@@ -1,0 +1,47 @@
+* lists comprehention
+Pythagorean Triplets, armstrong, page 75
+Block Expressions, armstrong, page 129
+
+* guards
+что-то про них было в рассылке, надо почитать
+типа ; не есть эквивалент orelse, а comma не есть полный эквивалент andalso
+есть какие-то тонкие различия между ними
+guards cannot call user-defined functions, since we want to
+guarantee that they are side effect free and terminate.
+
+* kv-структуры
+Maps are associative collections of key-value pairs. The key can be any Erlang
+term. In Perl and Ruby they are called hashes; in C++ and Java they are called
+maps, in Lua they are called tables, and in Python they are called dictionaries.
+
+maps to_json, from_json -- во как. Надо доку почитать, что ли )
+
+* ets
+В теме по ets затронуть read/write concurrency
+
+* json
+Сложно модифицировать сложные вложенные JSON объекты.
+библиотека ej
+в хаскеле есть какие-то линзы, что за они? Это не про это?
+в LYH есть именно про это: перемещение по сложным структурам данных и их модификация. Перечитать, вспомнить.
+
+* Супервизоры
+рассмотреть разные стратегии
+в т.ч. обязательно создание новых воркеров в рантайме
+
+* Про сопоставление с образом (pattern matching)
+оператора присваивания нет, есть оператор сопоставления с образцом :)
+
+* Про cowboy
+cowboy_req все время возвращает Req, и приходится делать
+{Res, Req1} =
+{_, Req2} =
+и т.д., что не удобно
+В cowboy 2 это пофиксили
+В cowboy 0.x-1.0 это часто можно игнорировать, если Req реально не меняется.
+А для этого нужно смотреть сорцы.
+Примеры, где Req меняется, где нет.
+
+
+* dialyzer
+у Армстронга 9-я глава про типы

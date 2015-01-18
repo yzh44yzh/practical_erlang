@@ -1,13 +1,14 @@
 * Часть 1-я
-   DEADLINE: <2015-03-29 Няд>
+   DEADLINE: <2015-04-12 Sun>
 
 ** 1. Какое-то введение
-   DEADLINE: <2015-01-18 Няд>
+   DEADLINE: <2015-01-25 Sun>
    shell, типы данных
    integer, float, atom, tuple, list, array, record
+   что-нибудь прикольное
 
 ** 2. Функциональное программирование,
-   DEADLINE: <2015-01-25 Няд>
+   DEADLINE: <2015-02-01 Sun>
    структура данных List,
    рекурсивные функции с аккумуляторами,
    map, filter, foldl etc
@@ -15,62 +16,51 @@
    нужны хорошие примеры, а то суммировать и умножить все элементы списка – это отстой
 
 ** 3. Tuple, Pattern matching
-   DEADLINE: <2015-02-01 Няд>
    конструкции case и if
    клозы функций
    guards
 
 ** 4. KV-структуры данных
-   DEADLINE: <2015-02-08 Няд>
    proplist, dict, orddict, gb_trees,
    maps
 
-** 5. io_list, string, unicode
-   DEADLINE: <2015-02-15 Няд>
+** 5. io_list, binary, string, unicode
    flatten
 
 ** 6. ets
-   DEADLINE: <2015-02-22 Няд>
    упомянуть dets, mnesia
 
 ** 7. Многопоточность в Erlang
-   DEADLINE: <2015-03-01 Няд>
    Жизнь erlang-процесса
    (бесконечная рекурсия, состояние на стеке)
 
 ** 8. Работа с потоками на низком уровне
-   DEADLINE: <2015-03-08 Няд>
    spawn, link, spawn_link,
    receive, register,
    monitor, exit, trap exit
 
 ** 9. OTP 1
-   DEADLINE: <2015-03-15 Няд>
    gen_server
    Пишем свою реализацию gen_server в несколько этапов
 
 ** 10. OTP 2
-   DEADLINE: <2015-03-22 Няд>
    supervisor, gen_fsm, gen_event
 
 ** 11. OTP 3
-   DEADLINE: <2015-03-29 Няд>
    application
    Типичная структура OTP проекта
    с дочерними приложениями и зависимыми библиотеками
 
 
 * Часть 2-я
-   DEADLINE: <2015-05-24 Няд>
+   DEADLINE: <2015-06-14 Sun>
 
 ** 12. Обработка ошибок
-   DEADLINE: <2015-04-05 Няд>
    Defensive Programming vs Let it crash
    Уровни изоляции ошибок
    http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
 
 ** 13. Работа с сокетами
-   DEADLINE: <2015-04-12 Няд>
    TCP, UDP
    Активный и пассивный режим сокета
    Наивный tcp сервер
@@ -79,51 +69,42 @@
    Ranch Acceptor Pool
 
 ** 14. rebar
-   DEADLINE: <2015-04-19 Няд>
    управление зависимостями
    сборка проекта
    rebar 3,
    Makefile, EMakefile
 
 ** 15. Логирование
-   DEADLINE: <2015-04-26 Няд>
    report browser
    lager
 
 ** 16. dialyzer
-   DEADLINE: <2015-05-03 Няд>
    типы данных, спеки
    build_
    check
    ignore
 
 ** 17. Работа с JSON
-   DEADLINE: <2015-05-10 Няд>
    jsonx, jiffy, ej, jesse
 
 ** 18. cowboy 1
-   DEADLINE: <2015-05-17 Няд>
    Роутинг
    Статические файлы
    http хендлер
 
 ** 19. cowboy 2
-   DEADLINE: <2015-05-17 Няд>
    Поддержка сессий
    cowboy 2.0
 
 ** 20. cowboy 3
-   DEADLINE: <2015-05-25 Пан>
    websocket
    bullet
    пишем простой чат
 
 ** 21. работа с базой данных
-   DEADLINE: <2015-05-24 Няд>
    epgsql, emysql
 
 ** 22. еще полезные библиотеки
-   DEADLINE: <2015-05-24 Няд>
    erlydtl
    poolboy
    sheep
@@ -133,10 +114,8 @@
    lhttpc (или какая там у него замена сейчас?)
 
 ** 23. eunit
-   DEADLINE: <2015-05-24 Няд>
 
 ** 24. Курсовая работа :)
-   DEADLINE: <2015-05-24 Няд>
    реализация key-value хранилища
    чтобы было интересно, с фичами:
    - сохранение на диск и восстановление
