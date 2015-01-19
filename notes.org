@@ -11,6 +11,18 @@ lists comprehention
 Pythagorean Triplets, armstrong, page 75
 Block Expressions, armstrong, page 129
 
+самые ходовые функции из модуля lists
+
+показать improper list
+язык их позволяет
+специально их никто не делает, но могут получиться случайно, и вызывать ошибки
+
+* Pattern matching
+in Erlang is used to:
+- Assign values to variables
+- Control the execution flow of programs
+- Extract values from compound data types
+
 * guards
 что-то про них было в рассылке, надо почитать
 типа ; не есть эквивалент orelse, а comma не есть полный эквивалент andalso
@@ -27,6 +39,11 @@ maps to_json, from_json -- во как. Надо доку почитать, чт
 
 * ets
 В теме по ets затронуть read/write concurrency
+
+* string, binary, unicode
+пусть данные остаются в binary, если это возможно (если их нужно просто передавать или хранить)
+если нужно что-то делать с контентом, тогда unicode:characters_to_list
+но не binary_to_list
 
 * eunit
 генераторы тестов. Неплохо, но есть проблемы:
