@@ -1,0 +1,10 @@
+{"name" : "Эрланг на практике, урок №1. Вступление, типы данных.",
+ "locale" : "ru",
+ "slug" : "practical_erlang_01_intro_types",
+ "audience" : "TODO веб разработчики",
+ "mission" : "TODO научиться применять Erlang в разработке реальных проектов",
+ "description" : "TODO",
+ "video" : {"provider" : "youtube",
+            "uid" : "TODO"},
+ "transcript" : "TODO"
+}
