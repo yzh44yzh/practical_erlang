@@ -64,15 +64,13 @@ TODO:
 ### Изучай Erlang во имя добра!
 Фред Хеберт
 
-Переведенная на русский язык:
-http://www.ozon.ru/context/detail/id/28953563/
+[Переведенная на русский язык](http://www.ozon.ru/context/detail/id/28953563/)
 
 В оригинале:
-Learn You Some Erlang for Great Good!: A Beginner's Guide
-Fred Hebert
-http://www.amazon.com/Learn-Some-Erlang-Great-Good/dp/1593274351/
+[Learn You Some Erlang for Great Good!: A Beginner's Guide
+Fred Hebert](http://www.amazon.com/Learn-Some-Erlang-Great-Good/dp/1593274351/)
 
-Бесплатная html версия: http://learnyousomeerlang.com/
+[Бесплатная html версия](http://learnyousomeerlang.com/)
 
 Пожалуй, лучшая книга по эрланг. Фред сделал просто эпичный труд, спасибо ему за это.
 Написано легко, весело, понятно, и про все, про что только можно было написать.
@@ -82,13 +80,11 @@ http://www.amazon.com/Learn-Some-Erlang-Great-Good/dp/1593274351/
 ### Программирование в Erlang
 Франческо Чезарини, Симон Томпсон
 
-Переведенная на русский язык:
-http://www.ozon.ru/context/detail/id/30671701/
+[Переведенная на русский язык](http://www.ozon.ru/context/detail/id/30671701/)
 
 В оригинале:
-Erlang Programming
-Francesco Cesarini, Simon Thompson
-http://www.amazon.com/Erlang-Programming-Francesco-Cesarini/dp/0596518188/
+[Erlang Programming
+Francesco Cesarini, Simon Thompson](http://www.amazon.com/Erlang-Programming-Francesco-Cesarini/dp/0596518188/)
 
 Четкое, последовательное, понятное изложение. Хороший учебник.
 Несколько сухая, академичная, без шуточек, как у Фреда.
@@ -97,7 +93,7 @@ http://www.amazon.com/Erlang-Programming-Francesco-Cesarini/dp/0596518188/
 ### Programming Erlang: Software for a Concurrent World (Pragmatic Programmers)
 Joe Armstrong
 
-http://www.amazon.com/Programming-Erlang-Concurrent-Pragmatic-Programmers/dp/193778553X/
+[В оригинале](http://www.amazon.com/Programming-Erlang-Concurrent-Pragmatic-Programmers/dp/193778553X/)
 
 Автор -- один из создателей языка эрланг. Написано не так сухо, как у Чезарини, более живо, литературно.
 Немного страдает последовательность изложения, начальные темы идут в довольно странном порядке.
@@ -107,7 +103,7 @@ http://www.amazon.com/Programming-Erlang-Concurrent-Pragmatic-Programmers/dp/193
 ### Erlang and OTP in Action
 Martin Logan, Eric Merritt, Richard Carlsson
 
-http://www.amazon.com/Erlang-OTP-Action-Martin-Logan/dp/1933988789/
+[В оригинале](http://www.amazon.com/Erlang-OTP-Action-Martin-Logan/dp/1933988789/)
 
 Тоже неплохой способ изучить эрланг. Тут основы языка даются довольно кратко, а предлагается
 наблюдать за разработкой проекта, от начальной идеи, через несколько инкрементальных улучшений,
@@ -155,108 +151,121 @@ http://www.amazon.com/Erlang-OTP-Action-Martin-Logan/dp/1933988789/
 программиста, чем на сервере.
 
 
-## Инструменты и окружение
+## Типы данных
 
-Курс практический. Это значит, что придется писать, отлаживать и запускать код.
+Посмотрим, какие встроенные типы данных имеет эрланг.
 
-TODO
-emacs, intellij idea
-hexlet web ide
+Их не много, 11 штук. Но я бы все равно их классифицировал.
+Это не официальная классификация, моя:
+ - численные: integer, float;
+ - атомы;
+ - структуры: list, tuple, map;
+ - идентификаторы: pid, port, reference;
+ - функции;
+ - binary;
 
+Разумеется, на базе встроенных типов данных можно строить любое количество своих.
+Но сначала познакомимся с базовыми.
 
-## Работа в erlang-shell
-
-TODO: В видео можно показать. В теории буквально 2 слова. Quiz можно сделать.
-
-Запуск с разными аргументами, какие актуальны
-Остановка разными способами
-
-запуск erl выход C-G q help()
-
-b() – display all variable bindings f() – forget all variable bindings f(X) – forget the binding of variable X c(File) – compile and load code in <File> l(Module) – load or reload module flush() – flush any messages sent to the shell q() – quit - shorthand for init:stop()
-
-i() – information about the system i(X,Y,Z) – information about pid <X,Y,Z>Еще m() – which modules are loaded m(Mod) – information about module <Mod> memory() – memory allocation information regs() – information about registered processes
-
-C-G User switch command –> h c [nn] - connect to job i [nn] - interrupt job k [nn] - kill job j - list all jobs s [shell] - start local shell r [node [shell]] - start remote shell q - quit erlang ? | h - this message
-
-
-## типы данных
-TODO пару слов, какие вообще типы есть
 
 ### integer
-TODO
-small int 1 байт
-int 1 word (4/8 bytes)
-small bignum 1 байт заголовок
-large bignum 4 байта заголовок
 
-the number of digits that can be represented
-in an integer is limited only by available memory.
+Целое число со знаком. Диапазон значений не ограничен. Памяти
+выделяется столько, сколько нужно, чтобы хранить значение. В
+большинстве случаев это будет 1 машинное слово (4 байта на 32-х
+разрядной платформе, 8 байт на 64-х разрядной). Если число большое, и
+для его хранения не хватает машинного слова, то памяти выделяется
+больше.
 
-1> 2#101010.
-42
-2> 8#0677.
-447
-3> 16#AE.
-174
+Это удобно для программиста, но не очень эффективно по производительности.
+Поэтому для эрланга не характерны высокопроизводительные операции с числами.
+
+Числа могут быть представлены в различных системах исчисления, что иногда удобно:
+
+    1> 2#101010.
+    42
+    2> 8#0677.
+    447
+    3> 16#AE.
+    174
+
 
 ### float
-TODO
 
-IEEE 754
-http://en.wikipedia.org/wiki/IEEE_floating_point
+Число с плавающей точкой. Как и в большинстве других языков, реализованно по стандарту
+[IEEE 754](http://en.wikipedia.org/wiki/IEEE_floating_point).
+Соответственно, занимает 8 байт памяти. Может быть представлено в разных видах.
 
-TODO показать в консоли пару примеров с ошибками округления
+    1> 2.5.
+    2.5
+    2> 3.14159.
+    3.14159
+    3> -2.3e+6.
+    -2.3e6
+    4> 23.56E-27.
+    2.356e-26
 
-Erlang uses 64-bit IEEE 754-1985 floats
+И подвержено потере точности при вычислениях, точно так же, как и в других языках.
 
-1.0 3.14159 -2.3e+6 23.56E-27
+    5> 0.1 + 0.2.
+    0.30000000000000004
 
-http://habrahabr.ru/post/112953/
-Что нужно знать про арифметику с плавающей запятой
+Таков стандарт IEEE 754 :) Если вы вдруг не знаете, почему так
+получилось, но хотите узнать, почитайте
+["Что нужно знать про арифметику с плавающей запятой"](http://habrahabr.ru/post/112953/)
+
 
 ### atom
-TODO
-константное значение ‘Atom in single quote’
 
-довольно типичный тип данных для функциональных языков
-используются как эффективные по памяти и производительности имена сущностей
-для них определена только операция сравнения
+Вот тут уже сложнее объяснить. Атомы типичны для функциональных языков,
+но не встречаются в языках императивных.
 
-в большинстве случаев мы можем использовать как имя любой term (в ets например)
-в некоторых -- только атом (для регистрации процессов, например)
+Это некие константные значения, которые можно сравнивать друг с другом
+на предмет совпадения.  Собственно, сравнивать -- это единственное,
+что с ними можно делать.
 
-Аналог в Java – enum enum Season { WINTER, SPRING, SUMMER, AUTUMN }
+    1> Color1 = green.
+    green
+    2> Color2 = red.
+    red
+    3> Color3 = green.
+    green
+    4> Color1 == Color2.
+    false
+    5> Color1 == Color3.
+    true
 
-Аналог в C – define define WIDTH 80
+При этом они очень широко используются. Но не так, как в примере выше,
+а в основном для "сопоставления с образцом" (pattern matching).  У нас
+будет отдельный урок, посвященных этой теме.
 
+Пока можно считать, что это некий аналог перечислений (enum),
+хотя это не совсем точно.
 
-делают код более понятным:
+В документации и во всех книгах авторы рассказывают, что атомы
+храняться в специальной таблице в памяти и никогда не удаляются
+оттуда. Поэтому их нельзя генерировать динамически.
+*list_to_atom/1* опасен (не совсем очевидно, но *binary_to_term/1*
+опасен таким же образом). А вот *list_to_existing_atom/1* безопасен.
 
-{ok, Value}
-{error, Reason}
-{user, "Bob", 22}
--type(my_bool() :: true | false | undefined).
+Все-все эрланг разработчики это знают, но все равно иногда это
+делают. Даже очень опытные.  И в один прекрасный момент у них падает
+нода из-за исчерпания всей памяти ОС.  Ну вот, я предупредил, и вы
+теперь тоже об этом знаете, и никогда не будете так делать :)
 
-глобальная область видимости (в пределах ноды)
-хранятся в таблице атомов, занимают 4 или 8 байт, эта память не освобождается (4 bytes/atom in a 32-bit system, 8 bytes/atom in a 64-bit system).
+Атомы имеют глобальную область видимости (в пределах ноды) и занимают
+1 машинное слово в памяти.
 
-нет встроенного в язык типа boolean, есть атомы true false, которые по соглашению считаются boolean
-операции сравнения ==, <, > и т.д. реализованы в языке так, что возвращают эти атомы
-
-boolean() = true | false.
-но из функций можно возвращать и более мнемоничные атомы
-ok | error
-Value | not_found
-и т.д.
-
-не генерировать их динамически
-list_to_atom опасно
-list_to_existing_atom -- ок
-
+Интересно, что в эрланге нет типа данных *boolean*. А роль boolean
+значений выполняют атомы *true* и *false*. Операции сравнения ==, <, >
+и т.д. реализованы в языке так, что возвращают эти атомы.
 
 
 ### tuple
+
+Еще один тип данных, который есть во всех функциональных языках, но
+редко встречается в императивных.
+
 TODO
 
 group a fixed number of items into a single entity
