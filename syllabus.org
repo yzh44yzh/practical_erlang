@@ -144,3 +144,14 @@
 
 ** 31. распределенность
    Курсовая работа -- распределенный чат
+
+** Работа с APNS, GCM
+   ssl, сертификаты
+
+** Валидация данных
+   many inner case..of
+   try..catch
+   json scheme
+   maybe/error monads
+   list of validation functions
+   что-то еще на мобильнике
