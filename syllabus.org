@@ -1,66 +1,63 @@
 * Часть 1-я
    DEADLINE: <2015-04-12 Sun>
 
-** 1. Какое-то введение
-   DEADLINE: <2015-01-25 Sun>
-   shell, типы данных
-   integer, float, atom, tuple, list, array, record
-   что-нибудь прикольное
+** DONE 1. Введение. Типы данных.
 
-** 2. Функциональное программирование,
+** TODO 2. Устройство списков. Рекурсивные функции с аккумуляторами.
    DEADLINE: <2015-02-01 Sun>
-   структура данных List,
-   рекурсивные функции с аккумуляторами,
+
+** TODO 3. Функции высшего порядка. Свертка.
+   DEADLINE: <2015-02-08 Sun>
    map, filter, foldl etc
    Lists Comprehention
    нужны хорошие примеры, а то суммировать и умножить все элементы списка – это отстой
 
-** 3. Tuple, Pattern matching
+** TODO Tuple, Pattern matching
    конструкции case и if
    клозы функций
    guards
 
-** 4. KV-структуры данных
+** TODO KV-структуры данных
    proplist, dict, orddict, gb_trees,
    maps
 
-** 5. io_list, binary, string, unicode
+** TODO io_list, binary, string, unicode
    flatten
 
-** 6. ets
+** TODO ets
    упомянуть dets, mnesia
 
-** 7. Многопоточность в Erlang
+** TODO Многопоточность в Erlang
    Жизнь erlang-процесса
    (бесконечная рекурсия, состояние на стеке)
 
-** 8. Работа с потоками на низком уровне
+** TODO Работа с потоками на низком уровне
    spawn, link, spawn_link,
    receive, register,
    monitor, exit, trap exit
 
-** 9. OTP 1
+** TODO OTP 1
    gen_server
    Пишем свою реализацию gen_server в несколько этапов
 
-** 10. OTP 2
+** TODO OTP 2
    supervisor, gen_fsm, gen_event
 
-** 11. OTP 3
+** TODO OTP 3
    application
    Типичная структура OTP проекта
    с дочерними приложениями и зависимыми библиотеками
 
 
-* Часть 2-я
+* TODO Часть 2-я
    DEADLINE: <2015-06-14 Sun>
 
-** 12. Обработка ошибок
+** TODO Обработка ошибок
    Defensive Programming vs Let it crash
    Уровни изоляции ошибок
    http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
 
-** 13. Работа с сокетами
+** TODO Работа с сокетами
    TCP, UDP
    Активный и пассивный режим сокета
    Наивный tcp сервер
@@ -68,43 +65,43 @@
    опробовать оба через telnet
    Ranch Acceptor Pool
 
-** 14. rebar
+** TODO Rebar
    управление зависимостями
    сборка проекта
    rebar 3,
    Makefile, EMakefile
 
-** 15. Логирование
+** TODO Логирование
    report browser
    lager
 
-** 16. dialyzer
+** TODO Dialyzer
    типы данных, спеки
    build_
    check
    ignore
 
-** 17. Работа с JSON
+** TODO Работа с JSON
    jsonx, jiffy, ej, jesse
 
-** 18. cowboy 1
+** TODO Cowboy 1
    Роутинг
    Статические файлы
    http хендлер
 
-** 19. cowboy 2
+** TODO Cowboy 2
    Поддержка сессий
    cowboy 2.0
 
-** 20. cowboy 3
+** TODO Cowboy 3
    websocket
    bullet
    пишем простой чат
 
-** 21. работа с базой данных
+** TODO Работа с базой данных
    epgsql, emysql
 
-** 22. еще полезные библиотеки
+** TODO Еще полезные библиотеки
    erlydtl
    poolboy
    sheep
@@ -113,9 +110,9 @@
    erma
    lhttpc (или какая там у него замена сейчас?)
 
-** 23. eunit
+** TODO Eunit
 
-** 24. Курсовая работа :)
+** TODO Курсовая работа :)
    реализация key-value хранилища
    чтобы было интересно, с фичами:
    - сохранение на диск и восстановление
@@ -126,23 +123,22 @@
 
 * Часть 3-я
 
-** 25. observer, webtool
+** Observer, Webtool
 
-
-** 26. Сериализация данных
+** Сериализация данных
    bert, google protocol buffers
 
-** 27. common test
+** Common test
 
-** 28. релизы, relx
+** Релизы, relx
 
-** 29. отладка
+** Отладка
    trace, dbg, sys, observer
 
-** 30. zabbix
+** Zabbix
    тулы для мониторинга логов, etc
 
-** 31. распределенность
+** Распределенность
    Курсовая работа -- распределенный чат
 
 ** Работа с APNS, GCM
