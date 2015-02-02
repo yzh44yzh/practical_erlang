@@ -1,9 +1,3 @@
-* list
-
-lists comprehention
-Pythagorean Triplets, armstrong, page 75
-Block Expressions, armstrong, page 129
-
 * Pattern matching
 оператора присваивания нет, есть оператор сопоставления с образцом :)
 
