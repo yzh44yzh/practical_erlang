@@ -31,7 +31,9 @@ transparency).
 
 Вот мы создаем список и присваиваем его переменной List:
 
-    List = [1, 2, 3, 4].
+```erlang
+List = [1, 2, 3, 4].
+```
 
 В памяти у нас появляется вот такая структура:
 
@@ -45,7 +47,9 @@ transparency).
 можем, но можем создать новый список, включающий один новый элемент и
 все элементы старого списка:
 
-    List2 = [0 | List].
+```erlang
+List2 = [0 | List].
+```
 
 Эта операция называется **конкатенация** (concatenation).
 
@@ -59,7 +63,9 @@ transparency).
 
 Любой список можно представить как последовательность операций конкатенации:
 
-    [0 | [1 | [2 | [3 | [4 | []]]]]]
+```erlang
+[0 | [1 | [2 | [3 | [4 | []]]]]]
+```
 
 Или схематически:
 
@@ -68,7 +74,9 @@ transparency).
 Конкатенация используется и для добавления элемента в начало списка, и для разделения
 списка на начальный элемент (голова) и все остальные элементы (хвост).
 
-    [Head | Tail] = List.
+```erlang
+[Head | Tail] = List.
+```
 
 А что было бы, если бы мы использовали двунаправленный связанный список? Он представлен в памяти так:
 
@@ -106,7 +114,9 @@ transparency).
 
 Еще рассмотрим суммирование двух списков:
 
-    List1 ++ List2.
+```erlang
+List1 ++ List2.
+```
 
 Стоимость этой операции O(n), где n длинна первого списка.
 Память первого списка копируется, память второго списка используется повторно.
@@ -139,22 +149,26 @@ transparency).
 
 Допустим, у нас есть список пользователей:
 
-    Users = [{user, 1, "Bob", male},
-             {user, 2, "Helen", female},
-             {user, 3, "Bill", male},
-             {user, 4, "Kate", female}].
+```erlang
+Users = [{user, 1, "Bob", male},
+         {user, 2, "Helen", female},
+         {user, 3, "Bill", male},
+         {user, 4, "Kate", female}].
+```
 
 И мы хотим отфильтровать пользователей женского пола. То есть, получить новый список,
 где будут только девушки.
 
 Применим рекурсивную функцию с аккумулятором:
 
-    filter_female([], Acc) -> Acc;
-    filter_female([User | Rest], Acc) ->
-        case User of
-            {user, _, _, male} -> filter_female(Rest, Acc);
-            {user, _, _, female} -> filter_female(Rest, [User | Acc])
-        end.
+```erlang
+filter_female([], Acc) -> Acc;
+filter_female([User | Rest], Acc) ->
+    case User of
+        {user, _, _, male} -> filter_female(Rest, Acc);
+        {user, _, _, female} -> filter_female(Rest, [User | Acc])
+    end.
+```
 
 Функция получает на вход два аргумента: список пользователей, и
 список, где будет накапливаться результат выполнения -- аккумулятор. В
@@ -192,19 +206,25 @@ case и сопоставление с образцом пока что не из
 важно, то аккумулятор можно вернуть, как есть. Если желательно
 сохранить оригинальный порядок, то аккумулятор нужно развернуть:
 
-    filter_female([], Acc) -> lists:reverse(Acc);
+```erlang
+filter_female([], Acc) -> lists:reverse(Acc);
+```
 
 Второй пример. Допустим, из списка пользователей нужно извлечь их идентификаторы и имена.
 То есть, получить список кортежей вида:
 
-    {Id, Name}
+```erlang
+{Id, Name}
+```
 
 Делаем:
 
-    get_names([], Acc) -> lists:reverse(Acc);
-    get_names([User | Rest], Acc) ->
-        {user, Id, Name, _} = User,
-        get_names(Rest, [{Id, Name} | Acc]).
+```erlang
+get_names([], Acc) -> lists:reverse(Acc);
+get_names([User | Rest], Acc) ->
+    {user, Id, Name, _} = User,
+    get_names(Rest, [{Id, Name} | Acc]).
+```
 
 Опять два тела у функции. Первое тело отвечает за завершение рекурсии и возврат результата,
 накопленного в аккумуляторе.
@@ -216,34 +236,39 @@ case и сопоставление с образцом пока что не из
 с аккумулятором скрывать от пользователей модуля. Потому что аккумулятор может быть сложнее,
 чем просто список, и пользователям модуля незачем об этом знать.
 
-    get_names(Users) -> get_names(Users, []).
+```erlang
+get_names(Users) -> get_names(Users, []).
 
-    get_names([], Acc) -> lists:reverse(Acc);
-    get_names([User | Rest], Acc) ->
-        {user, Id, Name, _} = User,
-        get_names(Rest, [{Id, Name} | Acc]).
-
+get_names([], Acc) -> lists:reverse(Acc);
+get_names([User | Rest], Acc) ->
+    {user, Id, Name, _} = User,
+    get_names(Rest, [{Id, Name} | Acc]).
+```
 
 И вот пример со сложным аккумулятором. Допустим нам нужно разделить пользователей на два списка.
 В первом те, кому меньше 18 лет, во втором от 18 и старше. Тут, конечно, будет немного другой
 список пользователей, с указанием возраста:
 
-    Users = [{user, 1, "Bob", male, 27},
-             {user, 2, "Helen", female, 18},
-             {user, 3, "Bill", male, 15},
-             {user, 4, "Kate", female, 11}].
+```erlang
+Users = [{user, 1, "Bob", male, 27},
+         {user, 2, "Helen", female, 18},
+         {user, 3, "Bill", male, 15},
+         {user, 4, "Kate", female, 11}].
+```
 
 Реализация:
 
-    partition_users(Users) -> partition_users(Users, {[], []}).
+```erlang
+partition_users(Users) -> partition_users(Users, {[], []}).
 
-    partition_users([], {List1, List2}) -> {lists:reverse(List1), lists:reverse(List2)};
-    partition_users([User | Rest], {List1, List2}) ->
-        {user, _, _, _, Age} = User,
-        if
-            Age < 18 -> partition_users(Rest, {[User | List1], List2});
-            true -> partition_users(Rest, {List1, [User | List2]})
-        end.
+partition_users([], {List1, List2}) -> {lists:reverse(List1), lists:reverse(List2)};
+partition_users([User | Rest], {List1, List2}) ->
+    {user, _, _, _, Age} = User,
+    if
+        Age < 18 -> partition_users(Rest, {[User | List1], List2});
+        true -> partition_users(Rest, {List1, [User | List2]})
+    end.
+```
 
 На сей раз наш аккумулятор -- это кортеж из двух списков. В первом теле функции, как обычно,
 возвращаем результат. И тут мы разворачиваем оба списка. Во втором теле функции обрабатываем
