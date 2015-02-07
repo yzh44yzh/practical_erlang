@@ -1,6 +1,7 @@
 -module(main).
 
--export([get_users/0, get_females/1, split_by_age/1, get_id_name/1]).
+-export([get_users/0, get_females/1, split_by_age/1, get_id_name/1,
+         get_females_id_name/1, get_females_id_name2/1]).
 
 get_users() ->
     [{user, 1, "Bob", male, 22},
@@ -24,3 +25,14 @@ split_by_age(Users) ->
 get_id_name(Users) ->
     F = fun({user, Id, Name, _, _}) -> {Id, Name} end,
     lists:map(F, Users).
+
+
+get_females_id_name(Users) ->
+    Users2 = lists:filter(fun({user, _, _, Gender, _}) -> Gender =:= female end, Users),
+    lists:map(fun({user, Id, Name, _, _}) -> {Id, Name} end, Users2).
+
+
+get_females_id_name2(Users) ->
+    lists:filtermap(fun({user, _, _, male, _}) -> false;
+                       ({user, Id, Name, female, _}) -> {true, {Id, Name}}
+                    end, Users).
