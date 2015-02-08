@@ -1,7 +1,10 @@
 -module(main).
 
--export([get_users/0, get_females/1, get_id_name/1,
-         get_females_id_name/1, get_females_id_name2/1, get_stat/1,
+-export([get_users/0,
+         get_females/1, get_females2/1,
+         get_id_name/1, get_id_name2/1,
+         get_females_id_name/1, get_females_id_name2/1,
+         get_stat/1,
          split_by_age/1]).
 
 get_users() ->
@@ -18,9 +21,17 @@ get_females(Users) ->
     lists:filter(F, Users).
 
 
+get_females2(Users) ->
+    [User || {user, _, _, Gender, _} = User <- Users, Gender =:= female].
+
+
 get_id_name(Users) ->
     F = fun({user, Id, Name, _, _}) -> {Id, Name} end,
     lists:map(F, Users).
+
+
+get_id_name2(Users) ->
+    [{Id, Name} || {user, Id, Name, _, _} <- Users].
 
 
 get_females_id_name(Users) ->
