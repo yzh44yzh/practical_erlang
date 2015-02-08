@@ -142,10 +142,13 @@
 ** Работа с APNS, GCM
    ssl, сертификаты
 
+** Кастомный супервизор с exponential backoff
+
 ** Валидация данных
    many inner case..of
    try..catch
    json scheme
    maybe/error monads
-   list of validation functions
-   что-то еще на мобильнике
+   list of validation functions, return: ok | {error, term()} | {stop, term()}
+   get-данные можно перегнать в JSON и валидировать по схеме.
+   Схема не годится там, где валидация с побочными эффектами: обращение к базе, к стороннему сервису и т.д.
