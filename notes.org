@@ -1,18 +1,3 @@
-* Pattern matching
-оператора присваивания нет, есть оператор сопоставления с образцом :)
-
-in Erlang is used to:
-- Assign values to variables
-- Control the execution flow of programs
-- Extract values from compound data types
-
-* guards
-что-то про них было в рассылке, надо почитать
-типа ; не есть эквивалент orelse, а comma не есть полный эквивалент andalso
-есть какие-то тонкие различия между ними
-guards cannot call user-defined functions, since we want to
-guarantee that they are side effect free and terminate.
-
 * kv-структуры
 Maps are associative collections of key-value pairs. The key can be any Erlang
 term. In Perl and Ruby they are called hashes; in C++ and Java they are called

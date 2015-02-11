@@ -1,11 +1,10 @@
 * TODO 4й урок
 - источники инфы:
+  - официальные доки http://erlang.org/doc/reference_manual/expressions.html
   - Армстронг
   - Цезарини
   - Хеберт
   - OTP in action
-  - yzh44yzh.by, erlang-school
-  - notes.org
 
 - теория, написать все в md-файл
 
@@ -32,12 +31,14 @@
 * По каждому уроку:
 
 - источники инфы:
+  - notes.org
+  - erlang-school
+  - официальные доки
   - Армстронг
   - Цезарини
   - Хеберт
   - OTP in action
-  - yzh44yzh.by, erlang-school
-  - notes.org
+  - yzh44yzh.by
 
 - теория, написать все в md-файл
 
