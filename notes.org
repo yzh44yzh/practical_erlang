@@ -16,6 +16,11 @@ OTP in Action
 если нужно что-то делать с контентом, тогда unicode:characters_to_list
 но не binary_to_list
 
+When matching strings, the following is a valid pattern:
+f("prefix" ++ Str) -> ...
+This is syntactic sugar for the equivalent, but harder to read
+f([$p,$r,$e,$f,$i,$x | Str]) -> ...
+
 * eunit
 генераторы тестов. Неплохо, но есть проблемы:
 - при возникновении ошибки непонятен источник

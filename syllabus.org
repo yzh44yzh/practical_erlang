@@ -18,6 +18,9 @@
    proplist, dict, orddict, gb_trees,
    maps
 
+** TODO обработка ошибок
+try..catch
+defensive programming
 ** TODO io_list, binary, string, unicode
    flatten
 
