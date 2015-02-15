@@ -1,4 +1,4 @@
-# Сопоставление с образцом
+## Сопоставление с образцом
 
 Когда я впервые увидел конструкцию **сопоставления с образцом**
 (**pattern matching**), я сразу в нее влюблися.  И, может быть, это
@@ -11,72 +11,154 @@
 как это работает. Но теперь пришло время четко разобраться во всех
 нюансах.
 
+Итак, сопоставление с образцом используется для:
 
-in Erlang is used to:
- - Assign values to variables
-   оператора присваивания нет, есть оператор сопоставления с образцом :)
- - Control the execution flow of programs
- - Extract values from compound data types
-
-Pattern matching occurs when:
- - evaluating a function call,
- - case- receive- try- expressions
- - match operator (=) expressions
-
-left-hand side pattern is matched against a right-hand side term.
-If the matching succeeds, any unbound variables in the pattern become bound. If the matching fails, a run-time error occurs.
-несвязанная (unbound) - связанная (bound) переменная
-
-Expr1 = Expr2
-Matches Expr1, a pattern, against Expr2. If the matching succeeds, any unbound variable in the pattern becomes bound and the value of Expr2 is returned.
-
-If the matching fails, a badmatch run-time error will occur.
-
-Unbound variables are only allowed in patterns.
-Variables are bound to values using pattern matching. Erlang uses single assignment, a variable can only be bound once.
-
-The anonymous variable is denoted by underscore (_) and can be used when a variable is required but its value can be ignored.
-
-Note that since variables starting with an underscore are not anonymous, this will match:
-{_,_} = {1,2}
-But this will fail:
-{_N,_N} = {1,2}
+ - присвоения значений переменным;
+ - извлечения значений из сложных структур данных;
+ - условных переходов.
 
 
-Вот интересный пример:
+### Присвоение значений переменным
+
+```erlang
+1> A = 123.
+123
+```
+
+Даже эта элементарная конструкция, которая выглядит как оператор
+присваивания, на самом деле является сопоставлением с образцом. А
+оператора присваивания в эрланг нет вообще.
+
+Переменные в эрланг могут быть несвязаные (unbound) и связаные
+(bound).  Несвязаная переменная объявлена, но еще не получила никакого
+значения.  Связанная переменная уже получила значение, и теперь не
+может его изменить.
+
+В данном коде несвязаная переменная **А**, с помощью сопоставления с
+образцом получает значение *123*, и становится связаной.
+
+
+### Извлечение значений из сложных структур данных
+
+```erlang
+2> User = {user, "Bob", 25}.
+{user,"Bob",25}
+3> {user, Name, Age} = User.
+{user,"Bob",25}
+4> Name.
+"Bob"
+5> Age.
+25
+```
+
+Это мы уже делали на предыдущих уроках, сейчас разберем подробнее, что
+здесь происходит.  Слева от знака **=** находится шаблон (pattern),
+справа значение, которое мы пытаемся сопоставить с шаблоном.
+
+Шаблон может быть любой структурой данных и может содержать
+несвязаные и связаные переменные.  Значение справа может быть любой
+структурой данных, но может содержать только связанные переменные.
+
+Сопоставление может пройти успешно, и тогда несвязаные переменные в
+шаблоне (если они есть), получат свои значения. Или сопоставление
+может не пройти, и тогда возникнет исключение -- ошибка времени
+выполнения.
+
+```erlang
+6> {cat, Name, TailLength} = User.
+** exception error: no match of right hand side value {user,"Bob",25}
+```
+
+Шаблон может также содержать анонимные переменные (обозначаются
+символом подчеркивания), которые совпадают с любым значением.
+
+```erlang
+8> {_, Name, _} = User.
+{user,"Bob",25}
+9> Name.
+"Bob"
+```
+
+Но их нужно отличать от именованых переменных, чьи имена начинаются
+с символа подчеркивания:
+
+```erlang
+10> {_Some, Name, _Some} = User.
+** exception error: no match of right hand side value {user,"Bob",25}
+```
+
+Здесь первое и третье значения кортежа должны быть одинаковыми, чтобы
+шаблон совпал.  Но в значении **User** они разные, поэтому получаем
+исключение.
+
+
+### Условные переходы
+
+```erlang
+6> case User of
+6> {user, _, _} -> "this is user";
+6> {cat, _, _} -> "this is cat"
+6> end.
+"this is user"
+```
+
+Сопоставление с образцом также используется в клозах (clause) функций
+и в конструкциях **case**, **if**, **receive**, **try** для выбора
+ветки кода, которая будет выполняться. То есть, для условного
+перехода.
+
+Ниже мы рассмотрим все эти варианты. А сейчас один пример из реального
+проекта. Это игра, где несколько пользователей собираются за одним
+столом. Один из игроков является владельцем комнаты.  Данная функция
+позволяет определить, является ли данный игрок владельцем данной
+комнаты:
 
 ```
-%% check table owner leave table in waiting state
-check_room_owner(RoomId, OwnerId) ->
-    case  personal_table:get_table_for_room(RoomId) of
-        {ok, #ptable{id = TableId, owner = OwnerId}} ->
-            bingo_room_manager:close_table_and_room(TableId, RoomId);
-        _ -> do_nothing
-    end
-end
+is_user_owner_of_room(UserId, RoomId) ->
+    case rooms:find_room(RoomId) of
+        {ok, #room{owner = UserId}} -> true;
+        _ -> false
+    end.
 ```
-Находим стол, и сразу матчингом UserId проверяем владельца.
+
+Здесь **rooms:find_room/1** может вернуть либо {ok, #room{}}, либо
+{error, not_found}. В первом шаблоне конструкции **case** мы
+проверяем, что find_room вернула {ok, #room{}}, причем owner
+совпадается с UserId.
+
+Таким образом, мы одним шаблоном проверяем сразу два условия:
+
+ - что комната с таким RoomId существует;
+ - что владелец у нее именно UserId, а не кто-то другой.
+
+В императивном языке тут было бы две конструкции **if**.
 
 
 ## clause
 
-klôz
+Рассмотрим подробнее клозы функции.  Этот термин пишется **clause**,
+произносится **[klôz]** и означает одно из нескольких тел функции.
 
-a unit of grammatical organization next below the sentence in rank and
-in traditional grammar said to consist of a subject and predicate.
-"In each sentence above, two clauses are linked by clause-chaining without conjunctions."
+Общепринятого перевода на русский язык нет, поэтому я буду писать без
+перевода -- **клоз**, потому что каждый раз писать "одно из нескольких
+тел функции", несколько утомительно :)
 
-синонимы: section, paragraph, article, subsection
+Примеры мы видели, когда писали рекурсивные функции с аккумуляторами.
+Вообще клозов у функции может быть много:
 
-TODO: немного познакомиться с прологом, в самых общих чертах
+```erlang
+area({rect, Width, Height}) -> Width * Height;
+area({square, Size}) -> Size * Size;
+area({circle, Radius}) -> math:pi() * Radius * Radius.
+```
 
-f({connect,From,To,Number,Options}, To) ->
-    Signal = {connect,From,To,Number,Options},
-can instead be written as
-f({connect,_,To,_,_} = Signal, To) ->
+Очередность клозов важна, потому что шаблоны проверяются сверху вниз,
+и первое совпадение приводит к выполнению соответствующего клоза.
+Поэтому более специфичные шаблоны должны идти раньше, а более общие
+поздно. Компилятор может предупредить о неправильной
+последовательности шаблонов, но не всегда.
 
-следить за правильной очередностью
-компилятор предупредит, но не всегда
+TODO пример правильной и неправильной последовательности шаблонов.
 
 
 ## guards
