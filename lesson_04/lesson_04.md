@@ -61,7 +61,7 @@
 
 Сопоставление может пройти успешно, и тогда несвязаные переменные в
 шаблоне (если они есть), получат свои значения. Или сопоставление
-может не пройти, и тогда возникнет исключение -- ошибка времени
+может не пройти, и тогда генерируется исключение -- ошибка времени
 выполнения.
 
 ```erlang
@@ -245,30 +245,39 @@ check_user({user, _, Gender, Age})
 встроенные функции можно вызывать не все.  Что именно разрешено,
 [смотрите в документации](http://erlang.org/doc/reference_manual/expressions.html#id81911)
 
+Если при вычислении выражения в гарде возникает исключение, то
+оно не распростроняется дальше, а просто гард не срабатывает
+(данная ветка кода не выполняется).
 
+```erlang
+1> F = fun(X) when 5/X > 1 -> "clause 1";
+1> (X) -> "clause 2"
+1> end.
+ #Fun<erl_eval.6.90072148>
+2> F(0).
+"clause 2"
+3> F(2).
+"clause 1"
+```
 
-f(X) when (X == 0) or (1/X > 2) ->
-...
-g(X) when (X == 0) orelse (1/X > 2) ->
-...
-The guard in f(X) fails when X is zero but succeeds in g(X).
-In practice, few programs use complex guards, and simple ( , ) guards
-suffice for most programs.
+Поэтому можно не писать так:
 
-TODO проверить все это:
-and, or - вычисляют оба аргумента
-andalso, orelse - вычисляют минимум аргументов
-comma is andalso, semicolon is orelse
+```erlang
+1> F = fun(X) when is_tuple(X), tuple_size(X) == 2 -> X end.
+```
 
+а писать сразу так:
 
-TODO проверить это:
-Robert Virding:
-Note that there is one very significant difference between ';' and or/orelse and that is how they behave with errors. ';' will just fail that one guard sequence and attempt the next one while or/orelse will fail the guard sequence they are in. So if they are used as an alternative to ';' you will get different behaviour.
-That errors in guards cause the guard to fail and not generate an exception was an intentional design decision, it saved a lot of explicit type tests and they were implicit in the operations. For example you could do tuple_size(T) without first having to check if T is a tuple.
-
+```erlang
+2> F = fun(X) when tuple_size(X) == 2 -> X end.
+```
 
 ## конструкция case
 
+Конструкция **case** аналогична клозам функции, но может
+использоваться в любом месте в коде.
+
+```erlang
 case Expr of
     Pattern1 [when GuardSeq1] ->
         Body1;
@@ -276,16 +285,50 @@ case Expr of
     PatternN [when GuardSeqN] ->
         BodyN
 end
+```
 
-The expression Expr is evaluated and the patterns Pattern are sequentially matched against the result. If a match succeeds and the optional guard sequence GuardSeq is true, the corresponding Body is evaluated.
+Как и с клозами, шаблоны применяются к выражению по очереди, сверху
+вниз.  Первый совпавший шаблон определяет ветку кода, которая будет
+выполняться. Если ни один шаблон не совпал, то генерируется
+исключение.
 
-If there is no matching pattern with a true guard sequence, a case_clause run-time error will occur.
+case могут быть вложенными друг в друга. 2 уровня вложенности
+допустимы.  3 уровня читаются (и пишутся) плохо, этого лучше избегать.
 
-The scope for a variable is its function clause. Variables bound in a branch of an if, case, or receive expression must be bound in all branches to have a value outside the expression, otherwise they will be regarded as 'unsafe' outside the expression.
+Вот пример на 2 уровня вложенности:
+
+```erlang
+close_room(UserId, RoomId) ->
+    case rooms:find_room(RoomId) of
+        {ok, #room{owner = UserId}} ->
+            case rooms:close(RoomId) of
+                ok -> ok;
+                {error, Reason} -> {error, Reason}
+            end;
+        {ok, #room{}} -> {error, not_room_owner};
+        {error, not_found} -> {error, room_not_found}
+    end.
+```
+
+Здесь пользователь пытается закрыть комнату. Результатом этой попытки
+может быть успешное закрытие комнаты, или несколько вариантов ошибок:
+пользователь не является владельцем комнаты, комната не найдена и
+т.д. Эти варианты обрабатываются 2 case.
+
+Если мы создаем новую переменную в одной из веток case, и потом
+пытаемся ее использовать за пределами case, то такой код не
+скомпилируется.  Переменная считается небезопасной (unsafe), потому
+что может оказаться не определена.  Правильный вариант -- не
+использовать переменную за пределами ветки case, в которой она
+объявлена, либо объявить во всех ветках.
 
 
 ## конструкция if
 
+Конструкция **if** представляет собой упрощенный case без выражения и
+без шаблонов, а ветки представлены только гардами.
+
+```erlang
 if
     GuardSeq1 ->
         Body1;
@@ -293,7 +336,29 @@ if
     GuardSeqN ->
         BodyN
 end
+```
 
-The branches of an if-expression are scanned sequentially until a guard sequence GuardSeq which evaluates to true is found. Then the corresponding Body (sequence of expressions separated by ',') is evaluated.
+Здесь, как и с case, если ни один гард не сработал, генерируется
+исключение.  Довольно часто бывает, что последним гардом ставят true,
+и он срабатывает всегда.
 
-If no guard sequence is true, an if_clause run-time error will occur. If necessary, the guard expression true can be used in the last branch, as that guard sequence is always true.
+```erlang
+valid_char(Char) ->
+    IsDigit = is_digit(Char),
+    IsAlpha = is_alpha(Char),
+    if
+        IsDigit -> true;
+        IsAlpha -> true;
+        true -> false
+    end.
+```
+
+Еще в этом примере мы видим, как обойти ограничение на использование
+своих функций в гардах. Мы просто вызываем эти функции за пределами
+if, присваиваем результат в переменные, и уже переменные используем в
+гардах.
+
+Для case тоже можно делать последний шаблон, который обязательно
+совпадет с любым выражением (catch all pattern).  Но так делают реже,
+чем в случае с if. А почему, мы выясним на одном из следующих уроков,
+когда будем изучать обработку ошибок и принцип **let is crush**.
