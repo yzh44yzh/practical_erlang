@@ -103,9 +103,8 @@
 ```
 
 Сопоставление с образцом также используется в клозах (clause) функций
-и в конструкциях **case**, **if**, **receive**, **try** для выбора
-ветки кода, которая будет выполняться. То есть, для условного
-перехода.
+и в конструкциях **case**, **receive**, **try** для выбора ветки кода,
+которая будет выполняться. То есть, для условного перехода.
 
 Ниже мы рассмотрим все эти варианты. А сейчас один пример из реального
 проекта. Это игра, где несколько пользователей собираются за одним
@@ -158,29 +157,94 @@ area({circle, Radius}) -> math:pi() * Radius * Radius.
 поздно. Компилятор может предупредить о неправильной
 последовательности шаблонов, но не всегда.
 
-TODO пример правильной и неправильной последовательности шаблонов.
+Вот неправильная последовательность шаблонов:
 
+```erlang
+case List of
+    [] -> empty_list;
+    [Head | _] -> process(Head);
+    [{X, Y} | _] -> process(X, Y)
+end.
+```
+
+Шаблон **Head** более общий, чем **{X, Y}**, и третяя вертка кода
+никогда не сработает, все перехватит вторая ветка.
+
+Вот правильная последовательность шаблонов:
+
+```erlang
+case List of
+    [] -> empty_list;
+    [{X, Y} | _] -> process(X, Y);
+    [Head | _] -> process(Head)
+end.
+```
 
 ## guards
 
-A guard sequence is a sequence of guards, separated by semicolon (;). The guard sequence is true if at least one of the guards is true. (The remaining guards, if any, will not be evaluated.)
-Guard1;...;GuardK
+Вообще **guard** переводится как охранник. Но в литературе его не
+переводят, а используют англицизм **гард**.
 
-A guard is a sequence of guard expressions, separated by comma (,). The guard is true if all guard expressions evaluate to true.
-GuardExpr1,...,GuardExprN
+Гарды используются там, где сопоставление с образцом применяется для
+условных переходов: то есть, в клозах функций, в case, try и receive
+конструкциях.  Они дополняют сопоставление с образцом, позволяя
+указать дополнительные условия.
 
-Guards are an extension of pattern
-matching
+Гадром является последовательность выражений, разделенных запятой,
+каждое из которых вычисляется в булевое значение.
 
-If an arithmetic expression, a boolean expression, a short-circuit expression, or a call to a guard BIF fails (because of invalid arguments), the entire guard fails. If the guard was part of a guard sequence, the next guard in the sequence (that is, the guard following the next semicolon) will be evaluated.
+```erlang
+check_user({user, _, Gender, Age}) when Gender =:= female, Age < 14 -> girl;
+check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 14, Age < 21 -> teenage_girl;
+check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 21 -> women;
+check_user({user, _, Gender, Age}) when Gender =:= male, Age < 14 -> boy;
+check_user({user, _, Gender, Age}) when Gender =:= male, Age >= 14, Age < 21 -> teenage_boy;
+check_user({user, _, Gender, Age}) when Gender =:= male, Age >= 21 -> men.
+```
 
-guards cannot call user-defined functions, since we want to
-guarantee that they are side effect free and terminate.
+Гард срабатывает (разрешает выполнение данной ветки кода), если все
+выражения вычисляются в true.
 
-The set of valid guard expressions (sometimes called guard tests) is a subset of the set of valid Erlang expressions. The reason for restricting the set of valid expressions is that evaluation of a guard expression must be guaranteed to be free of side effects.
+Гарды могут объединяться в последовательности, разделенные точкой с запятой:
 
-подробнее, какие именно выражения и функции можно использовать, см в доке
-http://erlang.org/doc/reference_manual/expressions.html#id81911
+```erlang
+check_user({user, _, Gender, Age})
+  when Gender =:= female, Age < 14;
+       Gender =:= male, Age < 14
+       -> child;
+check_user({user, _, Gender, Age})
+  when Gender =:= male, Age >= 21;
+       Gender =:= male, Age >= 21
+       -> adult.
+```
+
+Последовательность гардов срабатывает, если срабатывает любой из
+гардов в ней.
+
+То есть, запятая работает как **andalso**, а точка с запятой работает
+как **orelse** и код выше эквивалентен:
+
+```erlang
+check_user({user, _, Gender, Age})
+  when (Gender =:= female andalso Age < 14) orelse
+       (Gender =:= male andalso Age < 14)
+       -> child;
+check_user({user, _, Gender, Age})
+  when (Gender =:= male andalso Age >= 21) orelse
+       (Gender =:= male andalso Age >= 21)
+       -> adult.
+```
+
+Я предпочитаю второй вариант -- явное использование andalso и orelse.
+Он длиннее, зато не требует от всех, читающих код, помнить, что значит
+запятая, а что точка с запятой :)
+
+Выражения в гардах не должны иметь побочных эффектов. Поэтому
+разрешены не любые эрганговские выражения, а только их
+подмножество. Например, запрещен вызов пользовательских функций. Да и
+встроенные функции можно вызывать не все.  Что именно разрешено,
+[смотрите в документации](http://erlang.org/doc/reference_manual/expressions.html#id81911)
+
 
 
 f(X) when (X == 0) or (1/X > 2) ->
