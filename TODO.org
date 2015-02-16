@@ -1,9 +1,10 @@
 * TODO 4й урок
 
 - добавить в теорию, в пример, еще пару фигур
-http://ru.onlinemschool.com/math/formula/area/
+  http://ru.onlinemschool.com/math/formula/area/
 
-- практическое задание (одно или несколько)
+- практическое задание
+  сделал, осталось README написать
 
 - spell check (теория, quiz, задание)
 
