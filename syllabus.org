@@ -8,21 +8,18 @@
 ** DONE 3. Функции высшего порядка. Свертка.
 
 ** TODO 4. Сопоставление с образцом
-   DEADLINE: <2015-02-15 Няд>
    конструкции case и if
    клозы функций
    guards
 
-** TODO KV-структуры данных
+** TODO 5. KV-структуры данных
    DEADLINE: <2015-02-22 Sun>
    proplist, dict, orddict, gb_trees,
    maps
-** TODO io_list, binary, string, unicode
-   flatten
-
 ** TODO ets
    упомянуть dets, mnesia
-
+** TODO io_list, binary, string, unicode
+   flatten
 ** TODO Многопоточность в Erlang
    Жизнь erlang-процесса
    (бесконечная рекурсия, состояние на стеке)
