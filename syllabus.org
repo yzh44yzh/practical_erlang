@@ -17,10 +17,6 @@
    DEADLINE: <2015-02-22 Sun>
    proplist, dict, orddict, gb_trees,
    maps
-
-** TODO обработка ошибок
-try..catch
-defensive programming
 ** TODO io_list, binary, string, unicode
    flatten
 
