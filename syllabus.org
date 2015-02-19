@@ -7,36 +7,36 @@
 
 ** DONE 3. Функции высшего порядка. Свертка.
 
-** TODO 4. Сопоставление с образцом
-   конструкции case и if
-   клозы функций
-   guards
+** DONE 4. Сопоставление с образцом, гарды.
 
 ** TODO 5. KV-структуры данных
    DEADLINE: <2015-02-22 Sun>
    proplist, dict, orddict, gb_trees,
    maps
-** TODO ets
+
+** TODO 6. ets
    упомянуть dets, mnesia
-** TODO io_list, binary, string, unicode
+
+** TODO 7. io_list, binary, string, unicode
    flatten
-** TODO Многопоточность в Erlang
+
+** TODO 8. Многопоточность в Erlang
    Жизнь erlang-процесса
    (бесконечная рекурсия, состояние на стеке)
 
-** TODO Работа с потоками на низком уровне
+** TODO 9. Работа с потоками на низком уровне
    spawn, link, spawn_link,
    receive, register,
    monitor, exit, trap exit
 
-** TODO OTP 1
+** TODO 10. OTP 1
    gen_server
    Пишем свою реализацию gen_server в несколько этапов
 
-** TODO OTP 2
+** TODO 11. OTP 2
    supervisor, gen_fsm, gen_event
 
-** TODO OTP 3
+** TODO 12. OTP 3
    application
    Типичная структура OTP проекта
    с дочерними приложениями и зависимыми библиотеками
@@ -46,6 +46,7 @@
    DEADLINE: <2015-06-14 Sun>
 
 ** TODO история эрланг на фоне истории программирования
+
 ** TODO Обработка ошибок
    Defensive Programming vs Let it crash
    Уровни изоляции ошибок
