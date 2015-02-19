@@ -10,11 +10,10 @@
 ** DONE 4. Сопоставление с образцом, гарды.
 
 ** TODO 5. KV-структуры данных
-   DEADLINE: <2015-02-22 Sun>
    proplist, dict, orddict, gb_trees,
    maps
 
-** TODO 6. ets
+** TODO 6. ets таблицы
    упомянуть dets, mnesia
 
 ** TODO 7. io_list, binary, string, unicode
