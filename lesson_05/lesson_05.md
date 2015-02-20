@@ -62,17 +62,18 @@ lookup
 
 dicts are proplists with a taste for formality.
 
-TODO посмотреть сорцы, как они реализованы. Похоже там что-то поверх proplists
-
-TODO прочитать доку
 http://www.erlang.org/doc/man/dict.html
 
-TODO чем отличается от других kv
-TODO пример CRUD операций
-TODO какие есть фишки
+new
+append, store
+append\_list то есть, у одного ключа может быть много значений
+erase
+fetch, find
+map, fold
+from\_list, to\_list
+merge
 
-dict:store
-dict:fold
+TODO пример CRUD операций
 
 dict:find/2 (when you do not know whether the key is in the dictionaries),
 dict:fetch/2 (when you know it is there or that it must be there)
@@ -102,14 +103,14 @@ error
 
 ## orddict
 
-the whole list is sorted for faster average lookup
+Orddict implements a Key - Value dictionary. An orddict is a
+representation of a dictionary, where a list of pairs is used to store
+the keys and values. The list is ordered after the keys.
 
-TODO прочитать доку
+This module provides exactly the same interface as the module dict but with a defined representation.
+
 http://www.erlang.org/doc/man/orddict.html
 
-TODO чем отличается от других kv
-TODO пример CRUD операций
-TODO какие есть фишки
 
 Orddicts are a generally good compromise between complexity and
 efficiency up to about 75 elements (see my benchmark). After that
@@ -125,6 +126,8 @@ http://learnyousomeerlang.com/static/erlang/keyval_benchmark.erl
 
 
 ## gb_trees
+
+http://www.erlang.org/doc/man/gb_trees.html
 
 General Balanced Trees, on the other hand, have a bunch more functions
 leaving you more direct control over how the structure is to be used.
@@ -168,36 +171,43 @@ Oh and also note that while dicts have a fold function, gb_trees don't: they ins
 There is also gb\_trees:map/2, which is always a nice thing when you need it.
 
 
-TODO прочитать доку
-http://www.erlang.org/doc/man/gb_trees.html
-
 (general balanced trees)
 
-TODO чем отличается от других kv
 TODO пример CRUD операций
-TODO какие есть фишки
-
+enter, insert, update
+get, lookup
+delete, delete\_any
 
 TODO это нужно проверить
 gb_trees хранит ключи, понятно, в дереве. Поэтому еще более быстрый поиск O(ln(n)), но добавление может оказаться медленным, из-за необходимости перебалансировать дерево.
 
+deletion only does not rebalance the tree
+balance/1 после многих удалений
 
 ## maps
 
 Все выше -- реализации средствами языка, то есть, поверх списков и структур данных
-(TODO заглянуть в сорцы dict и gb_trees, чтобы убедиться)
+
 Maps -- нативная реализация в виртуальной машине.
 
-TODO прочитать доку
 http://www.erlang.org/doc/man/maps.html
 
 TODO прочитать Фреда
 http://learnyousomeerlang.com/maps
 
-TODO чем отличается от других kv
 TODO пример CRUD операций
-TODO какие есть фишки
 
+new
+put, update
+find, get
+remove
+
+merge
+fold, map
+
+from\_list, to\_list
+
+TODO разобраться, какой сахар работает, а какой задуман, но еще не работает.
 
 Maps are associative collections of key-value pairs. The key can be any Erlang
 term. In Perl and Ruby they are called hashes; in C++ and Java they are called
@@ -205,19 +215,6 @@ maps, in Lua they are called tables, and in Python they are called dictionaries.
 
 maps to\_json, from\_json -- во как.
 
-
-## array
-
-TODO прочитать доку
-http://www.erlang.org/doc/man/array.html
-
-TODO чем отличается от других kv
-TODO пример CRUD операций
-TODO какие есть фишки
-
-But what about code that requires data structures with nothing but numeric keys? Well for that, there are arrays. They allow you to access elements with numerical indices and to fold over the whole structure while possibly ignoring undefined slots.
-
-Erlang arrays, at the opposite of their imperative counterparts, are not able to have such things as constant-time insertion or lookup. Because they're usually slower than those in languages which support destructive assignment and that the style of programming done with Erlang doesn't necessary lend itself too well to arrays and matrices, they are rarely used in practice.
 
 ## Заключение
 
