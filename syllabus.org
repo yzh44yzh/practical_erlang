@@ -40,16 +40,16 @@
    Типичная структура OTP проекта
    с дочерними приложениями и зависимыми библиотеками
 
+** TODO 13. Обработка ошибок
+   Defensive Programming vs Let it crash
+   Уровни изоляции ошибок
+   http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
+
 
 * TODO Часть 2-я
    DEADLINE: <2015-06-14 Sun>
 
 ** TODO история эрланг на фоне истории программирования
-
-** TODO Обработка ошибок
-   Defensive Programming vs Let it crash
-   Уровни изоляции ошибок
-   http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
 
 ** TODO Работа с сокетами
    TCP, UDP
@@ -95,6 +95,8 @@
 ** TODO Работа с базой данных
    epgsql, emysql
 
+** TODO Eunit
+
 ** TODO Еще полезные библиотеки
    erlydtl
    poolboy
@@ -103,8 +105,6 @@
    orca
    erma
    lhttpc (или какая там у него замена сейчас?)
-
-** TODO Eunit
 
 ** TODO Курсовая работа :)
    реализация key-value хранилища

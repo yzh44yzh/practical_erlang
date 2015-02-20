@@ -1,10 +1,3 @@
-* kv-структуры
-Maps are associative collections of key-value pairs. The key can be any Erlang
-term. In Perl and Ruby they are called hashes; in C++ and Java they are called
-maps, in Lua they are called tables, and in Python they are called dictionaries.
-
-maps to_json, from_json -- во как. Надо доку почитать, что ли )
-
 * ets
 В теме по ets затронуть read/write concurrency
 
@@ -20,6 +13,9 @@ When matching strings, the following is a valid pattern:
 f("prefix" ++ Str) -> ...
 This is syntactic sugar for the equivalent, but harder to read
 f([$p,$r,$e,$f,$i,$x | Str]) -> ...
+
+We’ll finish this section with a short discussion of the history of strings in the Erlang system.
+цезарини, 27-я страница
 
 * eunit
 генераторы тестов. Неплохо, но есть проблемы:
@@ -57,7 +53,6 @@ httpc, lhttpc, exponential backoff
 * dialyzer
 у Армстронга 9-я глава про типы
 
-
 * процессы
 генерируем много процессов, даем каждому задание
 каждый выдает ответ после рандомной задержки,
@@ -68,6 +63,9 @@ httpc, lhttpc, exponential backoff
 * mysql, postgresql
 про erma, конечно
 пару слов про ORM, ChicagoBoss
+
+* errors
+http://learnyousomeerlang.com/errors-and-exceptions#not-so-fast
 
 * продвинутый курс (2-ю часть) начать с истории эрланга
   на фоне истории программирования:
