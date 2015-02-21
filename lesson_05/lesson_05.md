@@ -1,61 +1,102 @@
 ## Key-Value структуры данных
 
-Было бы трудно пользоваться языком, в котором нет key-value структур данных.
-И в эрланг они есть. И поскольку они очень востребованы в любом проекте,
-рассмотрим их подробнее.
+Было бы трудно пользоваться языком, в котором нет key-value структур
+данных.  И в эрланг они есть. И поскольку они очень востребованы в
+любом проекте, рассмотрим их подробнее.
 
 
-## proplist
+## proplists
 
-http://www.erlang.org/doc/man/proplists.html
+Самое простое, что можно придумать, это собрать пару "ключ-значение" в
+кортеж, и положить такие кортежи в список.
 
-Property lists are ordinary lists containing entries in the form of either tuples, whose first elements are keys used for lookup and insertion, or atoms, which work as shorthand for tuples {Atom, true}.
+```erlang
+1> PropList = [{key1, "Val1"}, {key2, 2}, {key3, true}].
+[{key1,"Val1"},{key2,2},{key3,true}]
+```
 
-Other terms are allowed in the lists, but are ignored by this module.
+Именно это и делает модуль [proplists](http://www.erlang.org/doc/man/proplists.html).
 
-If there is more than one entry in a list for a certain key, the first occurrence normally overrides any later
+Только proplists еще позволяет пары, где значение **true** сокращать,
+сохраняя вместо кортежа просто ключ.
 
-The proplists module contains functions for working with property
-lists. Property lists are ordinary lists containing entries in the
-form of either tagged tuples, whose first elements are keys used for
-lookup and insertion, or atoms (such as blah ), which is shorthand for
-the tuple {blah, true} .
+```erlang
+2> PropList2 = [{key1, "Val1"}, {key2, 2}, key3].
+[{key1,"Val1"},{key2,2},key3]
+```
 
-You'll notice there is no function to add or update an element of the
-list. This shows how loosely defined proplists are as a data
-structure. To get these functionalities, you must cons your element
-manually ([NewElement|OldList])
+АПИ модуля довольно странное. Есть несколько функций для извлечения
+значения по ключу, есть функция для удаление значения. Но нет функций
+для добавления и изменения значения.
 
-and use functions such as lists:keyreplace/4.
+Впрочем, с добавлением все просто. Для этого используем оператор **cons**:
 
-often used to deal with configuration lists
+```erlang
+3> PropList3 = [{key4, "Hello"} | PropList2].
+[{key4,"Hello"},{key1,"Val1"},{key2,2},key3]
+```
 
-CRUD:
+С изменением значения тоже просто, для этого опять используем оператор **cons** :)
 
-%% add item:
-List2 = [{Key, Value} | List]
+```erlang
+4> PropList4 = [{key1, "New val"} | PropList3].
+[{key1,"New val"},
+ {key4,"Hello"},
+ {key1,"Val1"},
+ {key2,2},
+ key3]
+```
 
-%% get item:
-Value = proplists:get_value(Key, List)
+Тогда оказывается, что в списке есть два ключа **key1**, но proplists
+такое разрешает. В этом случае будет возвращаться первое от головы
+списка значение.
 
-%% delete item:
-List3 = proplists:delete(Key, List)
+Для извлечения значения по ключу есть функции **get\_value/2**,
+**get\_value/3** и **get\_all\_values/2**.
 
-update как такового нет. Можно просто добавить элемент с тем же ключом в начало, и get_value будет возвращать его.
+```erlang
+5> proplists:get_value(key1, PropList4).
+"New val"
+6> proplists:get_value(key777, PropList4).
+undefined
+7> proplists:get_value(key777, PropList4, "default value").
+"default value"
+8> proplists:get_all_values(key1, PropList4).
+["New val","Val1"]
+9> proplists:get_all_values(key777, PropList4).
+[]
+```
 
-[{Key, Value} | List]
+Есть еще функции **lookup/2** и **lookup_all/2**, они отличаются тем,
+что возвращают не значение, а кортеж ключ-значение.
 
-А можно добавить элемент с одновременным удалением по ключу
+```erlang
+10> proplists:lookup(key1, PropList4).
+{key1,"New val"}
+11> proplists:lookup(key777, PropList4).
+none
+12> proplists:lookup_all(key1, PropList4).
+[{key1,"New val"},{key1,"Val1"}]
+13> proplists:lookup_all(key777, PropList4).
+[]
+```
 
-[{Key, Value} | proplists:delete(Key, List)]
+Ну и функция **delete/2** удаляет значение из списка:
 
-Из этого следует, что в списке могут быть несколько значений с одним ключом
+```erlang
+14> proplists:delete(key1, PropList4).
+[{key4,"Hello"},{key2,2},key3]
+```
 
-get_all_values
-lookup
+Понятно, что такая структура данных не очень эффективна.  Операции
+поиска и удаления выполняются, конечно, не за логарифмическое время, а
+за линейное. Несмотря на это, proplists популярен, и широко
+используется в проектах. Обычно он используется для конфигурирования,
+для хранения различных настроек и опций.
 
-Используется как небольшое KV хранилище. Не больше нескольких десятков элементов. Часто для хранения и передачи настроек или опций.
-
+Ну и в других случаях, когда мы знаем, что ключей в наших данных будет
+не много, не больше нескольких десятков, то смело берем proplists.
+Ибо в этой ситуации его эффективность не важна.
 
 
 ## dict
