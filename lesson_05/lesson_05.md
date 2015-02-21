@@ -101,69 +101,168 @@ none
 
 ## dict
 
-dicts are proplists with a taste for formality.
+Модуль [dict](http://www.erlang.org/doc/man/dict.html) мощнее и эффективнее.
 
-http://www.erlang.org/doc/man/dict.html
+Он уже предлагает полный **CRUD** (Create, Read, Update, Delete) API и некоторые
+функции свех того.
 
-new
-append, store
-append\_list то есть, у одного ключа может быть много значений
-erase
-fetch, find
-map, fold
-from\_list, to\_list
-merge
+Для начала словарь нужно создать:
 
-TODO пример CRUD операций
+```erlang
+1> Dict = dict:new().
+{dict,0,16,16,8,80,48,
+      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
+      {{[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]}}}
+```
 
-dict:find/2 (when you do not know whether the key is in the dictionaries),
-dict:fetch/2 (when you know it is there or that it must be there)
+Затем можно добавлять новые значения функцией **store/3**.
 
+```erlang
+2> Dict2 = dict:store(key1, "val 1", Dict).
+{dict,1,16,16,8,80,48,
+      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
+      {{[],
+        [[key1,118,97,108,32,49]],
+        [],[],[],[],[],[],[],[],[],[],[],[],[],[]}}}
+3> Dict3 = dict:store(key2, "val 2", Dict2).
+{dict,2,16,16,8,80,48,
+      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
+      {{[],
+        [[key1,118,97,108,32,49]],
+        [[key2,118,97,108,32,50]],
+        [],[],[],[],[],[],[],[],[],[],[],[],[]}}}
+```
+
+Как мы видим внутреннее представление это структуры
+довольно сложное, читать его в консоли и в логах неудобно.
+Тут на помощью придет функция **to\_list/1**
+
+```erlang
+4> dict:to_list(Dict2).
+[{key1,"val 1"}]
+5> dict:to_list(Dict3).
+[{key1,"val 1"},{key2,"val 2"}]
+```
+
+Она просто превращает dict в proplists, и в таком виде данные читаются
+гораздо лучше.
+
+Обратная функция **from\_list/1** тоже есть:
+
+```erlang
+6> dict:from_list([{key1, "val 1"}, {key2, "val 2"}]).
+{dict,2,16,16,8,80,48,
+      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
+      {{[],
+        [[key1,118,97,108,32,49]],
+        [[key2,118,97,108,32,50]],
+        [],[],[],[],[],[],[],[],[],[],[],[],[]}}}
+```
+
+Для изменения значения в словаре тоже используем функцию **store/3**
+
+```erlang
+7> Dict4 = dict:store(key1, "new val", Dict3).
+8> dict:to_list(Dict4).
+[{key1,"new val"},{key2,"val 2"}]
+```
+
+Далее, у нас есть две функции для чтения значения по ключу:
+
+```erlang
+9> dict:fetch(key1, Dict4).
+"new val"
+10> dict:fetch(key777, Dict4).
+** exception error: bad argument
+11> dict:find(key1, Dict4).
+{ok,"new val"}
+12> dict:find(key777, Dict4).
+error
+```
+
+Функция **fetch/2** возвращает значение, если ключ найден. Или бросает
+исключение, если такого ключа нет.  Функция **find/2** возвращает
+кортеж {ok, Val}, если ключ найден, или атом error, если ключа нет.
+
+Как видим, у нас есть два разных подхода к ситуации, когда ключ не
+найден.  Почему так, и какой подход в какой ситуации нужно
+использовать, мы выясним на одном из последующих уроков, когда будем
+изучать обработку ошибок.
+
+Ну и для удаления ключа из словаря используем функцию **erase/2**:
+
+```erlang
+13> Dict5 = dict:erase(key1, Dict4).
+14> dict:to_list(Dict5).
+[{key2,"val 2"}]
+```
+
+Это полный CRUD API, но кроме него в модуле dict есть и другие интересные функции.
+
+Есть возможность для одного ключа хранить несколько значений.  Для
+этого значения добавляются функцией **append/3** или **append_list/3**:
+
+```erlang
 1> D = dict:new().
-2> D2 = dict:append(1, "Bob", D).
-3> D3 = dict:append(2, "Bill", D2).
-4> dict:find(1, D3).
-{ok,["Bob"]}
-5> dict:find(2, D3).
-{ok,["Bill"]}
-6> dict:find(3, D3).
-error
-8> D4 = dict:append(1, "John", D3).
-9> dict:find(1, D4).
-{ok,["Bob","John"]}
-10> D5 = dict:erase(1, D4).
-11> dict:find(1, D5).
-error
-12> dict:to_list(D5).
-[{2,["Bill"]}]
-13> dict:fetch(2, D5).
-["Bill"]
-14> dict:fetch(1, D5).
-    exception error: bad argument
+2> D2 = dict:append(key1, "value 1", D).
+3> D3 = dict:append(key1, "value 2", D2).
+4> dict:to_list(D3).
+[{key1,["value 1","value 2"]}]
+5> D4 = dict:append_list(key1, ["value 3", "value 4"], D3).
+6> dict:to_list(D4).
+[{key1,["value 1","value 2","value 3","value 4"]}]
+```
+
+Еще есть функции высшего порядка **map/2**, **filter/2**, **fold/3**.
+Они аналогичны функциям модуля **lists**, но принимают на вход словарь,
+и на выходе отдают словарь.
+
+```erlang
+1> D = dict:new().
+2> D2 = dict:store(1, "Bob", D).
+3> D3 = dict:store(2, "Bill", D2).
+4> D4 = dict:store(3, "Helen", D3).
+5> dict:to_list(D4).
+[{3,"Helen"},{2,"Bill"},{1,"Bob"}]
+```
+
+```erlang
+6> D5 = dict:map(fun(Key, Val) -> string:to_upper(Val) end, D4).
+8> dict:to_list(D5).
+[{3,"HELEN"},{2,"BILL"},{1,"BOB"}]
+```
+
+```erlang
+9> D6 = dict:filter(fun(Key, Val) -> length(Val) > 3 end, D4).
+10> dict:to_list(D6).
+[{3,"Helen"},{2,"Bill"}]
+```
+
+```erlang
+11> dict:fold(fun(Key, Val, {KeySum, AllVals}) -> {KeySum + Key, [Val | AllVals]} end, {0, []}, D4).
+{6,["Helen","Bill","Bob"]}
+```
+
+Обратите внимание, не foldl, не foldr, а просто fold. Поскольку ключи
+в словаре не подразумевают определенной последовательности, то и
+направление свертки не имеет смысла.
 
 
 ## orddict
 
-Orddict implements a Key - Value dictionary. An orddict is a
-representation of a dictionary, where a list of pairs is used to store
-the keys and values. The list is ordered after the keys.
+Модуль [orddict](http://www.erlang.org/doc/man/orddict.html)
+аналогичен модулю dict, и предоставляет точно такие же функции. Но
+хранит ключи в сортированом виде.  Это позволяет чуть быстрее
+извлекать значения по ключу, но чуть медленее добавлять значения.
 
-This module provides exactly the same interface as the module dict but with a defined representation.
+Фред Хеберт в своей книге [пишет](http://learnyousomeerlang.com/a-short-visit-to-common-data-structures#key-value-stores)
+что orddict эффективен для небольших структур, порядка 75 элементов.
+Если так, то смысла использовать orddict нет, для такого набора данных
+и proplists вполне годится.
 
-http://www.erlang.org/doc/man/orddict.html
-
-
-Orddicts are a generally good compromise between complexity and
-efficiency up to about 75 elements (see my benchmark). After that
-amount, you should switch to different key-value stores.
-
-There are basically two key-value structures/modules to deal with larger amounts of data: dicts and gb_trees.
-
-Ну странно получается, 75 элементов -- мелочь. Ради них и не требуется сортировка.
-Фред пишет, что dict эффективнее на большем к-ве элементов. Тогда нафига вообще нужен orddict?
-
-TODO погонять самому бенчмарк Фреда
-http://learnyousomeerlang.com/static/erlang/keyval_benchmark.erl
+Однако, выбирая структуру данных для своего проекта, в тех случаях,
+когда важна производительность, вы должны сами пробовать разные
+структуры. И сами проводить бенчмарки на своих данных.
 
 
 ## gb_trees
@@ -256,13 +355,5 @@ maps, in Lua they are called tables, and in Python they are called dictionaries.
 
 maps to\_json, from\_json -- во как.
 
-
-## Заключение
-
-I would therefore say that your application's needs is what should
-govern which key-value store to choose. Different factors such as how
-much data you've got to store, what you need to do with it and whatnot
-all have their importance. Measure, profile and benchmark to make
-sure.
 
 ets на следующем уроке
