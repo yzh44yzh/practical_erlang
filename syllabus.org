@@ -45,6 +45,8 @@
    Уровни изоляции ошибок
    http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
 
+** TODO 14. Курсовая работа по 1й части курса.
+
 
 * TODO Часть 2-я
    DEADLINE: <2015-06-14 Sun>

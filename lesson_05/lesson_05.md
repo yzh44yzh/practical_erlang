@@ -267,62 +267,71 @@ error
 
 ## gb_trees
 
-http://www.erlang.org/doc/man/gb_trees.html
+Модуль [gb_trees](http://www.erlang.org/doc/man/gb_trees.html) предлагает еще одну key-value структуру данных.
 
-General Balanced Trees, on the other hand, have a bunch more functions
-leaving you more direct control over how the structure is to be used.
+gb_trees означает General Balanced Trees, то есть сбалансированное
+дерево общего назначения.  Если вы изучали алгоритмы, то знаете, что
+деревья -- эффективные структуры данных, которые обеспечивают доступ к
+своим элементам за логарифмическое время.  Но для этого нужно, чтобы
+глубина всех веток дерева была примерно одинаковая.  Значит деревья
+должны уметь перемещать свои узлы из одной ветки в другую, то есть,
+балансироваться.
 
-There are basically two modes for gb\_trees: the mode where you know
-your structure in and out (I call this the 'smart mode'), and the mode
-where you can't assume much about it (I call this one the 'naive
-mode').
+Понятно, что балансировка сама по себе требует какого-то времени.
+В **gb\_trees** она выполняется после каждого добавления нового элемента.
+Но не выполняется при модификации и удалении элемента.
 
-In naive mode, the functions are
-gb\_trees:enter/3
+Модуль **gb\_trees** тоже предоставляет CRUD API, и некоторые функции сверх него.
+
+empty() -> tree()
+Returns a new empty tree
+
+insert(Key, Value, Tree1) -> Tree2
+add. Assumes that the key is not present in the tree, crashes otherwise.
+update(Key, Value, Tree1) -> Tree2
+Assumes that the key is present in the tree.
+enter(Key, Value, Tree1) -> Tree2
+реализовано через is_defined,insert,update
+
+get(Key, Tree) -> Value
+Assumes that the key is not present in the tree, crashes otherwise.
+lookup(Key, Tree) -> none | {value, Value}
+returns {value, Value}, or none if Key is not present.
+
+delete(Key, Tree1) -> Tree2
+Assumes that the key is present in the tree, crashes otherwise.
+delete_any(Key, Tree1) -> Tree2
+Removes the node with key Key from Tree1 if the key is present in the tree, otherwise does nothing; returns new tree.
+
+У Фреда написано про naive и smart функции.
+In naive mode, the functions are (не бросают исключение, проверяют наличие ключа)
 gb\_trees:lookup/2
+gb\_trees:enter/3
 gb\_trees:delete_any/2.
-
-The related smart functions are
-gb\_trees:insert/3
+The related smart functions are (бросают исключение)
 gb\_trees:get/2
+gb\_trees:insert/3
 gb\_trees:update/3
 gb\_trees:delete/2.
+smart функции немного быстрее, чем naive, ибо там пропускается проверка ключа.
 
-The disadvantage of 'naive' functions over 'smart' ones is that
-because gb_trees are balanced trees, whenever you insert a new element
-(or delete a bunch), it might be possible that the tree will need to
-balance itself. This can take time and memory (even in useless checks
-just to make sure). The 'smart' function all assume that the key is
-present in the tree: this lets you skip all the safety checks and
-results in faster times.
+balance(Tree1) -> Tree2
+Rebalances Tree1. Note that this is rarely necessary, but may be motivated when a large number of nodes have been deleted from the tree without further insertions. Rebalancing could then be forced in order to minimise lookup times, since deletion only does not rebalance the tree.
 
-То есть, если мы предполагаем, что после изменений балансировать
-дерево не нужно, то пользуемся smart функциями. А если нужно,
-то пользуемся naive функциями. Но тогда при чем тут функции
-чтения lookup и get?
+map(Function, Tree1) -> Tree2
+filter и fold нету
 
-Как насчет такого варианта:
-нужно сделать несколько вставок. Мы не хотим перебалансировать
-после каждой вставки, а хотим один раз, после всех вставок.
-Можно сделать все ставки smart, и последнюю naive?
-TODO: это нужно как-то выяснить
+iterator/1, next/1
+%% - iterator(T): returns an iterator that can be used for traversing
+%%   the entries of tree T; see `next'. The implementation of this is
+%%   very efficient; traversing the whole tree using `next' is only
+%%   slightly slower than getting the list of all elements using
+%%   `to_list' and traversing that. The main advantage of the iterator
+%%   approach is that it does not require the complete list of all
+%%   elements to be built in memory at one time.
+То есть, to\_list, и последующая обработка списка будет быстрее. Но потребует больше памяти.
+итератор немного медленнее, но без выделения лишней памяти.
 
-Oh and also note that while dicts have a fold function, gb_trees don't: they instead have an iterator function
-There is also gb\_trees:map/2, which is always a nice thing when you need it.
-
-
-(general balanced trees)
-
-TODO пример CRUD операций
-enter, insert, update
-get, lookup
-delete, delete\_any
-
-TODO это нужно проверить
-gb_trees хранит ключи, понятно, в дереве. Поэтому еще более быстрый поиск O(ln(n)), но добавление может оказаться медленным, из-за необходимости перебалансировать дерево.
-
-deletion only does not rebalance the tree
-balance/1 после многих удалений
 
 ## maps
 
