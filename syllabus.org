@@ -10,10 +10,9 @@
 ** DONE 4. Сопоставление с образцом, гарды.
 
 ** TODO 5. KV-структуры данных
-   proplist, dict, orddict, gb_trees,
-   maps
+   proplists, dict, orddict, gb_trees
 
-** TODO 6. ets таблицы
+** TODO 6. maps и ets таблицы
    упомянуть dets, mnesia
 
 ** TODO 7. io_list, binary, string, unicode
