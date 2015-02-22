@@ -281,88 +281,209 @@ gb_trees означает General Balanced Trees, то есть сбаланси
 В **gb\_trees** она выполняется после каждого добавления нового элемента.
 Но не выполняется при модификации и удалении элемента.
 
-Модуль **gb\_trees** тоже предоставляет CRUD API, и некоторые функции сверх него.
+Модуль **gb\_trees** тоже предоставляет CRUD API и некоторые функции сверх того.
 
-empty() -> tree()
-Returns a new empty tree
+Создадим дерево:
 
-insert(Key, Value, Tree1) -> Tree2
-add. Assumes that the key is not present in the tree, crashes otherwise.
-update(Key, Value, Tree1) -> Tree2
-Assumes that the key is present in the tree.
-enter(Key, Value, Tree1) -> Tree2
-реализовано через is_defined,insert,update
+```erlang
+1> T = gb_trees:empty().
+{0,nil}
+```
 
-get(Key, Tree) -> Value
-Assumes that the key is not present in the tree, crashes otherwise.
-lookup(Key, Tree) -> none | {value, Value}
-returns {value, Value}, or none if Key is not present.
+Добавим в него значения:
 
-delete(Key, Tree1) -> Tree2
-Assumes that the key is present in the tree, crashes otherwise.
-delete_any(Key, Tree1) -> Tree2
-Removes the node with key Key from Tree1 if the key is present in the tree, otherwise does nothing; returns new tree.
+```erlang
+2> T2 = gb_trees:insert(key1, "value 1", T).
+{1,{key1,"value 1",nil,nil}}
+3> T3 = gb_trees:insert(key2, "value 2", T2).
+{2,{key1,"value 1",nil,{key2,"value 2",nil,nil}}}
+4> T4 = gb_trees:insert(key2, "value 2", T3).
+** exception error: {key_exists,key2}
+```
 
-У Фреда написано про naive и smart функции.
-In naive mode, the functions are (не бросают исключение, проверяют наличие ключа)
-gb\_trees:lookup/2
-gb\_trees:enter/3
-gb\_trees:delete_any/2.
-The related smart functions are (бросают исключение)
-gb\_trees:get/2
-gb\_trees:insert/3
-gb\_trees:update/3
-gb\_trees:delete/2.
-smart функции немного быстрее, чем naive, ибо там пропускается проверка ключа.
+Как видим, функция **insert/3** не позволяет добавлять один и тот же
+ключ дважды, бросает исключение в этой ситуации.
 
-balance(Tree1) -> Tree2
-Rebalances Tree1. Note that this is rarely necessary, but may be motivated when a large number of nodes have been deleted from the tree without further insertions. Rebalancing could then be forced in order to minimise lookup times, since deletion only does not rebalance the tree.
+Модифицируем значения:
 
-map(Function, Tree1) -> Tree2
-filter и fold нету
+```erlang
+5> T4 = gb_trees:update(key1, "new value", T3).
+{2,{key1,"new value",nil,{key2,"value 2",nil,nil}}}
+6> T5 = gb_trees:update(key777, "new value", T4).
+** exception error: no function clause matching gb_trees:update_1(key777,"new value",nil) (gb_trees.erl, line 258)
+```
 
-iterator/1, next/1
-%% - iterator(T): returns an iterator that can be used for traversing
-%%   the entries of tree T; see `next'. The implementation of this is
-%%   very efficient; traversing the whole tree using `next' is only
-%%   slightly slower than getting the list of all elements using
-%%   `to_list' and traversing that. The main advantage of the iterator
-%%   approach is that it does not require the complete list of all
-%%   elements to be built in memory at one time.
-То есть, to\_list, и последующая обработка списка будет быстрее. Но потребует больше памяти.
-итератор немного медленнее, но без выделения лишней памяти.
+Функция **update/3** бросает исключение, если ключа в дереве нет.
+
+```erlang
+7> T5 = gb_trees:enter(key777, "new value", T4).
+{3,
+ {key1,"new value",nil,
+       {key2,"value 2",nil,{key777,"new value",nil,nil}}}}
+8> T6 = gb_trees:enter(key2, "new value", T5).
+{3,
+ {key1,"new value",nil,
+       {key2,"new value",nil,{key777,"new value",nil,nil}}}}
+```
+
+А функция **enter/3** исключений не бросает. Если ключа нет, она его
+добавляет, а если ключ есть, то изменяет значение.
+
+Теперь попробуем получить значения по ключу:
+
+```erlang
+12> gb_trees:get(key1, T6).
+"new value"
+13> gb_trees:get(some_key, T6).
+** exception error: no function clause matching gb_trees:get_1(some_key,nil) (gb_trees.erl, line 239)
+14> gb_trees:lookup(key1, T6).
+{value,"new value"}
+15> gb_trees:lookup(some_key, T6).
+none
+```
+
+Здесь у нас две функции. **get/2** бросает исключение, если ключа в
+дереве нет, а **lookup/2** возвращает либо кортеж **{value, Value}**, либо
+атом **none**.
+
+Ну и попробуем удалить ключ:
+
+```erlang
+16> gb_trees:delete(key1, T6).
+{2,{key2,"new value",nil,{key777,"new value",nil,nil}}}
+17> gb_trees:delete(some_key, T6).
+** exception error: no function clause matching gb_trees:delete_1(some_key,nil) (gb_trees.erl, line 403)
+19> gb_trees:delete_any(key1, T6).
+{2,{key2,"new value",nil,{key777,"new value",nil,nil}}}
+20> gb_trees:delete_any(some_key, T6).
+{3,
+ {key1,"new value",nil,
+       {key2,"new value",nil,{key777,"new value",nil,nil}}
+```
+
+И опять у нас две функции, которые по-разному реагируют на отсутствие
+ключа.  **delete/2** бросает исключение, а **delete_any/2** просто
+возвращает дерево без изменений.
+
+Мы уже видели это в модуле **dict**, и договорились, что разберем
+необходимость таких вариантов поведения на одном из последующих
+уроков, когда будем изучать обработку ошибок.
+
+По CRUD API все, теперь дополнительные функции:
+
+В **gb_trees** есть **map/2**, но нету **filter** и **fold**.
+
+```erlang
+22> gb_trees:map(fun(Key, Value) -> string:to_upper(Value) end, T6).
+{3,
+ {key1,"NEW VALUE",nil,
+       {key2,"NEW VALUE",nil,{key777,"NEW VALUE",nil,nil}}}}
+```
+
+Есть функции **iterator/1** и **next/1**, которые позволяют организовать
+обход дерева. В качестве альтернативы можно преобразовать дерево в
+proplists с помощью **to\_list/1**, и делать обход списка.
+
+Первый вариант немного медленнее, но экономит память. Второй вариант
+быстрее, но требует выделения лишней памяти.
+
+Кстати, функции **from_list/1** нету, есть только **from_orddict/1**.
 
 
 ## maps
 
-Все выше -- реализации средствами языка, то есть, поверх списков и структур данных
+Все, описанные выше структуры данных: **proplists**, **dict**, **orddict**,
+**gb_trees**, реализованы поверх списков и кортежей, то есть, средствами
+самого языка эрланг.  Понятно, что эти реализации будут уступать по
+эффективности аналогичным структурам в императивных языках.
 
-Maps -- нативная реализация в виртуальной машине.
+В отличие от них, модуль [maps](http://www.erlang.org/doc/man/maps.html) реализован внутри виртуальной
+машины, средствами языка С. Так что от него вполне можно ожидать
+большей эффективности.
 
-http://www.erlang.org/doc/man/maps.html
+Модуль появился недавно, в 17-й версии эрланг. И не считается пока что
+стабильным, работа по нему еще идет, и в новых версиях **maps** будут
+меняться.  Для разработчиков эрланг высокая производительность
+**maps** не приоритет. Сперва планируется получить удобный и
+правильный API.  Тем не менее, можно ожидать, что эффективность
+**maps** в новых версиях эрланг будет повышаться.
 
-TODO прочитать Фреда
-http://learnyousomeerlang.com/maps
+Помимо функций модуля, есть еще синтаксический сахар, похожий на сахар
+для **records**. Это похожесть вносит некоторую путаницу. Разработчики
+думают, что **maps** являются улучшеной версией **records** и должны
+их заменить. Это не так, **maps** являются улучшенной версией
+**dict**, и должны заменить **dict**. А **records** вообще не являются
+key-value структурой, и имеют совсем другое применение.
+
+
 
 TODO пример CRUD операций
 
-new
-put, update
-find, get
-remove
+new/0
 
-merge
-fold, map
+```erlang
+1> M = maps:new().
+ #{}
+```
 
-from\_list, to\_list
+put/3
+TODO а вариант без исключения есть?
 
+```erlang
+2> M2 = maps:put(key1, "value 1", M).
+ #{key1 => "value 1"}
+3> M3 = maps:put(key2, "value 2", M2).
+ #{key1 => "value 1",key2 => "value 2"}
+5> M4 = maps:put(key2, "new value", M3).
+** exception error: no match of right hand side value #{key1 => "value 1",key2 => "new value"}
+```
+
+update/3
+TODO а вариант без исключения есть?
+
+```erlang
+6> M5 = maps:update(key1, "new value", M4).
+ #{key1 => "new value",key2 => "value 2"}
+7> M6 = maps:update(key777, "new value", M5).
+** exception error: bad argument
+     in function  maps:update/3
+        called as maps:update(key777,"new value",#{key1 => "new value",key2 => "value 2"})
+```
+
+find/2, get/2
+
+```erlang
+8> maps:get(key1, M5).
+"new value"
+9> maps:get(key777, M5).
+** exception error: bad_key
+     in function  maps:get/2
+        called as maps:get(key777,#{key1 => "new value",key2 => "value 2"})
+10> maps:find(key1, M5).
+{ok,"new value"}
+11> maps:find(key777, M5).
+error
+```
+
+remove/2
+TODO а вариант с исключением есть?
+
+```erlang
+12> maps:remove(key1, M5).
+ #{key2 => "value 2"}
+13> maps:remove(key777, M5).
+ #{key1 => "new value",key2 => "value 2"}
+```
+
+TODO прочитать Фреда
+http://learnyousomeerlang.com/maps
 TODO разобраться, какой сахар работает, а какой задуман, но еще не работает.
 
-Maps are associative collections of key-value pairs. The key can be any Erlang
-term. In Perl and Ruby they are called hashes; in C++ and Java they are called
-maps, in Lua they are called tables, and in Python they are called dictionaries.
+
+map, fold
+filter?
+
+merge
+from\_list, to\_list
 
 maps to\_json, from\_json -- во как.
-
-
-ets на следующем уроке
