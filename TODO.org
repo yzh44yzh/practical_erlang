@@ -9,6 +9,11 @@ hexlet-vagrant сделайте make build. Убедитесь что после
 вагранта стоит docker версии 1.5.0. Если это не так, то aptitude
 install lxc-docker-1.5.0
 
+На работе это сделал, все ок. Дома vagrant up не запускается.
+Нужно снести hexlet-vagrant, скачать его заново, и по этому тутору
+http://feedback.hexlet.io/knowledgebase/articles/470066
+все заново настроить
+
 - видео
 
 
