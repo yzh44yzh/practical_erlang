@@ -96,3 +96,12 @@ http://learnyousomeerlang.com/errors-and-exceptions#not-so-fast
   Игра Konquer
   Что-нибудь из распределенных алгоритмов. Типа выбор мастера (хотя конкретно это было тестовым заданием в Эхо, и не стоит им мешать :)
   Графовая база данных
+
+* ssl, apns, gcm
+В erlang-questions появилась тема, где обсуждается чрезмерный расход памяти при использовании SSL.
+В этом треде увидел неожиданные для себя советы:
+http://erlang.org/pipermail/erlang-questions/2015-February/083511.html
+http://erlang.org/pipermail/erlang-questions/2015-February/083521.html
+Alexander Shorin
+Да, сталкивался и не раз. Рекомендация правильная, особенно если не
+хочется внезапных приключений на пустом месте.
