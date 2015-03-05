@@ -28,6 +28,7 @@ http://feedback.hexlet.io/knowledgebase/articles/470066
   - Армстронг
   - Цезарини
   - Хеберт
+  - erlang in anger
   - OTP in action
   - yzh44yzh.by
 
