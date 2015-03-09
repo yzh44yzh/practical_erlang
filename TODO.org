@@ -13,6 +13,14 @@ http://feedback.hexlet.io/knowledgebase/articles/470066
 
 * TODO 6й урок KV-структуры данных, продолжение
   SCHEDULED: <2015-02-28 Суб>
+- источники инфы:
+  - OTP in action. 2.14 ETS tables
+  - Армстронг
+  - Цезарини
+  - Хеберт
+  - официальные доки
+
+
 - теория
 - quiz
 - практическое задание
