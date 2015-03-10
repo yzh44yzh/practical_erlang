@@ -167,9 +167,6 @@ maps comprehention заявлен, но пока не работает
 [london,boston]
 ```
 
-TODO еще про мапы есть в новом издании Армстронга, а новое издание
-есть у меня на планшете. Где планшет? :)
-
 ## ets таблицы
 
 Erlang Term Storage
@@ -184,11 +181,12 @@ Erlang Term Storage
 
 Реализованы на С как часть виртуальной машины.
 Они нарушают ссылочную прозрачность и изоляцию памяти ради производительности.
+Могут хранить большие объемы данных, дают доступ за логарифмическое время.
 Это пример того, что эрланг -- язык прагматичный, а не академический :)
 
-могут хранить любые эрланговские значения и структуры данных
-обычно это кортежи произвольного размера, где первый элемент используется как ключ
-часто это records (в этом случае нужно указывать, что ключ -- второй элемент)
+Могут хранить кортежи произвольного размера, один из элементов которых используется как ключ.
+По умолчанию -- первый. Но в настройках ETS можно указать позицию элемента-ключа.
+И это нужно делать, если мы будем хранить там records (что часто бывает).
 
 если юзать в консоли, и ошибка, процесс консоли падает и перезапускается
 а ets теряется. Поэтому в консоли юзать не удобно, приходится аккуратно следить за опечатками
@@ -204,7 +202,7 @@ true
 3> ets:insert(Ets, [{2, "Bill", 30}, {3, "Helen", 22}]).
 true
 4> ets:lookup(Ets, 1).
-[{1,"Bob",25}]
+[{1,"Bob",25}] -- внимание, возвращается массив значений, а не одно значение. Даже если это set.
 5> ets:lookup(Ets, 3).
 [{3,"Helen",22}]
 6> ets:lookup(Ets, 4).
@@ -219,16 +217,42 @@ true
 []
 ```erlang
 
-set,
-ordered\_set,
-bag,
-duplicate\_bag
+When the table is created, it
+has a set of options that cannot be changed.
+
+set -- ключи должны быть уникальны
+ordered\_set -- ключи должны быть уникальны, кортежи хранятся в сортированном виде
+bag, -- разрешает одинаковые ключи, но значения должны быть разными
+duplicate\_bag -- разрешает одинаковые значения
+
+TODO попробовать добавление одинаковых ключей в set, что будет? Обновится значение?
+insertion of a second element with the alison
+key causes the first element to be overwritten.
+
+Internally, ETS tables are represented by hash tables (except ordered
+sets, which are represented by balanced binary trees).
+This means there
+is a slight space penalty for using sets and a time penalty for using
+ordered sets. Inserting into sets takes place in constant time, but in-
+serting into an ordered set takes place in a time proportional to the log
+of the number of entries in the table.
+Bags are more expensive to use than duplicate bags, since on each
+insertion all elements with the same key have to be compared for equal-
+ity.
 
 public,
 protected,
 private
 
+named_table
+{keypos, K}
+
+[set,protected,{keypos,1}] -- по дефолту
+
 Обход таблицы:
+
+ets:tab2list/1
+
 ```erlang
 11> F = ets:first(Ets).
 3
@@ -248,10 +272,18 @@ private
 [[{1,"Bob",25}],[{3,"Helen A.",21}]]
 ```
 
+ets:select, match spec, fun2ms
+
+obsever:start, посмотреть таблицу
+
 Память:
 не подвергаются сборке мусора
 удалять данные из них нужно явно
 удаляется вся таблица при завершении процесса-родителя
+
+An ETS table is said to be owned by the
+process that created it—when that process dies or when ets:delete is
+called, then the table is deleted.
 
 Особенности concurrency:
 
@@ -264,14 +296,25 @@ private
 Однако при обходе таблицы с помощью first/next гарантий нет. Если во время такого обхода
 таблица будет модифицироваться, то возможно, будут пропущены некоторые объекты.
 
-То же касается выборки объектов с помощью match или select.
+This is because all match operations
+are implemented as BIFs, and BIFs are executed atomically; a match
+operation on a large table can therefore stop other processes from exe-
+cuting until the operation has traversed the whole table.
 
 Прочитанное из таблицы значение скопировалось в память процесса-читателя.
 И последующие изменения в таблице не повлияют на копию в памяти процесса-читателя.
 
-*** dets, mnesia
+### dets, mnesia
 
 dest добавляет хранение данных на диске
+Disk ETS
+
+Data stored in DETS tables is persistent and should survive an entire system crash.
+(правда восстановление таблицы после краша может занять долгое время)
+Since the repair can take a long time, it’s important to
+close them properly before finishing your application.
+
+DETS files have a maximum size of 2GB.
 
 mnesia -- распределенное KV хранилище с поддержкой транзакций.
 Ее никто не использует, кроме Ericsson. Предпочитают другие базы данных, например Riak.
