@@ -262,7 +262,9 @@ ets:tab2list/1
 '$end_of_table'
 ```
 
-Самый эффективный способ выбрать группу объектов (или даже все):
+ets -- это не только kv. Она позволяет выбирать группу объектов с помощью
+сопоставления с образцом. Только шаблоны используются не обычные.
+
 ```erlang
 17> ets:match(Ets, {'$1', '_', '_'}).
 [[1],[3]]
@@ -270,9 +272,89 @@ ets:tab2list/1
 [[1,"Bob"],[3,"Helen A."]]
 19> ets:match(Ets, '$1').
 [[{1,"Bob",25}],[{3,"Helen A.",21}]]
+{'$1', '$2', 25}
+{'$1', "Helen", '$3'}
+```
+match/2,3 извлекает отдельные поля из кортежей
+match_object/2,3 извлекает кортежи целиком
+match_delete/2 удаляет кортежи по шаблону
+
+
+select дает больше возможностей, но использует более сложный язык сопоставления.
+Это отдельный DSL язык, с неудобным синтаксисом. К счастью, для него есть
+синтаксический сахар.
+
+Сперва посмотрим оригинальный синтаксис
+```erlang
+[{{'$1','$2',<<1>>,'$3','$4'},
+[{'andalso',{'>','$4',150},{'<','$4',500}},
+{'orelse',{'==','$2',meat},{'==','$2',dairy}}],
+['$1']},
+{{'$1','$2',<<1>>,'$3','$4'},
+[{'<','$3',4.0},{is_float,'$3'}],
+['$1']}]
 ```
 
-ets:select, match spec, fun2ms
+Эта штука называется **спецификация совпадения** (match specification).
+Любителей Лиспа это, вероятно, не смутит. Но обычным людям не очень удобно
+пользоваться таким синтаксисом.
+
+```erlang
+[{InitialPattern1, Guards1, ReturnedValue1},
+{InitialPattern2, Guards2, ReturnedValue2}].
+```
+
+потом сахар
+
+```erlang
+-module(SomeModule).
+-include_lib("stdlib/include/ms_transform.hrl").
+...
+some_function() ->
+ets:fun2ms(fun(X) when X > 4 -> X end).
+```
+
+The line -include_lib("stdlib/include/ms_transform.hrl"). contains
+some special code that will override the meaning of
+ets:fun2ms(SomeLiteralFun) whenever it's being used in a
+module. Rather than being a higher order function, the parse transform
+will analyse what is in the fun (the pattern, the guards and the
+return value), remove the function call to ets:fun2ms/1, and replace
+it all with an actual match specification.
+
+Но в консоли это тоже работает:
+```erlang
+6> ets:fun2ms(fun({Food, Type, <<1>>, Price, Calories})
+when Calories > 150 andalso Calories < 500,
+Type == meat orelse Type == dairy;
+Price < 4.00, is_float(Price) ->
+Food end).
+[{{'$1','$2',<<1>>,'$3','$4'},
+[{'andalso',{'>','$4',150},{'<','$4',500}},
+{'orelse',{'==','$2',meat},{'==','$2',dairy}}],
+['$1']},
+{{'$1','$2',<<1>>,'$3','$4'},
+[{'<','$3',4.0},{is_float,'$3'}],
+['$1']}]
+```
+
+Нужно понимать, что здесь fun -- это не настоящая функция. Это сахар, который
+на этапе компиляции превращается в шаблон. Так что нельзя написать такой код:
+```erlang
+Pattern = ets:fun2ms(...)
+ets:select(Table, Pattern)
+```
+а только так:
+```erlang
+ets:select(Table, ets:fun2ms(...))
+```
+
+Несмотря на то, что первый вариант работает в консоли, он не работает в модуле. TODO проверить это.
+
+match и select делают одно и то же -- извлекают данные из таблицы по шаблону.
+Но match использует простые шаблоны, а select сложные и более мощные.
+
+TODO: примеры на реальной базе
 
 obsever:start, посмотреть таблицу
 
@@ -317,4 +399,5 @@ close them properly before finishing your application.
 DETS files have a maximum size of 2GB.
 
 mnesia -- распределенное KV хранилище с поддержкой транзакций.
+support for sharding, transactions, and distribution.
 Ее никто не использует, кроме Ericsson. Предпочитают другие базы данных, например Riak.
