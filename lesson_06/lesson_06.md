@@ -229,13 +229,17 @@ TODO попробовать добавление одинаковых ключе
 insertion of a second element with the alison
 key causes the first element to be overwritten.
 
+insert_new/2
+
 Internally, ETS tables are represented by hash tables (except ordered
 sets, which are represented by balanced binary trees).
+
 This means there
 is a slight space penalty for using sets and a time penalty for using
 ordered sets. Inserting into sets takes place in constant time, but in-
 serting into an ordered set takes place in a time proportional to the log
 of the number of entries in the table.
+
 Bags are more expensive to use than duplicate bags, since on each
 insertion all elements with the same key have to be compared for equal-
 ity.
@@ -385,6 +389,13 @@ cuting until the operation has traversed the whole table.
 
 Прочитанное из таблицы значение скопировалось в память процесса-читателя.
 И последующие изменения в таблице не повлияют на копию в памяти процесса-читателя.
+
+{read_concurrency, true | false}
+reads become way cheaper to do, but then make switching to writes a lot more expensive.
+
+{write_concurrency, true | false}
+Usually, writing to a table will lock the whole thing and nobody else can access it, either for reading or writing to it, until the write is done. Setting this option to 'true' lets both reads and writes be done concurrently, without affecting the ACID properties of ETS. Doing this, however, will reduce the performance of sequential writes by a single process and also the capacity of concurrent reads.
+Непонятно :( Ну можно и вообще про это не писать.
 
 ### dets, mnesia
 
