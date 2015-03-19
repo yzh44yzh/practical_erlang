@@ -1,6 +1,14 @@
 * TODO 6й урок KV-структуры данных, продолжение
   SCHEDULED: <2015-03-16 Mon>
 - видео
+  записал, осталось склеить
+  maps_1 8:20 (8:58)
+  maps_2 4:08 (4:21)
+  ets_1 8:29 (8:32)
+  ets_2 10:56 (11:03)
+  ets_3 6:03 (6:06)
+  ets_4 8:37 (8:42)
+  ets_5 5:53
 - практическое задание
 
 * TODO обновить инфраструктуру
@@ -29,6 +37,8 @@ http://feedback.hexlet.io/knowledgebase/articles/470066
 и поправить этот тест в первом упражнении
 ?assertEqual(true, is_equal(3.51, 3.51, 0.01)),
 ?assertEqual(true, is_equal(3.501, 3.502, 0.001)),
+
+* TODO конспекты для всех уроков
 
 * TODO 7й урок io_list, binary, string, unicode
   SCHEDULED: <2015-03-18 Срд>
