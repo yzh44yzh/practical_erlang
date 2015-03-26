@@ -97,3 +97,15 @@ http://erlang.org/pipermail/erlang-questions/2015-February/083521.html
 Alexander Shorin
 Да, сталкивался и не раз. Рекомендация правильная, особенно если не
 хочется внезапных приключений на пустом месте.
+
+
+* Erlang often challenges newcomers in several ways:
+- functional programming in a mostly-pure environment
+- distributed computing
+- concurrency
+- error handling through asynchronous monitors/links
+- language syntax and semantics
+- how to build large erlang systems: module composition, releases, configuration, deployment
+- how to test Erlang programs which have the above distribution/concurrency traits
+- learning the performance model of Erlang: what is fast, what is slow
+- all of the OTP stack, its idioms, design choices and how it influences program architecture
