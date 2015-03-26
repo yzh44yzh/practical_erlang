@@ -174,7 +174,7 @@ gb_trees:new/1
 
 ## Модуль gb_trees имеет функции
 
-map/3
+map/2
 
 filter/3
 
