@@ -132,8 +132,6 @@ error
 [{key2,"val 2"}]
 ```
 
-Есть и другие интересные функции.
-
 Есть возможность для одного ключа хранить несколько значений.
 
 ```erlang
@@ -216,7 +214,7 @@ CRUD API
 5> T4 = gb_trees:update(key1, "new value", T3).
 {2,{key1,"new value",nil,{key2,"value 2",nil,nil}}}
 6> T5 = gb_trees:update(key777, "new value", T4).
-** exception error: no function clause matching gb_trees:update_1(key777,"new value",nil) (gb_trees.erl, line 258)
+** exception error
 ```
 
 ```erlang
@@ -237,7 +235,7 @@ CRUD API
 12> gb_trees:get(key1, T6).
 "new value"
 13> gb_trees:get(some_key, T6).
-** exception error: no function clause matching gb_trees:get_1(some_key,nil) (gb_trees.erl, line 239)
+** exception error
 14> gb_trees:lookup(key1, T6).
 {value,"new value"}
 15> gb_trees:lookup(some_key, T6).
@@ -248,7 +246,7 @@ none
 16> gb_trees:delete(key1, T6).
 {2,{key2,"new value",nil,{key777,"new value",nil,nil}}}
 17> gb_trees:delete(some_key, T6).
-** exception error: no function clause matching gb_trees:delete_1(some_key,nil) (gb_trees.erl, line 403)
+** exception error
 19> gb_trees:delete_any(key1, T6).
 {2,{key2,"new value",nil,{key777,"new value",nil,nil}}}
 20> gb_trees:delete_any(some_key, T6).
