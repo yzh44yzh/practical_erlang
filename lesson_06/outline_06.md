@@ -13,6 +13,7 @@ maps должны заменить dict и proplists
 
 ### CRUD API:
 
+```erlang
 M = maps:new().
 M = #{key1 => "value 1", key2 => "value 2"}.
 
@@ -40,21 +41,26 @@ M#{key1}. syntax error
 
 maps:remove(key1, M5).
 maps:remove(key777, M5).
+```
 
 ### Прочие
 
 maps:map/2 и maps:fold/3. Функции filter нету.
 
+```erlang
 M = #{key1 => "Bob", key2 => "Bill", key3 => "Helen"}.
 maps:map(fun(K, V) -> string:to_upper(V) end, M).
 maps:fold(fun(K, V, Acc) -> [V | Acc] end, [], M).
+```
 
 maps:merge/2, которая сливает две карты в одну:
 
+```erlang
 M1 = #{key1 => "Val 1", key2 => "Val 2"}.
 M2 = #{key2 => "Val 222", key3 => "Val 3"}.
 maps:merge(M1, M2).
 maps:merge(M2, M1).
+```
 
 
 ## ETS таблицы
@@ -71,10 +77,13 @@ Erlang Term Storage
 
 ### CRUD API
 
+```erlang
 MyEts = ets:new(my_ets, []).
+```
 
 Кстати, если мы создали ее прямо в консоли, то нужно быть осторожными.
 
+```erlang
 ets:insert(MyEts, {1, "Bob", 25}).
 ets:insert(MyEts, [{2, "Bill", 30}, {3, "Helen", 22}]).
 
@@ -84,7 +93,7 @@ ets:lookup(MyEts, 4).
 ets:insert(MyEts, {3, "Helen A.", 21}).
 
 ets:delete(MyEts, 2).
-
+```
 
 ### Настройки таблицы
 
@@ -110,12 +119,14 @@ ets:match/2
 
 Шаблон: атомы вида '$1', '$2', '$3', либо конкретные значения.
 
+```erlang
 ets:match(T, {'$1', '$2', male}).
 ets:match(T, {'$1', '$2', female}).
 ets:match(T, {'$2', '$1', '_'}).
 
-ets:match\_object(T, {'$1', '_', male}).
-ets:match\_delete/2
+ets:match_object(T, {'$1', '_', male}).
+ets:match_delete/2
+```
 
 ets:select/2
 Язык называется **спецификация совпадения** (match specification).
