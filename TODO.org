@@ -1,13 +1,3 @@
-* TODO конспекты для всех уроков
-  SCHEDULED: <2015-03-30 Mon>
-  - 1й
-  - 2й
-  + 3й
-  + 4й
-  + 5й
-  + 6й
-
-
 * TODO 7й урок io_list, binary, string, unicode
   SCHEDULED: <2015-03-30 Mon>
 - теория
