@@ -120,7 +120,22 @@ byte_size(Bin) -> Size
 
 match/3 matches/3 split/3 replace/3
 тут даже больше возможностей, чем в модуле strings
-TODO проверить, как все это работает с юникодом
+все это работает с юникодом
+
+```erlang
+1> Str = <<"Привет мир!"/utf8>>.
+<<"Привет мир!"/utf8>>
+2> binary:split(Str, [<<" ">>]).
+[<<"Привет"/utf8>>,<<"мир!"/utf8>>]
+3> binary:split(Str, [<<" ">>, <<"и"/utf8>>]).
+[<<"Пр"/utf8>>,<<"вет мир!"/utf8>>]
+4> binary:split(Str, [<<"и"/utf8>>]).
+[<<"Пр"/utf8>>,<<"вет мир!"/utf8>>]
+5> binary:replace(Str, <<"мир"/utf8>>, <<"Боб"/utf8>>).
+<<"Привет Боб!"/utf8>>
+6> binary:match(Str, <<"мир"/utf8>>).
+{13,6}
+```
 
 Как дополнительная тема:
 BERT сериализация
@@ -180,7 +195,6 @@ iolist можно долго формировать из разных куско
 
 ## unicode
 
-TODO взять инфу из этого видео
 [[https://www.youtube.com/watch?v=MijmeoH9LT4][Characters, Symbols and the Unicode Miracle - Computerphile]]
 
 http://www.erlang.org/doc/man/unicode.html
@@ -226,8 +240,23 @@ http://www.erlang.org/doc/man/unicode.html
 - *~s* -- показывает term как строку в latin1.
 - *~ts* -- показывает term как строку в unicode.
 
-TODO
 показать, как они работают для строк, и для структур данных с вложенными строками
+
+```erlang
+7> io:format("~w", [Str]).
+<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,188,208,184,209,128,33>>ok
+8> io:format("~p", [Str]).
+<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,188,208,184,209,128,33>>ok
+9> io:format("~ts", [Str]).
+Привет мир!ok
+10> T = {message, Str}.
+{message,<<"Привет мир!"/utf8>>}
+11> io:format("~tp", [T]).
+{message,<<"Привет мир!"/utf8>>}ok
+12> io:format("~p", [T]).
+{message,<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,188,208,184,
+           209,128,33>>}ok
+```
 
 [Модуль unicode](http://www.erlang.org/doc/man/unicode.html)
 unicode:characters_to_list.
