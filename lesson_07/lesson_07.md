@@ -1,32 +1,106 @@
 # Строки
 
-## string
+## Представление строк в эрланг
 
-Telecom applications do not rely on string operations, and as a result, strings were
-never included as a data type in Erlang.
+Для представления строк есть два основных типа данных, и два типа, производных от основных.
 
-latin1 (ISO-8859-1) and unicode
+[Основные типы](http://www.erlang.org/doc/reference_manual/typespec.html) -- это **string()** и **binary()**.
+Производные -- это **iolist()** и **unicode:chardata()**.
 
-Characters are represented by integers, and strings (of characters) are represented by
-lists of integers
+Тип string() определен как [char()]. То есть, это список из char().
+А тип char() определен как 0..16#10ffff. То есть, это число от 0 до 16#10ffff,
+которое соответствует коду символа в таблице Unicode.
+Значит string() -- это список кодов символов в таблице Unicode.
 
-There is no string data type in Erlang. Strings are denoted by lists of ASCII values (latin1)
-или юникод код-пониты (unicode)
+С этим представлением все хорошо, кроме расхода памяти. Один символ
+занимает 8 байт в 32 разрядной системе, и 16 байт в 64 разрядной
+системе.
+
+Другое представление, это **binary()** -- последовательность байт.
+Эрланг очень хорошо оптимизирован для работы именно с binary и по
+скорости обработки, и по расходу памяти.  Поэтому рекомендуется
+использовать именно это представление везде, где это возможно.
+
+Но binary нельзя интерпретировать, не зная кодировки. Мы живем в XXI
+веке и вполне можем ожидать, что байты, которые придут к нам из
+сокета, из файла или из базы данных, будут в **utf8**.  Эрланг
+понимает **latin1** (ISO-8859-1), **utf8**, **utf16** и **utf32**.
+
+Производные типы рассмотрим ниже.
+
+На самом деле эрланг не видит разницы между строкой и списком чисел.
+
+Вы можете написать в коде так:
+```erlang
+"hello"
+```
+или так:
+```erlang
+<<"hello">>
+```
+но это просто способ отображения значения в консоли.
+
+Некоторые списки консоль показывает как строки, а другие как числа:
 
 ```erlang
-3> io:format("~w", ["hello"]).
-[104,101,108,108,111]ok
-4> io:format("~w", ["привет"]).
-[1087,1088,1080,1074,1077,1090]ok
+2> L = [104,101,108,108,111].
+"hello"
+3> L2 = [1,2,3,4,5].
+[1,2,3,4,5]
+4> B = <<104,101,108,108,111>>.
+<<"hello">>
+5> B2 = <<1,2,3,4,5>>.
+<<1,2,3,4,5>>
 ```
 
-Every character in Erlang consumes 8 bytes in
-the 32-bit emulator (and 16 in the 64-bit emulator), ensuring that characters and strings
-are not stored in a memory-efficient way.
+Тут работает эвристика определения строки. Если эрланг видит, что
+список состоит только из кодов символов, то отображает его как
+строку. А если в списке будут числа, отличающиеся от кодов символов,
+то он отобразится как список чисел:
 
-[модуль string](http://www.erlang.org/doc/man/string.html)
+```erlang
+7> [104,101,108,108,111].
+"hello"
+8> [104,101,108,108,111,0].
+[104,101,108,108,111,0]
+```
 
-*tokens/2* -- разбивает сроку на подстроки по разделителю.
+По умолчанию эта эвристика работает для кодировки latin1.  А если мы
+хотим, чтобы эвристика работала для unicode, то нужно запустить эрланг
+с ключом **+pc unicode**.
+
+```erlang
+$ erl +pc unicode
+Erlang/OTP 17 [erts-6.2] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
+Eshell V6.2  (abort with ^G)
+1> [1087,1088,1080,1074,1077,1090].
+"привет"
+```
+
+Ну и не трудно определить, какие коды символов соответствуют буквам
+английского алфавита:
+
+```erlang
+2> io:format("~w", ["09AZaz"]).
+[48,57,65,90,97,122]ok
+```
+
+И какие соответствуют буквам русского алфавита:
+
+```erlang
+3> io:format("~w", ["АЯаяёЁ"]).
+[1040,1071,1072,1103,1105,1025]ok
+```
+
+## Модуль string
+
+[Модуль string](http://www.erlang.org/doc/man/string.html), как понятно из названия,
+работает с данными типа **string()**.
+
+Там не так много функций, но есть несколько полезных.
+
+**string:tokens/2** -- разбивает сроку на подстроки по разделителю.
+
 ```erlang
 1> string:tokens("http://google.com/?q=hello", "/").
 ["http:","google.com","?q=hello"]
@@ -35,22 +109,25 @@ are not stored in a memory-efficient way.
 Но тут есть один нюанс: второй аргумент, это список разделителей, а не подстрока.
 
 ```erlang
-1> Str = "aa+bb-cc+-+dd".
-"aa+bb-cc+-+dd"
-2> string:tokens(Str, "+-").
+2> string:tokens("aa+bb-cc+-+dd", "+-").
 ["aa","bb","cc","dd"]
 ```
 
-Если нужно разбиение по подстроке, то придется писать кастомную функцию.
+Если нужно разбиение по подстроке, то придется писать
+[свою функцию](https://github.com/wgnet/herd/blob/master/src/herd_string.erl#L18).
 
-*join/2* -- обратная по смыслу функция.
+**string:join/2** объединяет список строк в одну с заданным разделителем.
 
 ```erlang
-`> string:join(["item1", "item2", "item3"], ", ").
+3> string:join(["item1", "item2", "item3"], ", ").
 "item1, item2, item3"
 ```
 
-*strip* -- удаляет пробелы (или другие символы) в начале и/или конце строки.
+**join** и **tokens** не являются противоположными по действию, потому
+что 2-й аргумент у них имеет разный смысл.
+
+**string:strip/1**, **string:strip/2** -- удаляют пробелы (или другие символы) в
+ начале и/или конце строки.
 
 ```erlang
 8> S2 = "    bla bla bla   ".
@@ -67,7 +144,7 @@ are not stored in a memory-efficient way.
 "bla-bla-bla"
 ```
 
-**to_upper**, **to_lower**
+**string:to_upper/1**, **string:to_lower/1** -- преобразуют строку в верхний (нижний) регистр.
 
 ```erlang
 19> string:to_upper("Hello").
@@ -79,49 +156,71 @@ are not stored in a memory-efficient way.
 22> string:to_lower("Привет").
 ```
 
-Работает только с латинскими символами, остальные не меняет.
-Позже я расскажу, как решать эту проблему.
+Это работает только с латинскими символами, другие символны остаются
+неизменными.  Позже я расскажу, как решать эту проблему.
 
-**to_integer**, **to_float**
+Ну и сравним **string:to_integer/1** и **erlang:list_to_integer/1**:
 
-When matching strings, the following is a valid pattern:
-f("prefix" ++ Str) -> ...
-This is syntactic sugar for the equivalent, but harder to read
-f([$p,$r,$e,$f,$i,$x | Str]) -> ...
+```erlang
+1> string:to_integer("123").
+{123,[]}
+2> string:to_integer("123abc").
+{123,"abc"}
+3> string:to_integer("abc").
+{error,no_integer}
+```
 
-Вообще поддержка строк в эрланг довольно слабая.
+```erlang
+4> list_to_integer("123").
+123
+5> list_to_integer("123abc").
+** exception error: bad argument
+     in function  list_to_integer/1
+        called as list_to_integer("123abc")
+6> list_to_integer("abc").
+** exception error: bad argument
+     in function  list_to_integer/1
+        called as list_to_integer("abc")
+7> list_to_integer("FF", 16).
+255
+8> list_to_integer("1010", 2).
+10
+```
+
+**string:to_float/1** и **erlang:list_to_float/1** ведут себя аналогично.
 
 
-## binary
+## Работа с binary
 
-Erlang does include binaries, which we discuss in Chapter 9, and these are recommen-
-ded for representing long strings, particularly if they are being transported by an
-application rather than being analyzed in any way.
+Рассмотрим некоторые функции модуля [erlang](http://www.erlang.org/doc/man/erlang.html).
+Большинство функций здесь импортируются в глобальную область
+видимости, так что их можно вызывать без указания имени модуля.
 
-A binary is a reference to a chunk of raw, untyped memory.
+**erlang:byte_size/1**
+```erlang
+1> byte_size(<<"some long string">>).
+16
+```
 
-Binaries are effective in mov-
-ing large amounts of data, with BIFs provided for coding, decoding, and binary ma-
-nipulation
+**erlang:split_binary/2**
+```erlang
+2> split_binary(<<"some long string">>, 4).
+{<<"some">>,<<" long string">>}
+```
 
+**erlang:binary_part/3**
+```erlang
+3> binary_part(<<"some long string">>, 5, 4).
+<<"long">>
+```
 
-A binary is a data structure designed for storing large quantities of raw data
-in a space-efficient manner. The Erlang VM is optimized for the efficient input,
-output, and message passing of binaries.
-Binaries should be used whenever possible for storing the contents of large
-quantities of unstructured data, for example large strings or the contents of
-files
+Понятно, что эти функции нужно использовать с осторожностью, если данные
+в кодировке **utf8**, где 1 символ может быть закодирован 1-4 байтами. Тут
+можно попасть посередине символа и получить некорректный результат.
 
-http://www.erlang.org/doc/man/binary.html
+И рассмотрим некоторые функции модуля [binary](http://www.erlang.org/doc/man/binary.html).
 
-split_binary(Bin, Pos) -> {Bin1, Bin2}
-
-byte_size(Bin) -> Size
-
-match/3 matches/3 split/3 replace/3
-тут даже больше возможностей, чем в модуле strings
-все это работает с юникодом
-
+**binary:split/2**
 ```erlang
 1> Str = <<"Привет мир!"/utf8>>.
 <<"Привет мир!"/utf8>>
@@ -129,151 +228,209 @@ match/3 matches/3 split/3 replace/3
 [<<"Привет"/utf8>>,<<"мир!"/utf8>>]
 3> binary:split(Str, [<<" ">>, <<"и"/utf8>>]).
 [<<"Пр"/utf8>>,<<"вет мир!"/utf8>>]
-4> binary:split(Str, [<<"и"/utf8>>]).
-[<<"Пр"/utf8>>,<<"вет мир!"/utf8>>]
-5> binary:replace(Str, <<"мир"/utf8>>, <<"Боб"/utf8>>).
-<<"Привет Боб!"/utf8>>
-6> binary:match(Str, <<"мир"/utf8>>).
+4> binary:split(Str, [<<" ">>, <<"и"/utf8>>], [global]).
+[<<"Пр"/utf8>>,<<"вет"/utf8>>,<<"м"/utf8>>,<<"р!"/utf8>>]
+```
+
+Заметьте, что если мы пишем в коде литерал <<"Привет мир!"/utf8>>, а
+не просто последовательность байт, то обязательно нужно указывать
+кодировку.
+
+**binary:match/2**, **binary:matches/3**
+```erlang
+5> binary:match(<<"abc abc abc">>, <<"ab">>).
+{0,2}
+6> binary:matches(<<"abc abc abc">>, <<"ab">>).
+[{0,2},{4,2},{8,2}]
 {13,6}
 ```
 
-Как дополнительная тема:
-BERT сериализация
-External Term Format
-term_to_binary, binary_to_term
-
-
-
-## iolist
-
-http://learnyousomeerlang.com/buckets-of-sockets#io-lists
-
-не нужна конкатенация
-не нужно переводить string и binary друг в друга
-
-An iolist
-is defined recursively as a list whose elements are integers in 0..255 ,
-binaries, or iolists:
-
+**binary:replace/3**
 ```erlang
-[$H, $e, [$l, <<"lo">>, " "], [[["W","o"], <<"rl">>]] | [<<"d">>]].
+7> binary:replace(<<"a-b-c-a-b-c">>, <<"a">>, <<"A">>).
+<<"A-b-c-a-b-c">>
+8> binary:replace(<<"a-b-c-a-b-c">>, <<"a">>, <<"A">>, [global]).
+<<"A-b-c-A-b-c">>
 ```
 
-тут четко определено, что 0-255
-если там будут числа больше 255, то сокет их не пример
-нужно делать unicode:characters_to_list
-
-другой тип, который разрешает юникод кодпоинты, определен в модуле unicode
-надо посмотреть, как он называется.
-
-iolist принимают:
-- TCP, UDP сокеты
-- все функции модуля io
-- все функции модуля file
-- модуль re
+Все эти функции корректно работают с utf8.
 
 
+## iolist() и unicode:chardata()
+
+Довольно часто бывает нужно составить строку из нескольких частей.
+В разных языках программирования обычно есть операция конкатернации
+строк. Есть она и в эрланг:
 
 ```erlang
-66> L1 = ["My name is ", Name].
-["My name is ","Вася"]
-67> L2 = ["SELECT name FROM ", Table, " WHERE id = ", integer_to_list(Id)].
-["SELECT name FROM ","users"," WHERE id = ","5"]
+1> Str1 = "hello".
+"hello"
+2> Str2 = "world".
+"world"
+3> Str3 = Str1 ++ " " ++ Str2 ++ "!".
+"hello world!"
 ```
 
-iolist можно долго формировать из разных кусков, делая любую вложенность.
-И уже после того, как все сформировано, одним вызовом lists:flatten
-или unicode:characters_to_binary получить окончательный результат:
+Но как мы помним, эта операция не эффективна по производительности.
+И тем более не хочется повторять ее несколько раз.
 
+Ну есть еще такой вариант:
 ```erlang
-68> lists:flatten(L1).
-"My name is Вася"
-69> unicode:characters_to_binary(L2).
-<<"SELECT name FROM users WHERE id = 5">>
+4> Str4 = io_lib:format("~s ~s!", [Str1, Str2]).
+["hello",32,"world",33]
 ```
+Однако, интересный получился результат -- не строка, а список из двух строк
+и двух чисел.
+
+Это и есть **iolist()** -- специальная структура данных для
+составления строк из нескольких частей. Как видно, эти части не
+склеиваются, а просто складываются в список. Можно это делать
+напрямую, без использования **io_lib:format/2**:
+```erlang
+5> Str5 = [Str1, " ", Str2, "!"].
+["hello"," ","world","!"]
+```
+
+**iolist()** -- это список, который может включать:
+- байты (числа от 0 до 255);
+- binary;
+- другие iolist.
+
+Глубина вложенности может быть любая:
+```erlang
+6> Header = "<html><head><title>Hello</title></head>".
+"<html><head><title>Hello</title></head>"
+7> Footer = "</html>".
+"</html>"
+8> UserName = "Bob".
+"Bob"
+9> Greeting = ["Hello, ", UserName].
+["Hello, ","Bob"]
+10> Page = [Header, "<body>", Greeting, "</body>", Footer].
+["<html><head><title>Hello</title></head>","<body>",
+ ["Hello, ","Bob"],
+ "</body>","</html>"]
+```
+
+iolist легко преобразуется в string и binary:
+```erlang
+11> lists:flatten(Page).
+"<html><head><title>Hello</title></head><body>Hello, Bob</body></html>"
+12> iolist_to_binary(Page).
+<<"<html><head><title>Hello</title></head><body>Hello, Bob</body></html>">>
+```
+
+Но можно этого и не делать, а напрямую использовать во многих местах,
+где подразумевается использование string или binary. Его можно
+отдавать в сокет, сохранять в файл, использовать в регулярных
+выражениях и т.д.
+
+Однако iolist не может содержать чисел больше 255.
+```erlang
+13> iolist_to_binary([32,32,1040]).
+** exception error: bad argument
+     in function  iolist_to_binary/1
+        called as iolist_to_binary([32,32,1040])
+```
+
+И это, конечно, не хорошо, если мы работаем с unicode строками. И тут
+на помощь приходит **unicode:chardata()**. Этот тип данных определен в
+модуле [unicode](http://www.erlang.org/doc/man/unicode.html).
+И по сути этот тот же iolist, но в нем разрешены любые коды символов:
+```erlang
+15> UserName2 = "Вася".
+[1042,1072,1089,1103]
+16> Greeting2 = ["Привет ", UserName2].
+[[1055,1088,1080,1074,1077,1090,32],[1042,1072,1089,1103]]
+17> Page2 = [Header, Greeting2, Footer].
+["<html><head><title>Hello</title></head>",
+ [[1055,1088,1080,1074,1077,1090,32],[1042,1072,1089,1103]],
+ "</html>"]
+```
+
+unicode:chardata напрямую нельзя использовать там, где разрешены iolist.
+Например, его нельзя записать в сокет. Но он легко преобразуется в binary:
+```erlang
+19> Bin = unicode:characters_to_binary(Page2, utf8).
+<<"<html><head><title>Hello</title></head>"...>>
+20> io:format("~ts", [Bin]).
+<html><head><title>Hello</title></head>Привет Вася</html>ok
+```
+
+И таким образом мы подошли к модулю **unicode** :)
 
 
 ## unicode
 
-[[https://www.youtube.com/watch?v=MijmeoH9LT4][Characters, Symbols and the Unicode Miracle - Computerphile]]
+[Модуль](http://www.erlang.org/doc/man/unicode.html)
+небольшой, и нас интересуют только две функции:
+**characters_to_list/1** и **characters_to_binary/1**.
 
-http://www.erlang.org/doc/man/unicode.html
-
+Обе принимают unicode:chardata(), но первая возвращает string(), а вторая binary().
+А поскольку string() и binary() сами по себе являются unicode:chardata(), то эти
+функции суть способ преобразовать string() в binary() и наоборот.
 ```erlang
-1> Str = "Привет мир!".
-[1055,1088,1080,1074,1077,1090,32,1084,1080,1088,33]
-2> Bin8 = <<"Привет мир!"/utf8>>.
-<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,
-  188,208,184,209,128,33>>
-3> Bin16 = <<"Привет мир!"/utf16>>.
-<<4,31,4,64,4,56,4,50,4,53,4,66,0,32,4,60,4,56,4,64,0,33>>
-4> Bin32 = <<"Привет мир!"/utf32>>.
-<<0,0,4,31,0,0,4,64,0,0,4,56,0,0,4,50,0,0,4,53,0,0,4,66,0,
-  0,0,32,0,...>>
+21> unicode:characters_to_binary("привет").
+<<208,191,209,128,208,184,208,178,208,181,209,130>>
+22> unicode:characters_to_list(<<"привет"/utf8>>).
+[1087,1088,1080,1074,1077,1090]
+```
+Причем, это единственный правильный способ такого преобразования.
+Не делаейте этого с помощью **list_to_binary/1** и **binary_to_list/1**,
+это будет работать только с латинскими символами:
+```erlang
+23> binary_to_list(<<"Hello">>).
+"Hello"
+24> unicode:characters_to_list(<<"Hello">>).
+"Hello"
+25> list_to_binary("hello").
+<<"hello">>
+26> unicode:characters_to_binary("hello").
+<<"hello">>
+```
+а unicode данные преобразуются неправильно:
+```erlang
+27> binary_to_list(<<"Привет"/utf8>>).
+[208,159,209,128,208,184,208,178,208,181,209,130]
+28> unicode:characters_to_list(<<"Привет"/utf8>>).
+[1055,1088,1080,1074,1077,1090]
+29> list_to_binary("привет").
+** exception error: bad argument
+     in function  list_to_binary/1
+        called as list_to_binary([1087,1088,1080,1074,1077,1090])
+30> unicode:characters_to_binary("привет").
+<<208,191,209,128,208,184,208,178,208,181,209,130>>
 ```
 
-Речь пойдет об Erlang 17. В более ранних версиях поведение отличается,
-но мы не будем их рассматривать.
-
-Кодировку для бинарников нужно указывать, для строк не нужно:
-
+По умолчанию **characters_to_list/1** и **characters_to_binary/1**
+работают с utf8. Но можно указать другую кодировку, входящую и исходящую:
 ```erlang
-<<"привет"/utf8>>
-<<"привет"/utf16>>
-<<"привет"/utf32>>
-<<"привет">> % неправильно
-"привет" % правильно
+1> unicode:characters_to_binary("привет", utf8, utf8).
+<<208,191,209,128,208,184,208,178,208,181,209,130>>
+2> unicode:characters_to_binary("привет", utf8, utf16).
+<<4,63,4,64,4,56,4,50,4,53,4,66>>
+3> unicode:characters_to_binary("привет", utf8, {utf16, little}).
+<<63,4,64,4,56,4,50,4,53,4,66,4>>
+4> unicode:characters_to_binary("привет", utf8, utf32).
+<<0,0,4,63,0,0,4,64,0,0,4,56,0,0,4,50,0,0,4,53,0,0,4,66>>
+5> unicode:characters_to_binary("привет", utf8, {utf32, big}).
+<<0,0,4,63,0,0,4,64,0,0,4,56,0,0,4,50,0,0,4,53,0,0,4,66>>
+6> unicode:characters_to_binary("привет", utf8, {utf32, little}).
+<<63,4,0,0,64,4,0,0,56,4,0,0,50,4,0,0,53,4,0,0,66,4,0,0>>
 ```
+Здесь big и little -- это порядок байт -- big-endian и little-endian.
 
-опция +pc unicode
-показать с ней и без нее, как выглядит строка и бинарник
+И напоследок, я обещал рассказать, как сделать **to_upper** и **to_lower**
+для любых символов, а не только для латинских.
 
-Суть в том, что в некоторых случаях Erlang применяет эвристику, пытаясь определить,
-является ли данный список строкой, чтобы отобразить его соответствующим образом.
-Если флаг не задан, то эвристика применяется только для строк в *latin1*, а
-если задан, то и для строк в *unicode*.
+Если об этом подумать, то становится ясным, что это не сделать простым
+вычитанием константы из кода одного символа, чтобы получить код
+другого символа. В общем случае нет константного расстояния между
+символами в большом и малом регистре. Например, в кирилице это
+сработает для "ёЁ". В некоторых языках правила перевода в другой
+регистр зависят от позиции символа в слове.
 
-Аргументы форматирования [io:format](http://www.erlang.org/doc/man/io.html#fwrite-1)
-- *~w* -- показывает term как есть, без модификаций.
-- *~p* -- применяет эвристику, пытаясь определить, является ли term строкой в latin1.
-- *~tp* -- применяет эвристику, пытаясь определить, является ли term строкой в unicode.
-- *~s* -- показывает term как строку в latin1.
-- *~ts* -- показывает term как строку в unicode.
-
-показать, как они работают для строк, и для структур данных с вложенными строками
-
-```erlang
-7> io:format("~w", [Str]).
-<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,188,208,184,209,128,33>>ok
-8> io:format("~p", [Str]).
-<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,188,208,184,209,128,33>>ok
-9> io:format("~ts", [Str]).
-Привет мир!ok
-10> T = {message, Str}.
-{message,<<"Привет мир!"/utf8>>}
-11> io:format("~tp", [T]).
-{message,<<"Привет мир!"/utf8>>}ok
-12> io:format("~p", [T]).
-{message,<<208,159,209,128,208,184,208,178,208,181,209,130,32,208,188,208,184,
-           209,128,33>>}ok
-```
-
-[Модуль unicode](http://www.erlang.org/doc/man/unicode.html)
-unicode:characters_to_list.
-unicode:binary_to_list.
-не использовать
-erlang:binary_to_list
-erlang:list_to_binary
-
-Библиотека ux
-https://github.com/erlang-unicode/ux
-to_upper, to_lower
-sort
-search
-
-проблема нечуствительности к регистру
-
-Рекомендации:
-пусть данные остаются в binary, если это возможно (если их нужно просто передавать или хранить)
-если нужно что-то делать с контентом, тогда unicode:characters_to_list
-но не binary_to_list
+В общем, реализации to\_upper и to\_lower для общего случая в эрланг нет.
+И все, кому не хватает возможностей стандартных библиотек,
+пользуются [библиотекой ux -- Unicode eXtention for Erlang](https://github.com/erlang-unicode/ux).
+Там есть to\_upper, to\_lower и много чего еще :)

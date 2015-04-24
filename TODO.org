@@ -1,6 +1,7 @@
 * TODO 7й урок io_list, binary, string, unicode
-  SCHEDULED: <2015-03-30 Mon>
-- теория
++ теория
+  - spellcheck
+  - перечитать и проверить форматирование (через github)
 - конспект
 - quiz
 - практическое задание
