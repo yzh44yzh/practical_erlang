@@ -1,6 +1,5 @@
 * TODO 7й урок io_list, binary, string, unicode
 + теория
-  - spellcheck
   - перечитать и проверить форматирование (через github)
 - конспект
 - quiz
