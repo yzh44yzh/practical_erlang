@@ -10,45 +10,38 @@
 ** DONE 4. Сопоставление с образцом, гарды.
 
 ** DONE 5. KV-структуры данных
-   proplists, dict, orddict, gb_trees
 
-** TODO 6. maps и ets таблицы
-   упомянуть dets, mnesia
+** DONE 6. maps и ets таблицы
 
-** TODO 7. io_list, binary, string, unicode
-   flatten
+** DONE 7. io_list, binary, string, unicode
 
 ** TODO 8. Многопоточность в Erlang
-   Жизнь erlang-процесса
-   (бесконечная рекурсия, состояние на стеке)
 
-** TODO 9. Работа с потоками на низком уровне
-   spawn, link, spawn_link,
-   receive, register,
-   monitor, exit, trap exit
-
-** TODO 10. OTP 1
-   gen_server
+** TODO 9. gen_server
    Пишем свою реализацию gen_server в несколько этапов
 
-** TODO 11. OTP 2
-   supervisor, gen_fsm, gen_event
+** TODO 10. Многопоточность, обработка ошибок
+   link, spawn_link, monitor, exit, trap exit
 
-** TODO 12. OTP 3
+** TODO 11. supervisor
+
+** TODO 12 OTP фреймворк
+   gen_server, supervisor
+   gen_fsm, gen_event
    application
-   Типичная структура OTP проекта
+
+** TODO 12. Типичная структура OTP проекта
    с дочерними приложениями и зависимыми библиотеками
 
-** TODO 13. Обработка ошибок
+** TODO 13. Обработка ошибок на разных уровнях
    Defensive Programming vs Let it crash
    Уровни изоляции ошибок
    http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
 
-** TODO 14. Курсовая работа по 1й части курса.
+** TODO 14. Курсовая работа
 
 
-* TODO Часть 2-я
-   DEADLINE: <2015-06-14 Sun>
+* TODO Часть 2-я. Продвинутый эрланг
 
 ** TODO история эрланг на фоне истории программирования
 
