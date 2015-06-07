@@ -1,21 +1,27 @@
-# gen_server
 
 
-Жизнь erlang-процесса
-бесконечная рекурсия, состояние на стеке
+## Обработка ошибок на низком уровне
 
+link, spawn_link
+{'EXIT', Pid, Reason}
 
-Armstrong
-12.2 Introducing Client-Server
+exit(Pid, Reason)
 
-И у Фреда аналогичное описано. И у других, наверное.
-http://learnyousomeerlang.com/more-on-multiprocessing
+**System processes** are basically normal processes, except they can
+convert exit signals to regular messages. This is done by calling
+process_flag(trap_exit, true) in a running process.
 
-тож самое у меня в erlang-school
+сигнал 'EXIT' превращает в сообщение 'EXIT', которое можно обработать.
 
-В Ульяновсе я еще показывал, как работает hot code upgrade,
-и использовал его, развивая gen\_server. Т.е. запускал новые версии gen\_server без остановки ноды
-надо и в уроке так сделать. В erlang-school этого момента нет.
+|--------------+--------------------------------+-------------------------------|
+| Reason       | trap_exit=true                 | trap_exit=false               |
+|--------------+--------------------------------+-------------------------------|
+| exit(normal) | Receives {'EXIT', Pid, normal} | Nothing happens               |
+|--------------+--------------------------------+-------------------------------|
+| exit(kill)   | Terminates with reason killed  | Terminates with reason killed |
+|--------------+--------------------------------+-------------------------------|
+| exit(Other)  | Receives {'EXIT', Pid, Other}  | Terminates with reason Other  |
+|--------------+--------------------------------+-------------------------------|
 
-
-важность хвостовой рекурсии
+monitor
+{'DOWN', Reference, process, Pid, Reason}
