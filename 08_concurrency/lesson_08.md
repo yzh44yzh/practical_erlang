@@ -1,42 +1,45 @@
 # Многопоточность
 
-## Concurrency and parallelism
-
-Concurrency refers to the idea of having many actors running
-independently, but not necessarily all at the same time.
-
-Parallelism is having actors running exactly at the same time.
-
-До R13B Эрланг работал на одном ядре процессора, и имел concurrency,
-но не имел parallelism. 2009 year
-
-Корни эрланга в телефонии. Нужно обслуживать звонки. Много звонков, каждый независимо от других.
-Отсюда легковестные потоки со своей памятью.
-
-If we have only a single-core computer, then we can never run a parallel
-program on it. This is because we have one CPU, and it can do only one thing
-at a time. We can, however, run concurrent programs on a single-core com-
-puter. The computer time-shares between the different tasks, maintaining
-the illusion that the different tasks run in parallel.
+Эффективная поддержка многопоточности -- одна из главных фишек эрланг.
+И она же является базой для других фишек: распределенности, устойчивости
+к ошибкам и горячему обновлению кода.
 
 
 ## Легковесные потоки
 
-In Erlang, processes belong to the programming language and not the
-operating system.
+Эрланг имеет собственную реализацию многопоточности на уровне виртуальной машины.
+Конечно, это работает поверх процессов операционной системы. Но поверх одного
+такого процесса могут работать сотни и тысячи потоков эрланг. И виртуальная машина
+управляет ими независимо от операционной системы.
 
-- Creating and destroying processes is very fast.
-- Sending messages between processes is very fast.
-- Processes behave the same way on all operating systems.
-- We can have very large numbers of processes.
-- Processes share no memory and are completely independent.
-- The only way for processes to interact is through message passing.
+В разных операционных системах есть разные сущности: процессы, потоки, нити и т.д.
+Они отличаются реализацией и возможностями. Но в эрланг такая сущность только одна.
+Я буду называть ее "поток". Но если где-то упомяну "процесс", то знайте, что это
+одно и то же :)
+
+Особенность потоков эрланг в том, что они легковесные. Это значит, что они:
+- быстро стартуют и завершаются;
+- быстро переключаются;
+- потребляют мало памяти.
+
+TODO
 
 Создание и остановка потока очень быстрые (3-5 микросекунд).
 Потоки легкие, 2.5Кб памяти на старте.
 
 TODO: Armstrong 12.3 Processes Are Cheap
 TODO: в моем блоге об этом
+
+
+
+Еще потоки эрланга:
+- одинаковые во всех операционных системах;
+- имеют каждый свою изолированную область памяти (стек и кучу);
+- не читают и не пишут в чужую память, а обмениваются сообщениями;
+
+
+
+
 
 soft real time
 TODO что это такое и как это отличается от hard real time?
