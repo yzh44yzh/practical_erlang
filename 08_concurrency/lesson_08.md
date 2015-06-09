@@ -39,24 +39,33 @@
 обслуживать большое количество клиентов. Особенно если соединения с клиентами
 являются долгоживущими.
 
-
-TODO stopped here
-
-soft real time
-TODO что это такое и как это отличается от hard real time?
-
-Еще потоки эрланга:
+Кроме этого, потоки эрланг:
 - одинаковые во всех операционных системах;
 - имеют каждый свою изолированную область памяти (стек и кучу);
-- не читают и не пишут в чужую память, а обмениваются сообщениями;
+- не читают и не пишут в чужую память, а обмениваются сообщениями.
 
-This gives system response times on the order of
-milliseconds even in the presence of garbage-collected memory.
 
-Пример кода:
-генерируем много процессов, даем каждому задание
-каждый выдает ответ после рандомной задержки,
-наблюдаем, как ответы приходят в хаотичном порядке.
+## Работа с потоками на низком уровне
+
+### spawn
+
+Для создания нового потока используется функция [spawn](http://www.erlang.org/doc/man/erlang.html#spawn-1).
+
+Она имеет несколько вариантов:
+- spawn(Fun) -> pid()
+- spawn(Node, Fun) -> pid()
+- spawn(Module, Function, Args) -> pid()
+- spawn(Node, Module, Function, Args) -> pid()
+
+Так или иначе в аргументах spawn указывается точка входа для нового потока, с которой
+он начинает выполнятся. Далее поток либо выполнит весь код, и завершится. Либо попадет
+в бесконечную рекурсию и будет выполнятся бесконечно. Либо поток завершится аварийно
+из-за ошибки.
+
+Функция spawn возвращает **Pid** -- идентификатор процесса (process identifier).
+Зная Pid, можно посылать процессу сообщения и получать информацию о нем.
+
+Давайте попробуем запустить несколько потоков:
 
 ```erlang
 4> G = fun(X) -> timer:sleep(10), io:format("~p~n", [X]) end.
@@ -76,64 +85,17 @@ milliseconds even in the presence of garbage-collected memory.
 9
 ```
 
-The order doesn't make sense. Welcome to parallelism.
-
-
-На многопоточности основано:
-- масштабируемость
-- распределенность (если мы научились взаимодествовать между 2 процессами, то потом не важно, в одной они ноде, или на разных)
-- обработка ошибок (об этом отдельный урок)
-
-
-## Работа с потоками на низком уровне
-
-### spawn
-
-http://www.erlang.org/doc/man/erlang.html#spawn-1
-
-Несколько вариантов spawn
-http://www.erlang.org/doc/man/erlang.html#spawn-1
-spawn(Fun) -> pid()
-spawn(Node, Fun) -> pid()
-spawn(Module, Function, Args) -> pid()
-spawn(Node, Module, Function, Args) -> pid()
-
-Pid = spawn(Mod, Func, Args)
-
-много вариантов spawn, по-разному задающих функцию, + варианты для запуска на другой ноде
-
-spawn returns a Pid (short for process identifier). You can use a Pid to send messages to the process.
-
-If there is no more code to execute, a process is said to terminate normally. On the other
-hand, if a runtime error such as a bad match or a case failure occurs, the process is said
-to terminate abnormally.
-
-Spawning a process will never fail, even if you are spawning a nonexported or even a
-nonexistent function. As soon as the process is created and spawn/3 returns the pid, the
-newly created process will terminate with a runtime error:
-
-Показать, что shell тож процесс, что у него есть pid, он рестартует при краше,
-```erlang
-1>
-1> A = 128.
-128
-2> B = 512.
-512
-5> self().
-<0.33.0>
-6> exit(self()).
-** exception exit: <0.33.0>
-7> self().
-<0.40.0>
-8> A.
-128
-9> B.
-512
-```
-биндинги при этом не теряются
+Создаем анонимную функцию, в которой после паузы в 10 милисекунд
+выводим на консоль ее аргумент.  С помощью генератора списков создаем
+10 потоков. Каждый из них выполняет эту функцию независимо от
+остальных. Видим, что очередность вывода чисел на консоль не совпадает
+с очередностью создания потоков. Вывод будет случайным, в зависимости
+от того, как планировщик раздавал управление потокам.
 
 
 ### Отправка сообщений
+
+TODO stopped here
 
 The only way for processes to interact with each other is through
 message passing, where data is sent from one process to another.
@@ -261,8 +223,14 @@ whereis(Alias)  which returns the pid associated with the Alias
 
 ### Выводы
 
-легкие потоки, обмен сообщениеями, отсутсвие разделяемой памяти дают хорошую базу для:
+Легкие потоки, обмен сообщениями, отсутсвие разделяемой памяти дают хорошую базу для:
 
   - масштрабируемости
   - распределенности
   - устойчивости к ошибкам
+
+Масштабируемость -- бла бла бла.
+
+Распределенность -- если мы научились взаимодествовать между 2 процессами, то потом не важно, в одной они ноде, или на разных.
+
+Обработка ошибок -- бла бла бла, об этом отдельный урок.
