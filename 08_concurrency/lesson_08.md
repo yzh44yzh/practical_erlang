@@ -39,11 +39,6 @@
 обслуживать большое количество клиентов. Особенно если соединения с клиентами
 являются долгоживущими.
 
-Кроме этого, потоки эрланг:
-- одинаковые во всех операционных системах;
-- имеют каждый свою изолированную область памяти (стек и кучу);
-- не читают и не пишут в чужую память, а обмениваются сообщениями.
-
 
 ## Работа с потоками на низком уровне
 
@@ -95,22 +90,24 @@
 
 ### Отправка сообщений
 
-TODO stopped here
+Потоки эрланг имеют каждый свою изолированную область памяти (стек и кучу),
+не читают и не пишут в чужую память, а обмениваются сообщениями.
 
-The only way for processes to interact with each other is through
-message passing, where data is sent from one process to another.
+Для этого используется оператор ! (bang):
 
+```
 Pid ! Message
+```
 
-Sends Message to the process with identifier Pid . Message sending is asyn-
-chronous. The sender does not wait but continues with what it was doing.
-! is called the send operator.
+Pid должен быть идентификатором процесса, а Message -- любая структура
+данных или атомарное значение.
 
-Pid ! M returns M . Because of this, Pid1 ! Pid2 ! ... ! Msg means send the
-message Msg to all the processes Pid1 , Pid2 , and so on.
+Отправка сообщения выполняется асинхронно. То есть, поток не
+блокируется и не ждет ответа, а продолжает выполнение. При попытке
+отправить сообщение несуществующему процессу, сообщение просто
+игнорируется. Ошибки при этом не происходит.
 
-Sending a message will never fail; so if you try sending a message to a nonexistent
-process, it is thrown away without generating an error
+Поток может отправить сообщение самому себе.
 
 ```erlang
 10> self() ! hello.
@@ -120,18 +117,14 @@ Shell got hello
 ok
 ```
 
-
 ### Почтовый ящик
-receive, selective receive
 
-Each Erlang process has a mailbox in which incoming messages are stored. When a
-message is sent, it is copied from the sending process into the recipient’s mailbox for
-retrieval.
+У каждого потока есть специальная область памяти -- почтовый ящик
+(mailbox), куда копируются адресованные ему сообщения. Там сообщения
+накапливаются в очереди, в порядке их появления.
 
-Messages are stored in the mailbox in the order in which they are delivered.
-
-Receives a message that has been sent to a process. It has the following
-syntax:
+Чтобы прочитать сообщения в почтовом ящике, нужно использовать
+конструкцию **receive**.
 
 ```erlang
 receive
@@ -143,43 +136,22 @@ receive
 end
 ```
 
-Аналогично case
+Синтаксис аналогичен конструкции **case**.
 
-As soon as the execution flow of the process reaches
-the receive statement, it will try to match the oldest message in the mailbox
-A receive statement will return the last evaluated expression in the body of the matched
-clause.
+При вызове recieve поток берет сообщение из очереди, и сопоставляет
+его с имеющимися шаблонами. Если находится подходящий шаблон, то
+выполняется соответствующий блок кода, и затем код после receive. А
+сообщение удаляется из почтового ящика. Другие сообщения в почтовом
+ящике остаются до следующего вызова receive.
 
-process is suspended in receive
-statements until a message is matched
+Если сообщение не совпало ни с одним шаблоном, то оно остается в очереди,
+и для проверки берется следующее.
 
-нужен конкретный пример, прямо в консоли, как наполняется ящик сообщениями,
-как они выбираются, и что остается в ящике
-написать модуль для демонстрации этого
-использовать process_info(messages), чтобы посмотреть, что в ящике
+Если в момент вызова receive почтовый ящик пуст, то поток блокируется до
+появления сообщения. Или, если указан таймаут, то до истечения таймаута.
 
-
-• Erlang programs are made of lots of processes. These processes can send
-messages to each other.
-
-• These messages may or may not be received and understood. If you want
-to know whether a message was received and understood, you must send
-the process a message and wait for a reply.
-
-When you send a message to a process, the message is put into the mailbox
-of the process. The only time the mailbox is examined is when your program
-evaluates a receive statement.
-
-если на момент receive:
-- почтовый ящик пустой
-  (блокируется, ждет сообщения)
-- есть сообщения, но они не матчатся
-  (блокируется, ждет сообщение, которое заматчится)
-- есть сообщения, и они матчатся
-  (выбирается только одно из них, остальные остаются в ящике до следующего вызова receive)
-
-selective receive or match all
-
+В этом примере поток отправляет сообщение самому себе, и получает его
+с помощью receive:
 
 ```erlang
 12> self() ! "hello again".
@@ -190,6 +162,25 @@ selective receive or match all
 got message:"hello again"
 ok
 ```
+
+TODO stopped here
+
+нужен конкретный пример, прямо в консоли, как наполняется ящик сообщениями,
+как они выбираются, и что остается в ящике
+написать модуль для демонстрации этого
+использовать process_info(messages), чтобы посмотреть, что в ящике
+
+selective receive or match all
+
+
+Почтовый ящик -- самая частая причина утечки памяти в эрланг.
+Если receive не вызывается, или вызывается, но обрабатывает не все
+сообщения, то утечка памяти неизбежна. Кроме того, по мере роста
+очереди, каждый проход по ней становится все медленее и медленее.
+Все эрланг программисты об этом знают. И если обнаруживается утечка
+памяти, то диагностика проблемы начинается с очередей в почтовых
+ящиках.
+
 
 ### timeout
 
