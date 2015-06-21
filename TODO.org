@@ -1,8 +1,11 @@
-https://github.com/yzh44yzh/practical_erlang/
-https://ru.hexlet.io/courses/erlang_101
+Сперва теорию и quiz по всем темам
+Затем практические задания
+Затем видео
+
+Когда курс будет закончен, вывести из sanbox на hexlet
+Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)
 
 * TODO 7й урок io_list, binary, string, unicode
-- конспект
 - видео
 - залить и прицепить к уроку на hexlet
 
@@ -10,9 +13,7 @@ https://ru.hexlet.io/courses/erlang_101
 * TODO 8й урок. Многопоточность в Erlang.
 - практическое задание
   map-reduce
-- конспект
 - видео
-
 
 
 * TODO курсовая работа по 1й части курса
@@ -25,6 +26,7 @@ https://ru.hexlet.io/courses/erlang_101
 и на всем этом построить более сложное задание, чем обычно
 
 тестировать его будет трудно. Придется сделать TCP-клиента, повторяющего telnet
+
 
 * По каждому уроку:
 
@@ -45,17 +47,15 @@ https://ru.hexlet.io/courses/erlang_101
 - практическое задание
 - видео
 
+
 * Инфа
+
+https://github.com/yzh44yzh/practical_erlang/
+
+https://ru.hexlet.io/courses/erlang_101
 
 Дока:
 https://github.com/Hexlet/docs/blob/master/create-lesson.md
 
 Dockerfile для установки Erlang, Rebar, Relx
 https://registry.hub.docker.com/u/correl/erlang/dockerfile/
-
-Сперва теорию и quiz по всем темам
-Затем практические задания
-Затем видео
-
-Когда курс будет закончен, вывести из sanbox на hexlet
-Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)

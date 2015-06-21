@@ -1,50 +1,112 @@
 # gen_server
 
+Хороший подход к изучению gen_server – написать его самому. Такой
+подход выбрали и Joe Armstrong (Programming Erlang, глава 16), и Fred
+Hebert (LYSE, глава What is OTP?).
 
-Жизнь erlang-процесса
-бесконечная рекурсия, состояние на стеке
+Пойдем и мы тем же путем. Напишем свой gen_server в 6 этапов.
 
+## 1-й этап, простейший цикл.
 
-Armstrong
-12.2 Introducing Client-Server
-
-И у Фреда аналогичное описано. И у других, наверное.
-http://learnyousomeerlang.com/more-on-multiprocessing
-
-тож самое у меня в erlang-school
-
-В Ульяновсе я еще показывал, как работает hot code upgrade,
-и использовал его, развивая gen\_server. Т.е. запускал новые версии gen\_server без остановки ноды
-надо и в уроке так сделать. В erlang-school этого момента нет.
-
+TODO код и комментарии
+gs1.erl
 
 важность хвостовой рекурсии
 
 
-## Жизнь erlang-процесса
+## 2-й этап, цикл c состоянием.
 
-бесконечная рекурсия, состояние на стеке
+TODO код и комментарии
+gs2.erl
 
-```erlang
--module(lifecycle).
--export([start/0, loop/1]).
-start() ->
-    InitialState = [],
-    spawn(?MODULE, loop, [InitialState]).
-loop(State) ->
-    receive
-        {add, Item} -> io:format("~p adds ~p to its state~n", [self(), Item]),
-                       NewState = [Item | State],
-                       ?MODULE:loop(NewState);
-        {remove, Item} -> NewState = case lists:member(Item, State) of
-                                         true -> lists:delete(Item, State);
-                                         false -> io:format("I have no ~p~n", [Item]),
-                                                  State
-                                     end,
-                          ?MODULE:loop(NewState);
-        show_items -> io:format("my items is ~p~n", [State]),
-                      ?MODULE:loop(State);
-        stop -> io:format("~p stops now ~n", [self()]);
-        _Any -> ?MODULE:loop(State)
-    end.
+горячее обновление кода
+
+
+## 3-й этап, внешнее АПИ, матчинг сообщений по Ref.
+
+TODO код и комментарии
+gs3.erl
+
+
+## 4-й этап, убраем дублирование кода.
+
+TODO код и комментарии
+gs4.erl
+
+
+## 5-й этап, добавляем таймаут.
+
+TODO код и комментарии
+gs5.erl
+
+
+## 6-й этап, монитор, обработка ошибок.
+
+TODO код и комментарии
+gs6.erl
+
+
+## Комментарии по этой реализации.
+
+Мы реализовали только часть gen_server, а именно **gen_server:call/handle_call**.
+
+API gen_server еще включает:
+
+**start/init**
+TODO
+
+**cast/handle_cast**
+TODO
+
+**message/handle_info**
+TODO
+
+**terminate**
+TODO
+
+**code_change**
+TODO
+
+Но и это еще не все. В стандартной реализации gen\_server есть возможность
+сделать call/cast на несколько нод в кластере; есть возможность запаковать
+состояние, чтобы оно занимало меньше места в памяти и другие фишки.
+
+## Пример настоящего модуля.
+
+реализующего поведение gen_server
+https://github.com/yzh44yzh/e_prof/blob/master/src/e_prof.erl
+
+
+## Отложенная инициализация
+
+Вызов init блокирует родительский процесс, причем с timeout = infinity
+по умолчанию. Желательно оставлять эту функцию легковесной и
+возвращать управление родителю как можно быстрее.
+
+Если инициализация сервера требует долгих действий, то такие вещи
+лучше делать отложено.
+
 ```
+init(Args) ->
+    State = ...
+    self() ! heavy_init,
+    {ok, State}.
+
+handle_info(heavy_init, State) ->
+    NewState = ...
+    {noreply, NewState};
+```
+
+Устанавливать соединение с базой данных, запрашивать какие-то данные из внешнего
+источника, создавать большие объекты в памяти -- все это стоит делать отложено.
+
+
+## Deadlock на gen_server:call
+
+С этим сталкивается почти каждый новичок в Erlang. И я тож столкнулся.
+
+Нельзя делать gen\_server:call на самого себя внутри handle\_call.
+Бывают более сложные варианты, когда из handle\_call вызвается какая-то функция,
+и уже в ней, или где-то в цепочке вызовов gen\_server:call.
+
+TODO объяснить, почему нельзя
