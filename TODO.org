@@ -52,3 +52,10 @@ https://github.com/Hexlet/docs/blob/master/create-lesson.md
 
 Dockerfile для установки Erlang, Rebar, Relx
 https://registry.hub.docker.com/u/correl/erlang/dockerfile/
+
+Сперва теорию и quiz по всем темам
+Затем практические задания
+Затем видео
+
+Когда курс будет закончен, вывести из sanbox на hexlet
+Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)
