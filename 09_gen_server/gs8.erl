@@ -1,4 +1,4 @@
--module(gs6).
+-module(gs8).
 
 -export([start/0, add_item/2, remove_item/2, show_items/1, stop/1, loop/1]).
 
@@ -21,10 +21,17 @@ show_items(Pid) ->
 
 
 call(Pid, Msg) ->
-    Ref = make_ref(),
-    Pid ! {Msg, self(), Ref},
+    MRef = erlang:monitor(process, Pid),
+    Pid ! {Msg, self(), MRef},
     receive
-        {reply, Ref, Reply} -> Reply
+        {reply, MRef, Reply} ->
+            erlang:demonitor(MRef, [flush]),
+            Reply;
+        {'DOWN', MRef, _, _, Reason} ->
+            {error, Reason}
+    after 5000 ->
+            erlang:demonitor(MRef, [flush]),
+            no_reply
     end.
 
 
@@ -44,6 +51,7 @@ loop(State) ->
                                     true -> {ok, lists:delete(Item, State)};
                                     false -> {{error, not_exist}, State}
                                 end,
+            %% Reply = 55 / some, % want to crash here
             From ! {reply, Ref, Reply},
             ?MODULE:loop(NewState);
         {show_items, From, Ref} ->

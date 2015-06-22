@@ -1,4 +1,4 @@
--module(gs6).
+-module(gs7).
 
 -export([start/0, add_item/2, remove_item/2, show_items/1, stop/1, loop/1]).
 
@@ -25,6 +25,7 @@ call(Pid, Msg) ->
     Pid ! {Msg, self(), Ref},
     receive
         {reply, Ref, Reply} -> Reply
+    after 5000 -> no_reply
     end.
 
 

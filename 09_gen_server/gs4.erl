@@ -9,22 +9,23 @@ start() ->
 
 
 add_item(Pid, Item) ->
-    call(Pid, {add, Item}).
+    Pid ! {add, self(), Item},
+    receive
+        {reply, Reply} -> Reply
+    end.
 
 
 remove_item(Pid, Item) ->
-    call(Pid, {remove, Item}).
+    Pid ! {remove, self(), Item},
+    receive
+        {reply, Reply} -> Reply
+    end.
 
 
 show_items(Pid) ->
-    call(Pid, show_items).
-
-
-call(Pid, Msg) ->
-    Ref = make_ref(),
-    Pid ! {Msg, self(), Ref},
+    Pid ! {show_items, self()},
     receive
-        {reply, Ref, Reply} -> Reply
+        {reply, Reply} -> Reply
     end.
 
 
@@ -35,19 +36,19 @@ stop(Pid) ->
 
 loop(State) ->
     receive
-        {{add, Item}, From, Ref} ->
+        {add, From, Item} ->
             NewState = [Item | State],
-            From ! {reply, Ref, ok},
+            From ! {reply, ok},
             ?MODULE:loop(NewState);
-        {{remove, Item}, From, Ref} ->
+        {remove, From, Item} ->
             {Reply, NewState} = case lists:member(Item, State) of
                                     true -> {ok, lists:delete(Item, State)};
                                     false -> {{error, not_exist}, State}
                                 end,
-            From ! {reply, Ref, Reply},
+            From ! {reply, Reply},
             ?MODULE:loop(NewState);
-        {show_items, From, Ref} ->
-            From ! {reply, Ref, State},
+        {show_items, From} ->
+            From ! {reply, State},
             ?MODULE:loop(State);
         stop -> ok;
         _Any -> ?MODULE:loop(State)
