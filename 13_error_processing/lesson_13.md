@@ -24,26 +24,63 @@ end.
 ```
 
 Самые частые исключения:
-badmatch
-unknown function
-badarith
-что еще?
+
+- no function/case clause matching
+- badmatch
+- bad argument
+- undefined function
+- badarith
 
 как читать стэктрейс?
 
 
 ## try..catch
 
-много точек выхода с разными ошибками
-(валидация входящих данных)
+three kinds of exceptions in Erlang: throws, errors and exits
 
-генерация исключений: throw, exit
-разница между throw, error и exit
+throw(Exception)
+erlang:error(Reason)
+exit(Reason)
+
+erlang:error/1 returns a stack trace and exit/1 doesn't.
+
+```
+try
+    Expression1,
+    Expression2,
+    Expression3
+catch
+    TypeOfError:ExceptionPattern1 -> Expression3;
+    TypeOfError:ExceptionPattern2 -> Expression4
+end.
+```
+
+```
+try Expression of
+    SuccessfulPattern1 [Guards] -> Expression1;
+    SuccessfulPattern2 [Guards] -> Expression2
+catch
+    TypeOfError:ExceptionPattern1 -> Expression3;
+    TypeOfError:ExceptionPattern2 -> Expression4
+end.
+```
+
 как выглядит матчинг и стек трейс во всех этих случаях
 
-более понятное сообщение об ошибке
-не эрланговский стэк-трейс, а сообщение в терминах бизнес-логики, и содержащее контекст (данные)
+erlang:get_stacktrace().
 
+Get the call stack back-trace (stacktrace) of the last exception in
+the calling process as a list of {Module,Function,Arity,Location}
+tuples.
+
+Для чего применять:
+- много точек выхода с разными ошибками
+  (валидация входящих данных)
+- более понятное сообщение об ошибке
+  не эрланговский стэк-трейс, а сообщение в терминах бизнес-логики, и содержащее контекст (данные)
+
+It is important to know that the protected part of an exception can't be tail recursive.
+The VM must always keep a reference there in case there's an exception popping up.
 
 ## supervisor
 
