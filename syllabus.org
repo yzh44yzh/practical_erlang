@@ -1,146 +1,37 @@
-* TODO Часть 1-я
-   DEADLINE: <2015-04-12 Sun>
+* DONE 1. Введение. Типы данных.
 
-** DONE 1. Введение. Типы данных.
+* DONE 2. Устройство списков. Рекурсивные функции с аккумуляторами.
 
-** DONE 2. Устройство списков. Рекурсивные функции с аккумуляторами.
+* DONE 3. Функции высшего порядка. Свертка.
 
-** DONE 3. Функции высшего порядка. Свертка.
+* DONE 4. Сопоставление с образцом, гарды.
 
-** DONE 4. Сопоставление с образцом, гарды.
+* DONE 5. KV-структуры данных
 
-** DONE 5. KV-структуры данных
+* DONE 6. maps и ets таблицы
 
-** DONE 6. maps и ets таблицы
+* DONE 7. io_list, binary, string, unicode
 
-** DONE 7. io_list, binary, string, unicode
+* DONE 8. Многопоточность в Erlang
 
-** DONE 8. Многопоточность в Erlang
+* TODO 9. gen_server
 
-** TODO 9. gen_server
-   Пишем свою реализацию gen_server в несколько этапов
+* TODO 10. link, monitor
 
-** TODO 10. Многопоточность, обработка ошибок
-   link, spawn_link, monitor, exit, trap exit
+* TODO 11. supervisor
 
-** TODO 11. supervisor
+* TODO 12 OTP фреймворк
 
-** TODO 12 OTP фреймворк
-   gen_server, supervisor
-   gen_fsm, gen_event
-   application
-   Типичная структура OTP проекта
-   с дочерними приложениями и зависимыми библиотеками
+* TODO 13. Обработка ошибок на разных уровнях
 
-** TODO 13. Обработка ошибок на разных уровнях
-   Defensive Programming vs Let it crash
-   Уровни изоляции ошибок
-   http://jlouisramblings.blogspot.com/2010/11/on-erlang-state-and-crashes.html
+* TODO 14. Cowboy
 
-** TODO 14. Курсовая работа
+* TODO 15. JSON
 
+* TODO 16. EUnit
 
-* TODO Часть 2-я. Продвинутый эрланг
+* TODO 17. Common Test
 
-** TODO история эрланг на фоне истории программирования
+* TODO 18. Types, Dialyzer
 
-** TODO Работа с сокетами
-   TCP, UDP
-   Активный и пассивный режим сокета
-   Наивный tcp сервер
-   Два вида протоколов: бинарные с размером впереди, текстовые с разделителем
-   опробовать оба через telnet
-   Ranch Acceptor Pool
-
-** TODO Rebar
-   управление зависимостями
-   сборка проекта
-   rebar 3,
-   Makefile, EMakefile
-
-** TODO Логирование
-   report browser
-   lager
-
-** TODO Dialyzer
-   типы данных, спеки
-   build_
-   check
-   ignore
-
-** TODO Работа с JSON
-   jsonx, jiffy, ej, jesse
-
-** TODO Cowboy 1
-   Роутинг
-   Статические файлы
-   http хендлер
-
-** TODO Cowboy 2
-   Поддержка сессий
-   cowboy 2.0
-
-** TODO Cowboy 3
-   websocket
-   bullet
-   пишем простой чат
-
-** TODO Работа с базой данных
-   epgsql, emysql
-
-** TODO Eunit
-
-** TODO Еще полезные библиотеки
-   erlydtl
-   poolboy
-   sheep
-   herd
-   orca
-   erma
-   lhttpc (или какая там у него замена сейчас?)
-
-** TODO Курсовая работа :)
-   реализация key-value хранилища
-   чтобы было интересно, с фичами:
-   - сохранение на диск и восстановление
-   - TCP интерфейс (доступ через telnet)
-   - HTTP интерфейсом (используем cowboy)
-   - журналирование
-
-
-* Часть 3-я
-
-** Observer, Webtool
-
-** Сериализация данных
-   bert, google protocol buffers
-
-** Common test
-
-** Релизы, relx
-
-** Отладка
-   trace, dbg, sys, observer
-
-** Zabbix
-   тулы для мониторинга логов, etc
-
-** Распределенность
-   Курсовая работа -- распределенный чат
-
-** Работа с APNS, GCM
-   ssl, сертификаты
-
-** Кастомный супервизор с exponential backoff
-
-** Валидация данных
-   many inner case..of
-   try..catch
-   json scheme
-   maybe/error monads
-   list of validation functions, return: ok | {error, term()} | {stop, term()}
-   get-данные можно перегнать в JSON и валидировать по схеме.
-   Схема не годится там, где валидация с побочными эффектами: обращение к базе, к стороннему сервису и т.д.
-** Конфигурирование
-   sys.config
-   cuttlefish, econfig, либа Дениса
+* TODO 19. Курсовая работа

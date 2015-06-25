@@ -1,108 +1,187 @@
 * курс по Erlang
 
-** 6й день
-   распечатать, что я успел написать
-   работать будем на базе erl-proj-tpl
-   - 11 supervisor, gen_fsm, gen_even
-   - 12 application, структура проекта, rebar
-
-** 7й день
-   - 13 Обработка ошибок
-     см TODO в конспекте
-
-   - cowboy, роутинг, статика, хендлеры
-   - работа с JSON
-
 ** 8й день
-   - eunit, common test
-   - cowboy, web socket
-   - конфигурирование, логирование
+   - работа с JSON
+     jiffy, ej, jessy
+
+   - eunit
+     exceptions, generators, mock
+     samples: erma, herd
+
+   - common test
+     one node, two nodes rpc, black box http
+     groups, parallel, race conditions, dead locks
+
    - типы данных, диалайзер
+     build_plt, add_plt
+     warn_missing_spec
+     игнорирование предупреждений лагера
 
+* TODO theory, quiz
 
-* TODO 7й урок io_list, binary, string, unicode
-- видео
-- залить и прицепить к уроку на hexlet
+** TODO 9. gen_server
+   Пишем свою реализацию gen_server в несколько этапов
 
-
-* TODO 8й урок. Многопоточность в Erlang.
-- практическое задание
-  map-reduce
-  форкнуть процессы, пусть что-то прочитают из файла, пошлют процессору-reduce
-  тот пусть дождется всех результатов и что-нибудь просуммирует
-
-- видео
-
-
-* TODO 9. gen_server
-- теория
-- конспект
-- quiz
-- практическое задание
-- видео
-
-
-* TODO 10. Многопоточность, обработка ошибок
-- теория
-- конспект
-- quiz
-- практическое задание
-- видео
-
+** TODO 10. link, monitor
   здесь нужно показать примеры link и monitor
   можно на базе уже написанного gen_server
   запустить 2 таких процесса, слинковать, поставить trap_exit=true
   один останавливать, в другом ловить сообщения
   тож самое с monitor
+   link, spawn_link, monitor, exit, trap exit
 
+** TODO 11. supervisor
 
-* TODO 11. supervisor
-- теория
-- конспект
-- quiz
-- практическое задание
-- видео
+** TODO 12. OTP фреймворк
+   как было на уроке: ebin/some.app, application
+   gen_fsm, gen_event пару слов про них
+   erl-proj-tpl -- объяснить каждую папку и файл
+   запуск
+   конфигурация, логирование, lager
+   rebar, rebar config
+   Добавить cюда проект short_link
 
+** TODO 13. Обработка ошибок на разных уровнях
+   Defensive Programming vs Let it crash
+   - let it crush
+   - try..catch
+     - нужна обработка отличная от дефолтной
+     - более понятные сообщения в логах + контекст
+     - способ выйти из функции в нескольких местах
+   - supervisor
+   - cluster
 
-* TODO 12 OTP фреймворк
-- теория
-- конспект
-- quiz
-- практическое задание
-- видео
+** TODO 14. Cowboy
+   deps
+   routing, start,
+   not_found or ping_ handler
+   http_handler
+   work with Req object
 
+** TODO 15. JSON
+   jiffy, ej, jessy
 
-* TODO 13. Обработка ошибок на разных уровнях
-- теория
-- конспект
-- quiz
-- практическое задание
-- видео
+** TODO 16. eunit
+     exceptions, generators, mock
+     samples: erma, herd
+
+** TODO 17. common test
+     one node, two nodes rpc, black box http
+     groups, parallel, race conditions, dead locks
+
+** TODO 18. types, dialyzer
+     build_plt, add_plt
+     warn_missing_spec
+     игнорирование предупреждений лагера
 
 * TODO пересмотреть все материалы erlang-school
   что-то еще забрать сюда
+  dchat
 
-* TODO добавить темы cowboy, JSON, rebar
-  вряд ли у меня будет 2-я часть. А если будет, то не скоро.
-  поэтому нужно больше тем взять в 1-ю часть.
+* TODO exercises
 
-* TODO курсовая работа по 1й части курса
+** TODO 8. Многопоточность в Erlang.
+  map-reduce
+  форкнуть процессы, пусть что-то прочитают из файла, пошлют процессору-reduce
+  тот пусть дождется всех результатов и что-нибудь просуммирует
+
+** TODO 9. gen_server
+
+** TODO 10. link, monitor
+
+** TODO 11. supervisor
+
+** TODO 12. OTP фреймворк
+
+** TODO 13. Обработка ошибок на разных уровнях
+
+** TODO 14. Cowboy
+
+** TODO 15. JSON
+
+** TODO 16. eunit
+
+** TODO 17. common test
+
+** TODO 18. types, dialyzer
+
+* TODO video
+
+** TODO 7. io_list, binary, string, unicode
+
+** TODO 8. Многопоточность в Erlang.
+
+** TODO 9. gen_server
+
+** TODO 10. link, monitor
+
+** TODO 11. supervisor
+
+** TODO 12. OTP фреймворк
+
+** TODO 13. Обработка ошибок на разных уровнях
+
+** TODO 14. Cowboy
+
+** TODO 15. JSON
+
+** TODO 16. eunit
+
+** TODO 17. common test
+
+** TODO 18. types, dialyzer
+
+* TODO курсовая работа
   важно как-то это уметь тестировать
-  веб-сервер пока не изучали, на UI расчитывать не приходится
-  так что это должно быть что-то консольное
-  консольная игра
 
 можно взять тему TCP сокетов, телнет клиент, текстовый протокол
 и на всем этом построить более сложное задание, чем обычно
 
 тестировать его будет трудно. Придется сделать TCP-клиента, повторяющего telnet
 
+   реализация key-value хранилища
+   чтобы было интересно, с фичами:
+   - сохранение на диск и восстановление
+   - TCP интерфейс (доступ через telnet)
+   - HTTP интерфейсом (используем cowboy)
+   - журналирование
+
 * TODO Когда курс будет закончен, вывести из sanbox на hexlet
   Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)
 
+* Дополнительные темы
+** история эрланг на фоне истории программирования
+** Работа с сокетами
+   TCP, UDP
+   Активный и пассивный режим сокета
+   Наивный tcp сервер
+   Два вида протоколов: бинарные с размером впереди, текстовые с разделителем
+   опробовать оба через telnet
+   Ranch Acceptor Pool
+** Работа с базой данных
+   epgsql, emysql
+** Rebar
+   управление зависимостями
+   сборка проекта
+   rebar 3,
+   Makefile, EMakefile
+** cowboy, сессии
+** cowboy, websocket, bullet
+** wgnet: sheep, herd, wg_push, erma
+** tracing
+** Релизы, relx
+** кластер, dchat
+** Валидация данных
+   many inner case..of
+   try..catch
+   json scheme
+   maybe/error monads
+   list of validation functions, return: ok | {error, term()} | {stop, term()}
+   get-данные можно перегнать в JSON и валидировать по схеме.
+   Схема не годится там, где валидация с побочными эффектами: обращение к базе, к стороннему сервису и т.д.
+
 
 * По каждому уроку:
-
 - источники инфы:
   - notes.org
   - erlang-school
@@ -113,13 +192,11 @@
   - erlang in anger
   - OTP in action
   - yzh44yzh.by
-
 - теория
 - конспект
 - quiz
 - практическое задание
 - видео
-
 
 * Инфа
 
