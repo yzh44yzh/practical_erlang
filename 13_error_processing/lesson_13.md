@@ -15,8 +15,6 @@ prevent them all.
 ```
 
 ```
-
-```
 case do_something(Arg) of
     {ok, Res} -> code;
     {error, Reason} -> code
