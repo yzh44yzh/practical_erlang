@@ -3,6 +3,7 @@
     "type": "object",
     "properties": {
         "states": {
+            "required": true,
             "type": "string",
             "pattern": "^((unread|read|hidden)(,|$))+$"
         },
