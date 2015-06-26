@@ -1,0 +1,25 @@
+{
+    "description": "validation schema for ...",
+    "type": "object",
+    "properties": {
+        "states": {
+            "type": "string",
+            "pattern": "^((unread|read|hidden)(,|$))+$"
+        },
+        "page": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967296
+        },
+        "page_size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+        },
+        "order": {
+            "enum": ["asc","desc"],
+            "default": "asc"
+        }
+    },
+    "additionalProperties": false
+}

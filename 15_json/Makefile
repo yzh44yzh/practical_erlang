@@ -5,7 +5,8 @@ compile:
 run:
 	erl \
 	-pa ~/p/jiffy/ebin -pa ~/p/jiffy/deps/*/ebin \
-	-pa ~/p/ej/ebin -pa ~/p/ej/deps/*/ebin
+	-pa ~/p/ej/ebin -pa ~/p/ej/deps/*/ebin \
+	-pa ~/p/jesse/ebin
 
 
 clean:

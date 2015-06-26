@@ -1,9 +1,6 @@
 * курс по Erlang
 
 ** 8й день
-   - работа с JSON
-     jiffy, ej, jessy
-
    - eunit
      exceptions, generators, mock
      samples: erma, herd
