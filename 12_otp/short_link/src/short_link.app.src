@@ -1,0 +1,10 @@
+%% -*- mode: Erlang;-*-
+{application, short_link,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {mod, {short_link_app, []}},
+  {env, []}
+ ]}.
