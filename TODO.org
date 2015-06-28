@@ -1,10 +1,5 @@
 * TODO theory, quiz
 
-** TODO 9. gen_server
-   Пишем свою реализацию gen_server в несколько этапов
-   - quiz
-   - добавить quiz на hexlet
-
 ** TODO 10. gen_server, продолжение
    как пользоваться стандартным gen_server
 

@@ -4,7 +4,7 @@
 подход выбрали и Joe Armstrong (Programming Erlang, глава 16), и Fred
 Hebert (LYSE, глава What is OTP?).
 
-Пойдем и мы тем же путем. Напишем свой gen_server в 6 этапов.
+Пойдем и мы тем же путем. Напишем свой gen_server в 8 этапов.
 
 
 ## 1-й этап, простейший цикл.
