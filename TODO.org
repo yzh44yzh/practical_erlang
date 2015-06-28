@@ -2,10 +2,6 @@
 
 ** TODO 9. gen_server
    Пишем свою реализацию gen_server в несколько этапов
-   - spellcheck
-   - пуш, вычитка на github
-   - метаданные
-   - добавить на hexlet
    - quiz
    - добавить quiz на hexlet
 

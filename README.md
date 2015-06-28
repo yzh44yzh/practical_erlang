@@ -21,7 +21,7 @@
 * DONE 6. maps и ets таблицы
 * DONE 7. io_list, binary, string, unicode
 * DONE 8. Многопоточность в Erlang
-* TODO 9. gen_server
+* DONE 9. gen_server
 * TODO 10. gen_server, продолжение
 * TODO 11. link, monitor
 * TODO 12. supervisor
