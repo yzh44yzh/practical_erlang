@@ -21,14 +21,16 @@
 * DONE 6. maps и ets таблицы
 * DONE 7. io_list, binary, string, unicode
 * DONE 8. Многопоточность в Erlang
-* TODO 9. gen_server
-* TODO 10. link, monitor
-* TODO 11. supervisor
-* TODO 12. OTP фреймворк
-* TODO 13. Обработка ошибок на разных уровнях
-* TODO 14. Cowboy
-* TODO 15. JSON
-* TODO 16. EUnit
-* TODO 17. Common Test
-* TODO 18. Types, Dialyzer
-* TODO 19. Курсовая работа
+* DONE 9. gen_server
+* TODO 10. gen_server, продолжение
+* TODO 11. link, monitor
+* TODO 12. supervisor
+* TODO 13. application
+* TODO 14. OTP фреймворк
+* TODO 15. Обработка ошибок на разных уровнях
+* TODO 16. Cowboy
+* TODO 17. JSON
+* TODO 18. EUnit
+* TODO 19. Common Test
+* TODO 20. Types, Dialyzer
+* TODO 21. Курсовая работа
