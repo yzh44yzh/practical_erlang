@@ -1,5 +1,4 @@
 * TODO theory, quiz
-
 ** TODO 10. gen_server, продолжение
    как пользоваться стандартным gen_server
 
@@ -57,7 +56,6 @@
      one node, two nodes rpc, black box http
      groups, parallel, race conditions, dead locks
 
-
 ** TODO 20. types, dialyzer
    http://www.erlang.org/doc/reference_manual/typespec.html
    http://learnyousomeerlang.com/dialyzer
@@ -65,16 +63,13 @@
      warn_missing_spec
      игнорирование предупреждений лагера
 
+
 * TODO пересмотреть все материалы erlang-school
   что-то еще забрать сюда
   dchat
 
-* TODO exercises
 
-** TODO 8. Многопоточность в Erlang.
-  map-reduce
-  форкнуть процессы, пусть что-то прочитают из файла, пошлют процессору-reduce
-  тот пусть дождется всех результатов и что-нибудь просуммирует
+* TODO exercises
 
 ** TODO 9. gen_server
 
