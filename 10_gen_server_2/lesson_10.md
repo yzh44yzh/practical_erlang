@@ -26,6 +26,9 @@ Apple Push Notification Service.
 
 ## behavior(gen_server)
 
+TODO картинка, 4 части ген-сервера
+gen_server.png
+
 TODO что такое behavior и callback
 
 
@@ -67,19 +70,24 @@ TODO init/1
 
 TODO record #state
 
-TODO картинка, 4 части ген-сервера.
+TODO картинка, 4 части ген-сервера, init
+gen_server_init.png
 
 специальные потоки, модуль sys
 
 ## gen_server:call
 
-TODO картинка, 4 части ген-сервера.
+TODO картинка, 4 части ген-сервера, call
+gen_server_call.png
+
 **call/handle_call**
 
 
 ## gen_server:cast
 
-TODO картинка, 4 части ген-сервера.
+TODO картинка, 4 части ген-сервера, cast
+gen_server_cast.png
+
 **cast/handle_cast**
 
 
