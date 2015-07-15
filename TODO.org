@@ -1,7 +1,4 @@
 * TODO theory, quiz
-** TODO 10. gen_server, продолжение
-   как пользоваться стандартным gen_server
-
 ** TODO 11. link, monitor
   здесь нужно показать примеры link и monitor
   можно на базе уже написанного gen_server

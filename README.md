@@ -22,7 +22,7 @@
 * DONE 7. io_list, binary, string, unicode
 * DONE 8. Многопоточность в Erlang
 * DONE 9. gen_server
-* TODO 10. gen_server, продолжение
+* DONE 10. gen_server, продолжение
 * TODO 11. link, monitor
 * TODO 12. supervisor
 * TODO 13. application
