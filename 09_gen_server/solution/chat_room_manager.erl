@@ -2,67 +2,74 @@
 
 -export([start/0,
          create_room/2, remove_room/2, get_rooms/1,
-         add_user/2, remove_user/2,
-         get_users_list/2, get_messages_history/2,
-         send_message/4]).
+         add_user/3, remove_user/3, get_users_list/2,
+         send_message/4,  get_messages_history/2]).
+
+-type(server() :: pid()).
+-type(room_id() :: reference()).
+-type(name() :: binary()).
+-type(message() :: binary()).
 
 -record(room, {
-          id,
-          name,
-          users = [],
-          history = []
+          id :: room_id(),
+          name :: name(),
+          users = [] :: [name()],
+          history = [] :: [message()]
          }).
 
 -record(state, {
-          max_rooms = 10,
-          max_users_in_room = 10,
-          rooms = maps:new()
+          max_rooms = 10 :: integer(),
+          max_users_in_room = 10 :: integer(),
+          rooms = maps:new() :: map()
          }).
 
 
--spec start() -> pid().
+-spec start() -> server().
 start() ->
     spawn(?MODULE, loop, [#state{}]).
 
 
--spec create_room(pid(), binary()) -> {ok, reference()} | {error, term()}.
-create_room(Pid, RoomName) ->
-    call(Pid, {create_room, RoomName}).
+-spec create_room(server(), name()) -> {ok, room_id()} | {error, term()}.
+create_room(Server, RoomName) ->
+    call(Server, {create_room, RoomName}).
 
 
--spec remove_room(pid(), reference()) -> ok | {error, term()}.
-remove_room(Pid, RoomId) ->
-    call(Pid, {remove_room, RoomId}).
+-spec remove_room(server(), room_id()) -> ok | {error, term()}.
+remove_room(Server, RoomId) ->
+    call(Server, {remove_room, RoomId}).
 
 
--spec get_rooms(pid()) -> [#room{}].
-get_rooms(Pid) ->
-    call(Pid, get_rooms).
+-spec get_rooms(server()) -> [#room{}].
+get_rooms(Server) ->
+    call(Server, get_rooms).
 
 
-add_user(Pid, UserName) ->
+-spec add_user(server(), room_id(), name()) -> ok | {error, term()}.
+add_user(Server, RoomId, UserName) ->
+    call(Server, {add_user, RoomId, UserName}).
+
+
+-spec remove_user(server(), room_id(), name()) -> ok | {error, term()}.
+remove_user(Server, RoomId, UserName) ->
+    call(Server, {remove_user, RoomId, UserName}).
+
+
+-spec get_users_list(server(), room_id()) -> {ok, [name()]} | {error, term()}.
+get_users_list(Server, RoomId) ->
+    call(Server, {get_users_list, RoomId}).
+
+
+send_message(Server, RoomId, UserName, Message) ->
     ok.
 
 
-remove_user(Pid, UserName) ->
+get_messages_history(Server, RoomId) ->
     ok.
 
 
-get_users_list(Pid, RoomId) ->
-    ok.
-
-
-get_messages_history(Pid, RoomId) ->
-    ok.
-
-
-send_message(Pid, RoomId, UserName, Message) ->
-    ok.
-
-
-call(Pid, Msg) ->
-    MRef = erlang:monitor(process, Pid),
-    Pid ! {Msg, self(), MRef},
+call(Server, Msg) ->
+    MRef = erlang:monitor(process, Server),
+    Server ! {Msg, self(), MRef},
     receive
         {reply, MRef, Reply} ->
             erlang:demonitor(MRef, [flush]),
@@ -97,8 +104,38 @@ handle_call({remove_room, RoomId}, #state{rooms = Rooms} = State) ->
     case maps:find(RoomId, Rooms) of
         {ok, _Room} -> Rooms2 = maps:remove(RoomId, Rooms),
                        {ok, State#state{rooms = Rooms2}};
-        error -> {{error, not_found}, State}
+        error -> {{error, room_not_found}, State}
     end;
 
 handle_call(get_rooms, #state{rooms = Rooms} = State) ->
-    {maps:values(Rooms), State}.
+    {maps:values(Rooms), State};
+
+handle_call({add_user, RoomId, UserName}, #state{rooms = Rooms} = State) ->
+    case maps:find(RoomId, Rooms) of
+        {ok, #room{users = Users} = Room} ->
+            Room2 = Room#room{users = [UserName | Users]},
+            Rooms2 = maps:put(RoomId, Room2),
+            {ok, State#state{rooms = Rooms2}};
+        error -> {{error, room_not_found}, State}
+    end;
+
+handle_call({remove_user, RoomId, UserName}, #state{rooms = Rooms} = State) ->
+    case maps:find(RoomId, Rooms) of
+        {ok, #room{users = Users} = Room} ->
+            case lists:member(UserName, Users) of
+                true ->
+                    Users2 = lists:delete(UserName, Users),
+                    Room2 = Room#room{users = Users2},
+                    Rooms2 = maps:put(RoomId, Room2),
+                    {ok, State#state{rooms = Rooms2}};
+                false -> {{error, user_not_in_room}, State}
+            end;
+        error -> {{error, room_not_found}, State}
+    end;
+
+handle_call({get_users_list, RoomId}, #state{rooms = Rooms} = State) ->
+    case maps:find(RoomId, Rooms) of
+        {ok, #room{users = Users}} ->
+            {{ok, Users}, State};
+        error -> {{error, room_not_found}, State}
+    end.

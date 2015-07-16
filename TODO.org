@@ -72,15 +72,19 @@
    + свой модуль с таким же кастомным gen_server (call, loop) но с другим АПИ.
    - chat_room_manager
      + start
-     - test: проверять, что start вернула Pid, и этот Pid живой
      + create_room/2, remove_room/2, get_rooms/1,
-     - test
-     - add_user/2, remove_user/2,
-     - test
-     - get_users_list/2, get_messages_history/2,
-     - test
+     + add_user/2, remove_user/2,
+     + get_users_list/2
      - send_message/4
-     - test
+     - get_messages_history/2,
+     - tests
+       - start: проверять, что start вернула Pid, и этот Pid живой
+       - create_room/2, remove_room/2, get_rooms/1,
+       - add_user/2, remove_user/2,
+       - get_users_list/2
+       - send_message/4
+       - get_messages_history/2,
+   - dialyzer check
    - README
      пояснить, зачем нужен spec
    - hexlet exercise, test in Web IDE
