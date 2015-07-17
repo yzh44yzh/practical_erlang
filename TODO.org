@@ -71,19 +71,8 @@
 ** TODO 9. gen_server
    + свой модуль с таким же кастомным gen_server (call, loop) но с другим АПИ.
    - chat_room_manager
-     + start
-     + create_room/2, remove_room/2, get_rooms/1,
-     + add_user/2, remove_user/2,
-     + get_users_list/2
-     - send_message/4
-     - get_messages_history/2,
      - tests
-       - start: проверять, что start вернула Pid, и этот Pid живой
-       - create_room/2, remove_room/2, get_rooms/1,
-       - add_user/2, remove_user/2,
-       - get_users_list/2
-       - send_message/4
-       - get_messages_history/2,
+       - send_message/4, get_messages_history/2,
    - dialyzer check
    - README
      пояснить, зачем нужен spec

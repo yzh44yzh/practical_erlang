@@ -4,11 +4,12 @@
          create_room/2, remove_room/2, get_rooms/1,
          add_user/3, remove_user/3, get_users_list/2,
          send_message/4,  get_messages_history/2]).
+-export([loop/1, handle_call/2]).
 
 -type(server() :: pid()).
 -type(room_id() :: reference()).
 -type(name() :: binary()).
--type(message() :: binary()).
+-type(message() :: {name(), binary()}).
 
 -record(room, {
           id :: room_id(),
@@ -18,8 +19,8 @@
          }).
 
 -record(state, {
-          max_rooms = 10 :: integer(),
-          max_users_in_room = 10 :: integer(),
+          max_rooms = 5 :: integer(),
+          max_users_in_room = 5 :: integer(),
           rooms = maps:new() :: map()
          }).
 
@@ -60,11 +61,11 @@ get_users_list(Server, RoomId) ->
 
 
 send_message(Server, RoomId, UserName, Message) ->
-    ok.
+    call(Server, {send_message, RoomId, UserName, Message}).
 
 
 get_messages_history(Server, RoomId) ->
-    ok.
+    call(Server, {get_messages_history, RoomId}).
 
 
 call(Server, Msg) ->
@@ -88,6 +89,7 @@ loop(State) ->
             {Reply, State2} = ?MODULE:handle_call(Msg, State),
             From ! {reply, Ref, Reply},
             ?MODULE:loop(State2);
+        stop -> ok;
         _Any -> ?MODULE:loop(State)
     end.
 
@@ -114,7 +116,7 @@ handle_call({add_user, RoomId, UserName}, #state{rooms = Rooms} = State) ->
     case maps:find(RoomId, Rooms) of
         {ok, #room{users = Users} = Room} ->
             Room2 = Room#room{users = [UserName | Users]},
-            Rooms2 = maps:put(RoomId, Room2),
+            Rooms2 = maps:put(RoomId, Room2, Rooms),
             {ok, State#state{rooms = Rooms2}};
         error -> {{error, room_not_found}, State}
     end;
@@ -126,7 +128,7 @@ handle_call({remove_user, RoomId, UserName}, #state{rooms = Rooms} = State) ->
                 true ->
                     Users2 = lists:delete(UserName, Users),
                     Room2 = Room#room{users = Users2},
-                    Rooms2 = maps:put(RoomId, Room2),
+                    Rooms2 = maps:put(RoomId, Room2, Rooms),
                     {ok, State#state{rooms = Rooms2}};
                 false -> {{error, user_not_in_room}, State}
             end;
@@ -137,5 +139,24 @@ handle_call({get_users_list, RoomId}, #state{rooms = Rooms} = State) ->
     case maps:find(RoomId, Rooms) of
         {ok, #room{users = Users}} ->
             {{ok, Users}, State};
+        error -> {{error, room_not_found}, State}
+    end;
+
+
+handle_call({send_message, RoomId, UserName, Message}, #state{rooms = Rooms} = State) ->
+    case maps:find(RoomId, Rooms) of
+        {ok, #room{history = History} = Room} ->
+            Msg = {UserName, Message},
+            Room2 = Room#room{history = [Msg | History]},
+            Rooms2 = maps:put(RoomId, Room2),
+            {ok, State#state{rooms = Rooms2}};
+        error -> {{error, room_not_found}, State}
+    end;
+
+
+handle_call({get_messages_history, RoomId}, #state{rooms = Rooms} = State) ->
+    case maps:find(RoomId, Rooms) of
+        {ok, #room{history = History}} ->
+            {{ok, History}, State};
         error -> {{error, room_not_found}, State}
     end.
