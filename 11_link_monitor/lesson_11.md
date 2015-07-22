@@ -10,70 +10,38 @@ tolerance).  Считается, что система, сделанная на 
 дает средства, которыми программист может обеспечить устойчивость.
 Давайте посмотрим, что это за средства.
 
-Устойчивость к ошибкам построена на способности потоков наблюдать
-друг за другом.
-
-**Armstrong**
-
-If somebody dies, other people will notice.
-
-If I’m in a room and suddenly keel over and die, somebody will probably
-notice (well, at least I hope so). Erlang processes are just like people—
-they can on occasion die. Unlike people, when they die, they shout out
-in their last breath exactly what they have died from.
-
-Imagine a room full of people. Suddenly one person keels over and dies.
-Just as they die, they say “I’m dying of a heart attack” or “I’m dying of an
-exploded gastric wobbledgog.” That’s what Erlang processes do. One
-process might die saying “I’m dying because I was asked to divide by zero.”
-Another might say, “I’m dying because I was asked what the last element
-in an empty list was.”
-
-Now in our room full of people, we might imagine there are specially
-assigned people whose job it is to clear away the bodies. Let’s imagine
-two people, Jane and John. If Jane dies, then John will fix any problems
-associated with Jane’s death. If John dies, then Jane will fix the problems.
-Jane and John are linked with an invisible agreement that says that if
-one of them dies, the other will fix up any problems caused by the death.
-
-That’s how error detection in Erlang works. Processes can be linked. If
-one of the processes dies, the other process gets an error message saying
-why the first process dies.
-
-Pairs of processes can be linked. If one of the processes in a linked pair
-dies, the other process in the pair will be sent a message containing the
-reason why the first process died.
-
 
 ## link
 
-A link is a specific kind of relationship that can be created between
-two processes. When that relationship is set up and one of the
-processes dies from an unexpected throw, error or exit (see Errors and
-Exceptions), the other linked process also dies.
+Устойчивость к ошибкам построена на способности потоков наблюдать друг
+за другом. Два потока можно связать друг с другом так, что при падение
+одного из них, второй получит специальное сообщение, и тоже упадет.
 
-failing as soon as possible to stop errors
+Можно связать группу потоков, так, что при падении одного из них,
+упадет вся группа. Предполагается, что потоки зависят друг от друга в
+своей работе. Отсутствие одного потока приводит к нештатной ситуации,
+в которой остальные не могут выполнять осмысленных действий. Они
+только усугубляют и распространяют проблемы. Так что лучше остановить
+и рестартовать всю группу.
 
-if the process that has an error crashes but those that depend on it
-don't, then all these depending processes now have to deal with a
-dependency disappearing. Letting them die and then restarting the
-whole group is usually an acceptable alternative.
+Информация о падении передается в системном сообщении, тем же
+способом, что и обычные сообщения между потоками. Но системные
+сообщения не попадают в почтовый ящик, и их нельзя обработать обычным
+способом. Вместо этого, они просто завершают поток, который их
+получил, и распространяются дальше по имеющимся связям.
 
-When
-processes collaborate to solve a problem and something goes wrong, we can
-sometimes recover, but if we can’t recover, we just want to stop everything
-we were doing. This is rather like the notion of a transaction: either the pro-
-cesses do what they were supposed to do or they are all killed.
-
-When one of the linked processes crashes, a special kind of message is
-sent, with information relative to what happened. No such message is
-sent if the process dies of natural causes
+При нормальной остановке потока системное сообщение не генерируется, и
+связанные потоки продолжают работать.
 
 **link/1**, which takes a Pid as an argument. When called, the
   function will create a link between the current process and the one
   identified by Pid.
 
 **unlink/1**
+
+Links can not be stacked. If you call link/1 15 times for the same two
+processes, only one link will still exist between them and a single
+call to unlink/1 will be enough to tear it down.
 
 -spec spawn_link(Fun) -> Pid
 -spec spawn_link(Mod, Fnc, Args) -> Pid
@@ -82,15 +50,6 @@ sent if the process dies of natural causes
 -spec exit(Pid, Reason) -> none()
 
 TODO: пример кода
-
-Links can not be stacked. If you call link/1 15 times for the same two
-processes, only one link will still exist between them and a single
-call to unlink/1 will be enough to tear it down.
-
-Error propagation across processes is done through a process similar
-to message passing, but with a special type of message called
-signals.Exit signals are 'secret' messages that automatically act on
-processes, killing them in the action.
 
 
 ## system processes
