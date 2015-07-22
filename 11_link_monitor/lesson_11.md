@@ -1,9 +1,3 @@
-- источники инфы:
-  - Цезарини
-  - OTP in action
-  - официальные доки
-
-
 # Обработка ошибок на низком уровне
 
 Одна из главных фич эрланг -- устойчивость к ошибкам (fault
@@ -185,6 +179,10 @@ Using flush as an option will remove the DOWN message from the mailbox if it exi
 
 monitoring process
 does not have to become a system process in order to handle errors.
+
+Repeated calls to erlang:monitor(process,Pid) will return different ref-
+erences, creating multiple independent monitors. They will all send their 'DOWN' mes-
+sage when Pid terminates.
 
 ## Заключение
 

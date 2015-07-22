@@ -16,6 +16,20 @@ http://www.erlang.org/doc/man/supervisor.html
 
 дерево воркеров и супервизоров (картинка нужна)
 
+In large Erlang systems, you should never allow processes that are not part of a super-
+vision tree;
+
+Children can be started either in the initialization
+phase of the supervisor, or dynamically, once the supervisor has been started.
+
+Super-
+visors will trap exits and link to their children when spawning them. If a child process
+terminates, the supervisor will receive the exit signal. The supervisor can then use the
+Pid of the child in the exit signal to identify the process and restart it.
+
+These actions might include doing nothing,
+restarting the process, restarting the whole subtree, or terminating, making its super-
+visor resolve the problem.
 
 ## Настройка супервизора
 
