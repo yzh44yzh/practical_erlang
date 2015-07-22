@@ -69,11 +69,6 @@
 * TODO exercises
 
 ** TODO 9. gen_server
-   + свой модуль с таким же кастомным gen_server (call, loop) но с другим АПИ.
-   - chat_room_manager
-     - tests
-       - send_message/4, get_messages_history/2,
-   - dialyzer check
    - README
      пояснить, зачем нужен spec
    - hexlet exercise, test in Web IDE
@@ -81,8 +76,13 @@
 
 
 ** TODO 10. gen_server, продолжение
+   Теперь нужно сделать что-то на базе стандартного gen_server
+   можно тоже самое, что было в 9-м упражнении, но еще с каким-то развитием
+
 
 ** TODO 11. link, monitor
+   Армстронг, 13-я глава, упражнения. Можно взять тут идею.
+
 
 ** TODO 12. supervisor
 
