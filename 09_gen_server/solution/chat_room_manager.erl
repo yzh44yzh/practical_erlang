@@ -40,7 +40,7 @@ remove_room(Server, RoomId) ->
     call(Server, {remove_room, RoomId}).
 
 
--spec get_rooms(server()) -> [#room{}].
+-spec get_rooms(server()) -> [{room_id(), name()}].
 get_rooms(Server) ->
     call(Server, get_rooms).
 
@@ -110,7 +110,10 @@ handle_call({remove_room, RoomId}, #state{rooms = Rooms} = State) ->
     end;
 
 handle_call(get_rooms, #state{rooms = Rooms} = State) ->
-    {maps:values(Rooms), State};
+    Reply = maps:fold(fun(RoomId, #room{name = Name}, Acc) ->
+                              [{RoomId, Name} | Acc]
+                      end, [], Rooms),
+    {Reply, State};
 
 handle_call({add_user, RoomId, UserName}, #state{rooms = Rooms} = State) ->
     case maps:find(RoomId, Rooms) of
@@ -148,7 +151,7 @@ handle_call({send_message, RoomId, UserName, Message}, #state{rooms = Rooms} = S
         {ok, #room{history = History} = Room} ->
             Msg = {UserName, Message},
             Room2 = Room#room{history = [Msg | History]},
-            Rooms2 = maps:put(RoomId, Room2),
+            Rooms2 = maps:put(RoomId, Room2, Rooms),
             {ok, State#state{rooms = Rooms2}};
         error -> {{error, room_not_found}, State}
     end;
