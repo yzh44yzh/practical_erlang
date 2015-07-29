@@ -14,8 +14,8 @@ tolerance).  Считается, что система, сделанная на 
 ## link
 
 Устойчивость к ошибкам построена на способности потоков наблюдать друг
-за другом. Два потока можно связать друг с другом так, что при падение
-одного из них, второй получит специальное сообщение, и тоже упадет.
+за другом.  Два потока можно связать друг с другом так, что при
+падение одного, второй получит специальное сообщение и тоже упадет.
 
 Можно связать группу потоков, так, что при падении одного из них,
 упадет вся группа. Предполагается, что потоки зависят друг от друга в
@@ -24,67 +24,74 @@ tolerance).  Считается, что система, сделанная на 
 только усугубляют и распространяют проблемы. Так что лучше остановить
 и рестартовать всю группу.
 
-TODO: анекдот про трех мужиков, сажающих деревья, один не пришел.
-
 Информация о падении передается в системном сообщении, тем же
-способом, что и обычные сообщения между потоками. Но системные
-сообщения не попадают в почтовый ящик, и их нельзя обработать обычным
-способом. Вместо этого, они просто завершают поток, который их
-получил, и распространяются дальше по имеющимся связям.
+способом, что и обычные сообщения между потоками. Но системные сообщения
+(их еще называют **сигналы**), не попадают в почтовый ящик. Их нельзя
+обработать обычным способом. Вместо этого, они просто завершают поток,
+который их получил, и распространяются дальше по имеющимся связям.
 
-При нормальной остановке потока системное сообщение не генерируется, и
-связанные потоки продолжают работать.
+При нормальной остановке потока сигнал распространяется, но не
+вызывает завершение связанных потоков.
 
-**link/1**, which takes a Pid as an argument. When called, the
-  function will create a link between the current process and the one
-  identified by Pid.
+Вызов **link(Pid)** создает связь между текущим потоком и Pid.
+Связь двухстороннаяя. Чтобы связать несколько потоков, нужно сделать
+несколько вызовов link. Если потоки уже связаны, то вызов link не
+оказывает никакого эффекта.
 
-**unlink/1**
+Вызов **unlink(Pid)** разрывает связь.
 
-Links can not be stacked. If you call link/1 15 times for the same two
-processes, only one link will still exist between them and a single
-call to unlink/1 will be enough to tear it down.
+Часто бывает нужно создать новый поток и связь с ним. Это можно сделать
+последовательными вызовами spawn и link. Но поток может завершиться
+до вызова link. Поэтому лучше использовать функцию **spawn_link**,
+которая объединяет эти две операции, но выполняется атомарно.
 
--spec spawn_link(Fun) -> Pid
--spec spawn_link(Mod, Fnc, Args) -> Pid
+
+TODO: пример кода
+стартовать несколько потоков и связать все
+показать, что они работают
+сделать краш одного из них
+показать, что все завершились
+
+
+## Системные потоки
+
+Связи -- это хорошо, но этого мало. Еще нужно разделение ролей между
+потоками.  Одни потоки (рабочие), делают что-то полезное. Другие
+потоки (системные), присматривают за состоянием рабочих потоков.
+
+Чтобы сделать поток системным, достаточно вызывать:
+```erlang
+process_flag(trap_exit, true)
+```
+
+При этом в метаданных потока устанавливается специальный флаг
+**trap_exit**. После этого сигналы превращаются в обычные сообщения и
+попадают в почтовый ящик.  Таким образом системный поток может
+обработать падение рабочего потока.
+
+Сообщения выглядят так:
+```erlang
+{'EXIT', Pid, Reason}
+```
+
+Кортеж из 3х элеметов. Первый -- атом 'EXIT', второй -- Pid потока,
+который завершился, третий -- причина завершения потока.
+
+
+TODO: пример кода
+
+
+## Завершение работы потока
+
+нормально
+
+краш
+
+exit
 
 -spec exit(Reason) -> none()
 -spec exit(Pid, Reason) -> none()
 
-TODO: пример кода
-
-
-## system processes
-
-In order to restart a process, we need a way to first know that it
-died. This can be done by adding a layer on top of links (the
-delicious frosting on the cake) with a concept called system
-processes. System processes are basically normal processes, except
-they can convert exit signals to regular messages. This is done by
-calling process_flag(trap_exit, true) in a running process.
-
-By writing programs using system processes, it is easy to create a
-process whose only role is to check if something dies and then restart
-it whenever it fails.
-
-There are two types of processes, normal processes and system processes.
-spawn creates a normal process. A normal process can become a system
-process by evaluating the BIF process_flag(trap_exit, true).
-
-**System processes** are basically normal processes, except they can
-convert exit signals to regular messages. This is done by calling
-process_flag(trap_exit, true) in a running process.
-
--spec process_flag(trap_exit, true)
-
-сигнал 'EXIT' превращает в сообщение 'EXIT', которое можно обработать.
-
-{'EXIT', Pid, Reason}
-
-TODO: пример кода
-
-
-## kill
 
 While you can trap most exit reasons, there are situations where you
 might want to brutally murder a process: maybe one of them is trapping
