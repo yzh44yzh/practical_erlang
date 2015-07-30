@@ -46,11 +46,85 @@ tolerance).  Считается, что система, сделанная на 
 которая объединяет эти две операции, но выполняется атомарно.
 
 
-TODO: пример кода
-стартовать несколько потоков и связать все
-показать, что они работают
-сделать краш одного из них
-показать, что все завершились
+Рассмотрим пример кода:
+```erlang
+-module(sample1).
+
+-export([run/0, run_and_crash/0, work/1, work_and_crash_one/1]).
+
+run() ->
+    [spawn_link(?MODULE, work, [Id]) || Id <- lists:seq(0, 5)],
+    ok.
+
+work(Id) ->
+    io:format("~p ~p started~n", [Id, self()]),
+    timer:sleep(1000),
+    io:format("~p ~p stopped~n", [Id, self()]),
+    ok.
+```
+
+Здесь мы запускаем 5 потоков, и связываем их все с потоком консоли.
+Они стартуют, ждут 1 секунду, и завершаются:
+
+```erlang
+2> sample1:run().
+0 <0.40.0> started
+1 <0.41.0> started
+2 <0.42.0> started
+3 <0.43.0> started
+4 <0.44.0> started
+5 <0.45.0> started
+ok
+5 <0.45.0> stopped
+4 <0.44.0> stopped
+3 <0.43.0> stopped
+2 <0.42.0> stopped
+1 <0.41.0> stopped
+0 <0.40.0> stopped
+```
+
+Теперь сделаем, чтобы один из потоков завершался. Это будет 3й поток,
+как раз в середине всей группы потоков:
+
+```erlang
+run_and_crash() ->
+    [spawn_link(?MODULE, work_and_crash_one, [Id]) || Id <- lists:seq(0, 5)],
+    ok.
+
+work_and_crash_one(Id) ->
+    io:format("~p ~p started~n", [Id, self()]),
+    if
+        Id == 3 ->
+            io:format("~p ~p exiting~n", [Id, self()]),
+            exit(for_some_reason);
+        true -> ok
+    end,
+    timer:sleep(1000),
+    io:format("~p ~p stopped~n", [Id, self()]),
+    ok.
+```
+
+Видим, что стартуют все потоки, но ни один из них не выполняется до конца,
+потому что вместе с 3-м потоком завершились и все остальные.
+
+```erlang
+7> self().
+<0.68.0>
+8> sample1:run_and_crash().
+0 <0.71.0> started
+1 <0.72.0> started
+2 <0.73.0> started
+3 <0.74.0> started
+4 <0.75.0> started
+5 <0.76.0> started
+3 <0.74.0> exiting
+ok
+** exception exit: for_some_reason
+9> self().
+<0.77.0>
+```
+
+В том числе и поток консоли, который завершился, и рестартовал заново.
 
 
 ## Системные потоки
