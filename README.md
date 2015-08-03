@@ -13,24 +13,27 @@
 самостоятельно прочитают одну из книг по Erlang (до прохождения курса
 или паралельно с прохождением).
 
-* DONE 1. Введение. Типы данных.
-* DONE 2. Устройство списков. Рекурсивные функции с аккумуляторами.
-* DONE 3. Функции высшего порядка. Свертка.
-* DONE 4. Сопоставление с образцом, гарды.
-* DONE 5. KV-структуры данных
-* DONE 6. maps и ets таблицы
-* DONE 7. io_list, binary, string, unicode
-* DONE 8. Многопоточность в Erlang
-* DONE 9. gen_server
-* DONE 10. gen_server, продолжение
-* TODO 11. link, monitor
-* TODO 12. supervisor
-* TODO 13. application
-* TODO 14. OTP фреймворк
-* TODO 15. Обработка ошибок на разных уровнях
-* TODO 16. Cowboy
-* TODO 17. JSON
-* TODO 18. EUnit
-* TODO 19. Common Test
-* TODO 20. Types, Dialyzer
-* TODO 21. Курсовая работа
+Готовые уроки:
+ 1. Введение. Типы данных.
+ 2. Устройство списков. Рекурсивные функции с аккумуляторами.
+ 3. Функции высшего порядка. Свертка.
+ 4. Сопоставление с образцом, гарды.
+ 5. KV-структуры данных
+ 6. maps и ets таблицы
+ 7. io_list, binary, string, unicode
+ 8. Многопоточность в Erlang
+ 9. gen_server
+ 10. gen_server, продолжение
+ 11. link, monitor
+
+Уроки в разработке:
+ 12. supervisor
+ 13. application
+ 14. OTP фреймворк
+ 15. Обработка ошибок на разных уровнях
+ 16. Cowboy
+ 17. JSON
+ 18. EUnit
+ 19. Common Test
+ 20. Types, Dialyzer
+ 21. Курсовая работа

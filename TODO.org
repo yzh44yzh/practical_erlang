@@ -1,12 +1,4 @@
 * TODO theory, quiz
-** TODO 11. link, monitor
-  здесь нужно показать примеры link и monitor
-  можно на базе уже написанного gen_server
-  запустить 2 таких процесса, слинковать, поставить trap_exit=true
-  один останавливать, в другом ловить сообщения
-  тож самое с monitor
-   link, spawn_link, monitor, exit, trap exit
-
 ** TODO 12. supervisor
 
 ** TODO 13. application
