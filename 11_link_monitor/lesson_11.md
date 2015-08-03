@@ -34,7 +34,7 @@ tolerance).  Считается, что система, сделанная на 
 вызывает завершение связанных потоков.
 
 Вызов **link(Pid)** создает связь между текущим потоком и Pid.
-Связь двухстороннаяя. Чтобы связать несколько потоков, нужно сделать
+Связь двухсторонняя. Чтобы связать несколько потоков, нужно сделать
 несколько вызовов link. Если потоки уже связаны, то вызов link не
 оказывает никакого эффекта.
 
@@ -83,7 +83,7 @@ ok
 0 <0.40.0> stopped
 ```
 
-Теперь сделаем, чтобы один из потоков завершался. Это будет 3й поток,
+Теперь сделаем, чтобы один из потоков завершался. Это будет 3-й поток,
 как раз в середине всей группы потоков:
 
 ```erlang
@@ -149,8 +149,8 @@ process_flag(trap_exit, true)
 {'EXIT', Pid, Reason}
 ```
 
-Это кортеж из 3х элеметов. На первой позиции атом 'EXIT', на второй --
-Pid рабочего потока, на третей поциии -- причина завершения потока
+Это кортеж из 3-х элементов. На первой позиции атом 'EXIT', на второй --
+Pid рабочего потока, на третей позиции -- причина завершения потока
 (обычно атом или исключение).
 
 
@@ -266,7 +266,7 @@ exit(Pid, some_reason)
 ![gen_server](http://yzh44yzh.github.io/img/practical_erlang/link_exit_4.png)
 
 Поток W2 завершается с причиной **kill**. Сигнал доходит до потока W1,
-и W1 завершатеся с причиной **killed**.  Сигнал доходит до потока S4,
+и W1 завершается с причиной **killed**.  Сигнал доходит до потока S4,
 и S4 завершается с причиной **killed**.
 
 Сигнал распространяется дальше. Доходит до W3, и W3 завершается с
@@ -276,37 +276,39 @@ exit(Pid, some_reason)
 
 ## monitor
 
-Кроме link, есть еще один механизм наблюдения за состоянием потоков.
+Кроме link, есть еще один механизм наблюдения за состоянием потоков -- монитор.
+Этот механизм существенно отличается:
+- связь односторонняя;
+- информация сразу приходит в виде сообщений, а не в виде сигналов;
+- мониторов может быть несколько, и каждый работает независимо от остальных;
+- получателю не нужно быть системным потоком;
+- информация о нормальном завершении тоже доходит и обрабатывается.
 
-TODO
-
-More seriously, monitors are a special type of link with two differences:
-- they are unidirectional;
-- they can be stacked.
-- получателю не нужно быть системным потоком
-- инфа о нормальном завершении тоже доходит и обрабатывается
-
-
-Monitors are what you want when a process wants to know what's going
-on with a second process, but neither of them really are vital to each
-other.
-
+Текущий поток может установить монитор над другим потоком вызовом:
+```erlang
 Reference = erlang:monitor(process, Pid)
+```
 
+А аргументах передаются атом _process_ и Pid потока, который нужно
+мониторить.  Возвращается ссылка на установленный монитор. (Первый
+аргумент предполагает, что мониторить можно что-то еще, кроме
+потоков. Но подробности смотрите в документации).
+
+Если поток завершается, то второй поток получает сообщение:
+```erlang
 {'DOWN', Reference, process, Pid, Reason}
+```
 
-erlang:demonitor(Ref, [flush, info]).
+Где Reference -- это ссылка на монитор, Pid -- завершившийся поток,
+Reason -- причина завершения потока.
 
-The info option tells you if a monitor existed or not when you tried to remove it.
-demonitor returned false.
-Using flush as an option will remove the DOWN message from the mailbox if it existed
+Установленный монитор можно снять:
+```erlang
+erlang:demonitor(Reference, [flush]).
+```
 
-monitoring process
-does not have to become a system process in order to handle errors.
-
-Repeated calls to erlang:monitor(process,Pid) will return different ref-
-erences, creating multiple independent monitors. They will all send their 'DOWN' mes-
-sage when Pid terminates.
+Опция flush удаляет из почтового ящика сообщение вида {'DOWN', Reference, process, Pid, Reason},
+если оно есть.
 
 
 ## Заключение
