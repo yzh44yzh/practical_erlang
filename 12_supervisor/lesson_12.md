@@ -1,13 +1,5 @@
 TODO:
-
-- Хеберт
-http://learnyousomeerlang.com/supervisors
-
-- официальные доки
-http://www.erlang.org/doc/man/supervisor.html
-
-- http://petabridge.com/blog/how-actors-recover-from-failure-hierarchy-and-supervision/
-
+- http://learnyousomeerlang.com/supervisors
 
 # supervisor
 
@@ -29,6 +21,13 @@ In complex production systems, most faults and errors are transient, and retryin
 tion is a good way to do things — Jim Gray’s paper quotes Mean Times Between Failures
 (MTBF) of systems handling transient bugs being better by a factor of 4 when doing this.
 http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop
+
+Supervisors are used to build a hierarchical process structure called
+a supervision tree, a nice way to structure a fault tolerant
+application.
+
+The supervisor is responsible for starting, stopping and monitoring its child processes.
+The basic idea of a supervisor is that it shall keep its child processes alive by restarting them when necessary.
 
 TODO
 дерево воркеров и супервизоров (картинка нужна)
@@ -74,6 +73,9 @@ Is a valid Erlang term that is passed to the init/1 callback function when it is
 The start
 and start_link functions will spawn a new process that calls the init/1 callback function.
 
+TODO картинка, как для gen_server init процесс.
+
+
 ## Настройка супервизора
 
 {ok, {SupervisorSpecification, ChildSpecificationList}}
@@ -90,7 +92,7 @@ them.
     MaxRestarts = 10,
     MaxSecondsBetweenRestarts = 60,
 
-allowed restart frequency
+maximum restart intensity: intensity, period
 
 What will happen if your process gets into a cyclic restart? It crashes and is restarted,
 only to come across the same corrupted data, and as a result, it crashes again. This can’t
@@ -107,7 +109,14 @@ second to one per hour. Your choice will have to depend on what your child proce
 do, how many of them you expect the supervisor to monitor, and how you’ve set up
 your supervision strategy.
 
-### ChildSpec
+В 18 эрланг используется map
+    #{strategy => strategy(),
+      intensity => non_neg_integer(),
+      period => pos_integer()}
+вместо котрежа
+    {RestartStrategy, MaxRestart, MaxTime}
+
+### child specifications
 
 {ChildId, StartFunc, Restart, Shutdown, Type, Modules}.
 
@@ -148,6 +157,14 @@ name of the callback module used by the child behavior.
 Is a list of the modules that implement the process. The release handler uses it to
 determine which processes it should suspend during a software upgrade. As a rule
 of thumb, always include the behavior callback module.
+
+В 18 эрланг используется map
+    #{id => child_id(),       % mandatory
+     start => mfargs(),      % mandatory
+     restart => restart(),   % optional
+     shutdown => shutdown(), % optional
+     type => worker(),       % optional
+     modules => modules()}   % optional
 
 TODO
 Пример с парой воркеров и одним дочерним супервизором
