@@ -95,3 +95,14 @@ system.  (stidues -- диссертация Джо Армстронга, и др
 the next problem you get is hardware failures.  to have your program
  running on more than one computer at once, something that was needed
  for scaling anyway
+
+
+
+функция/библиотека может:
+- вернуть ok | error (Maybe or Result ok|error)
+- бросить исключение
+вызывающий код может
+- матч на ok
+- case на ok|error
+- ловить исключение
+- игнорировать исключение
