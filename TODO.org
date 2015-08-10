@@ -1,12 +1,4 @@
 * TODO theory, quiz
-** TODO 11. link, monitor
-  здесь нужно показать примеры link и monitor
-  можно на базе уже написанного gen_server
-  запустить 2 таких процесса, слинковать, поставить trap_exit=true
-  один останавливать, в другом ловить сообщения
-  тож самое с monitor
-   link, spawn_link, monitor, exit, trap exit
-
 ** TODO 12. supervisor
 
 ** TODO 13. application
@@ -69,11 +61,6 @@
 * TODO exercises
 
 ** TODO 9. gen_server
-   + свой модуль с таким же кастомным gen_server (call, loop) но с другим АПИ.
-   - chat_room_manager
-     - tests
-       - send_message/4, get_messages_history/2,
-   - dialyzer check
    - README
      пояснить, зачем нужен spec
    - hexlet exercise, test in Web IDE
@@ -81,8 +68,14 @@
 
 
 ** TODO 10. gen_server, продолжение
+   Теперь нужно сделать что-то на базе стандартного gen_server
+   можно тоже самое, что было в 9-м упражнении, но еще с каким-то развитием
+
 
 ** TODO 11. link, monitor
+   Армстронг, 13-я глава, упражнения. Можно взять тут идею.
+   Цезарини, 6-я глава, тоже есть упражнения.
+
 
 ** TODO 12. supervisor
 
@@ -135,6 +128,10 @@
 * TODO курсовая работа
   консольная 2048 http://habrahabr.ru/post/261801/
   важно как-то это уметь тестировать
+  Браузерная, с JS-клиентом и веб-сокетами. Клиент выходит за рамки курса.
+  Может быть клиента положить уже готового.
+  Может быть какой-то многопользовательский вариант игры.
+  Или что-то из Codewars.
 
 * TODO Когда курс будет закончен, вывести из sanbox на hexlet
   Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)

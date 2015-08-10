@@ -2,6 +2,12 @@
 
 http://www.erlang.org/doc/man/application.html
 
+Supervision trees are packaged into a behavior called an application. OTP applications
+not only are the building blocks of Erlang systems, but also are a way to package reus-
+able components. Industrial-grade systems consist of a set of loosely coupled, possibly
+distributed applications. These applications are part of the standard Erlang distribution
+or are specific applications developed by you, the programmer.
+
 to package Erlang modules into reusable components.
 An Erlang system will consist of a set of loosely coupled applications.
 

@@ -2,8 +2,6 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--record(room, {id, name, users = [], history = []}).
-
 
 start_test() ->
     Pid = chat_room_manager:start(),
@@ -19,53 +17,53 @@ room_test() ->
     ?assertEqual([], chat_room_manager:get_rooms(Server)),
 
     {ok, Room1} = chat_room_manager:create_room(Server, <<"Room 1">>),
-    ?assertEqual([#room{id = Room1, name = <<"Room 1">>}],
+    ?assertEqual([{Room1, <<"Room 1">>}],
                  chat_room_manager:get_rooms(Server)),
 
     {ok, Room2} = chat_room_manager:create_room(Server, <<"Room 2">>),
-    ?assertEqual([#room{id = Room1, name = <<"Room 1">>},
-                  #room{id = Room2, name = <<"Room 2">>}],
+    ?assertEqual([{Room1, <<"Room 1">>},
+                  {Room2, <<"Room 2">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
 
     {ok, Room3} = chat_room_manager:create_room(Server, <<"Nice Room">>),
-    ?assertEqual([#room{id = Room1, name = <<"Room 1">>},
-                  #room{id = Room2, name = <<"Room 2">>},
-                  #room{id = Room3, name = <<"Nice Room">>}],
+    ?assertEqual([{Room1, <<"Room 1">>},
+                  {Room2, <<"Room 2">>},
+                  {Room3, <<"Nice Room">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
 
     {ok, Room4} = chat_room_manager:create_room(Server, <<"Room 4">>),
     {ok, Room5} = chat_room_manager:create_room(Server, <<"Room 5">>),
     {error, room_limit} = chat_room_manager:create_room(Server, <<"Room 6">>),
-    ?assertEqual([#room{id = Room1, name = <<"Room 1">>},
-                  #room{id = Room2, name = <<"Room 2">>},
-                  #room{id = Room3, name = <<"Nice Room">>},
-                  #room{id = Room4, name = <<"Room 4">>},
-                  #room{id = Room5, name = <<"Room 5">>}],
+    ?assertEqual([{Room1, <<"Room 1">>},
+                  {Room2, <<"Room 2">>},
+                  {Room3, <<"Nice Room">>},
+                  {Room4, <<"Room 4">>},
+                  {Room5, <<"Room 5">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
 
     {error, room_not_found} = chat_room_manager:remove_room(Server, make_ref()),
 
     ok = chat_room_manager:remove_room(Server, Room2),
-    ?assertEqual([#room{id = Room1, name = <<"Room 1">>},
-                  #room{id = Room3, name = <<"Nice Room">>},
-                  #room{id = Room4, name = <<"Room 4">>},
-                  #room{id = Room5, name = <<"Room 5">>}],
+    ?assertEqual([{Room1, <<"Room 1">>},
+                  {Room3, <<"Nice Room">>},
+                  {Room4, <<"Room 4">>},
+                  {Room5, <<"Room 5">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
     {error, room_not_found} = chat_room_manager:remove_room(Server, Room2),
 
     ok = chat_room_manager:remove_room(Server, Room4),
-    ?assertEqual([#room{id = Room1, name = <<"Room 1">>},
-                  #room{id = Room3, name = <<"Nice Room">>},
-                  #room{id = Room5, name = <<"Room 5">>}],
+    ?assertEqual([{Room1, <<"Room 1">>},
+                  {Room3, <<"Nice Room">>},
+                  {Room5, <<"Room 5">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
 
     ok = chat_room_manager:remove_room(Server, Room1),
-    ?assertEqual([#room{id = Room3, name = <<"Nice Room">>},
-                  #room{id = Room5, name = <<"Room 5">>}],
+    ?assertEqual([{Room3, <<"Nice Room">>},
+                  {Room5, <<"Room 5">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
 
     ok = chat_room_manager:remove_room(Server, Room3),
-    ?assertEqual([#room{id = Room5, name = <<"Room 5">>}],
+    ?assertEqual([{Room5, <<"Room 5">>}],
                  lists:sort(chat_room_manager:get_rooms(Server))),
 
     ok = chat_room_manager:remove_room(Server, Room5),
@@ -101,6 +99,32 @@ user_test() ->
     ?assertEqual({ok, [<<"Helen">>]}, chat_room_manager:get_users_list(Server, Room1)),
     ok = chat_room_manager:remove_user(Server, Room1, <<"Helen">>),
     ?assertEqual({ok, []}, chat_room_manager:get_users_list(Server, Room1)),
+
+    Server ! stop,
+    ok.
+
+
+message_test() ->
+    Server = chat_room_manager:start(),
+    {ok, Room1} = chat_room_manager:create_room(Server, <<"Room 1">>),
+    {ok, Room2} = chat_room_manager:create_room(Server, <<"Room 2">>),
+
+    ?assertEqual({ok, []}, chat_room_manager:get_messages_history(Server, Room1)),
+    ?assertEqual({ok, []}, chat_room_manager:get_messages_history(Server, Room2)),
+    ?assertEqual({error, room_not_found}, chat_room_manager:get_messages_history(Server, make_ref())),
+
+    ok = chat_room_manager:send_message(Server, Room1, <<"Bob">>, <<"Hello!">>),
+    ok = chat_room_manager:send_message(Server, Room1, <<"Bill">>, <<"Hi there!">>),
+    ?assertEqual({ok, [{<<"Bill">>, <<"Hi there!">>}, {<<"Bob">>, <<"Hello!">>}]},
+                 chat_room_manager:get_messages_history(Server, Room1)),
+    ?assertEqual({ok, []}, chat_room_manager:get_messages_history(Server, Room2)),
+
+    ok = chat_room_manager:send_message(Server, Room2, <<"Helen">>, <<"Hi!">>),
+    ?assertEqual({ok, [{<<"Helen">>, <<"Hi!">>}]},
+                 chat_room_manager:get_messages_history(Server, Room2)),
+    ok = chat_room_manager:send_message(Server, Room2, <<"Kate">>, <<"ok">>),
+    ?assertEqual({ok, [{<<"Kate">>, <<"ok">>}, {<<"Helen">>, <<"Hi!">>}]},
+                 chat_room_manager:get_messages_history(Server, Room2)),
 
     Server ! stop,
     ok.

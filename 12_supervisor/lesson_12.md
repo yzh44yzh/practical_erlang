@@ -1,3 +1,6 @@
+TODO:
+- http://learnyousomeerlang.com/supervisors
+
 # supervisor
 
 http://www.erlang.org/doc/man/supervisor.html
@@ -14,10 +17,72 @@ http://www.erlang.org/doc/man/supervisor.html
 научные работы, в т.ч. докторская диссертация Джо Армстронга). Значительная часть,
 но не все, конечно. Поэтому нужны разные стратегии обработки ошибок.
 
+In complex production systems, most faults and errors are transient, and retrying an opera-
+tion is a good way to do things — Jim Gray’s paper quotes Mean Times Between Failures
+(MTBF) of systems handling transient bugs being better by a factor of 4 when doing this.
+http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop
+
+Supervisors are used to build a hierarchical process structure called
+a supervision tree, a nice way to structure a fault tolerant
+application.
+
+The supervisor is responsible for starting, stopping and monitoring its child processes.
+The basic idea of a supervisor is that it shall keep its child processes alive by restarting them when necessary.
+
+TODO
 дерево воркеров и супервизоров (картинка нужна)
+OTP behaviors include worker processes, which do the actual processing, and super-
+visors, whose task is to monitor workers and other supervisors. Worker behaviors, often
+denoted in diagrams as circles, include servers, event handlers, and finite state ma-
+chines. Supervisors, denoted in illustrations as squares, monitor their children, both
+workers and other supervisors, creating what is called a supervision tree (see Fig-
+ure 12-1).
+
+In large Erlang systems, you should never allow processes that are not part of a super-
+vision tree;
+
+Children can be started either in the initialization
+phase of the supervisor, or dynamically, once the supervisor has been started.
+
+Supervisors will trap exits and link to their children when spawning them. If a child process
+terminates, the supervisor will receive the exit signal. The supervisor can then use the
+Pid of the child in the exit signal to identify the process and restart it.
+
+These actions might include:
+- doing nothing,
+- restarting the process,
+- restarting the whole subtree,
+- or terminating, making its supervisor resolve the problem.
+
+
+## Запуск супервизора
+
+supervisor:start_link(ServerName, CallBackModule, Arguments)
+supervisor:start_link(CallBackModule, Arguments)
+
+ServerName
+Is the name to be registered for the supervisor, and is a tuple of the format {local,
+Name} or {global, Name} .
+
+CallbackModule
+Is the name of the module in which the init/1 callback function is placed.
+
+Arguments
+Is a valid Erlang term that is passed to the init/1 callback function when it is called.
+
+The start
+and start_link functions will spawn a new process that calls the init/1 callback function.
+
+TODO картинка, как для gen_server init процесс.
 
 
 ## Настройка супервизора
+
+{ok, {SupervisorSpecification, ChildSpecificationList}}
+The supervisor specification is a tuple containing information on how to handle process
+crashes and restarts. The child specification list specifies which children the supervisor
+has to start and monitor, together with information on how to terminate and restart
+them.
 
 структура child spec
 {ok, {{RestartStrategy, MaxRestart, MaxTime},[ChildSpecs]}}.
@@ -26,6 +91,32 @@ http://www.erlang.org/doc/man/supervisor.html
 
     MaxRestarts = 10,
     MaxSecondsBetweenRestarts = 60,
+
+maximum restart intensity: intensity, period
+
+What will happen if your process gets into a cyclic restart? It crashes and is restarted,
+only to come across the same corrupted data, and as a result, it crashes again. This can’t
+go on forever! This is where AllowedRestarts comes in, by specifying the maximum
+number of abnormal terminations the supervisor is allowed to handle in MaxSeconds
+seconds. If more abnormal terminations occur than are allowed, it is assumed that the
+supervisor has not been able to resolve the problem, and it terminates. The supervisor’s
+supervisor receives the exit signal and, based on its configuration, decides how to
+proceed.
+
+Finding reasonable values for AllowedRestarts and MaxSeconds is not easy, as they will
+be application-dependent. In production, we’ve used anything from ten restarts per
+second to one per hour. Your choice will have to depend on what your child processes
+do, how many of them you expect the supervisor to monitor, and how you’ve set up
+your supervision strategy.
+
+В 18 эрланг используется map
+    #{strategy => strategy(),
+      intensity => non_neg_integer(),
+      period => pos_integer()}
+вместо котрежа
+    {RestartStrategy, MaxRestart, MaxTime}
+
+### child specifications
 
 {ChildId, StartFunc, Restart, Shutdown, Type, Modules}.
 
@@ -36,6 +127,24 @@ http://www.erlang.org/doc/man/supervisor.html
     Shutdown = 2000,     % brutal_kill | int() >= 0 | infinity
     Type = worker | supervisor %
 
+**Shutdown**
+
+TODO:
+Specifies how many milliseconds a behavior that is trapping exits is allowed to
+execute in its terminate callback function after receiving the shutdown signal from
+its supervisor, either because the supervisor has reached its maximum number of
+allowed child restarts or because of a rest_for_one or one_for_all restart strategy.
+
+Вот этого я не понял. Что, terminate вызывается, только если у воркера стоит trap_exit=true?
+Очень странно. Надо проверить.
+
+If the child process has not terminated by this time, the supervisor will kill it un-
+conditionally.
+
+Shutdown will also take the atom infinity , a value which should
+always be chosen if the process is a supervisor, or the atom brutal_kill , if the
+process is to be killed unconditionally.
+
 **Type**
 This will be important when upgrading applications with more advanced
 OTP features, but you do not really need to care about this at the
@@ -44,6 +153,18 @@ moment
 **Modules**
 name of the callback module used by the child behavior.
 важно для горячего обновления
+
+Is a list of the modules that implement the process. The release handler uses it to
+determine which processes it should suspend during a software upgrade. As a rule
+of thumb, always include the behavior callback module.
+
+В 18 эрланг используется map
+    #{id => child_id(),       % mandatory
+     start => mfargs(),      % mandatory
+     restart => restart(),   % optional
+     shutdown => shutdown(), % optional
+     type => worker(),       % optional
+     modules => modules()}   % optional
 
 TODO
 Пример с парой воркеров и одним дочерним супервизором
@@ -55,7 +176,21 @@ TODO
 - вызовы start\_child/2, terminate\_child/2, restart\_child/2, delete\_child/2
 - simple\_one\_for\_one стратегия
 
+### start_child
+
+**start_child**
+**supervisor:start_child(SupervisorName, ChildSpec)
+
+SupervisorName
+Is either the process identifier of the supervisor or its registered name
+ChildSpec
+Is a single child specification tuple
+
 **terminate\_child/2**
+
+supervisor:terminate_child(SupervisorName, Id)
+Id Is the unique child identifier defined in the ChildSpec
+
 The process, if there is one, is terminated and, unless it is a
 temporary child, the child specification is kept by the
 supervisor. The child process may later be restarted by the
@@ -93,3 +228,18 @@ you ask for it and you get it
 
 TODO пример кода и попробовать в консоли
 наблюдать через observer
+
+
+## stop
+
+it does not export a stop function.
+As supervisors are never meant to be stopped by anyone other than their
+parent supervisors, this function was not implemented.
+
+You can easily add your own stop function by including the following
+code in your supervisor callback module. However, this will work only
+if stop is called by the parent:
+
+stop() -> exit(whereis(?MODULE), shutdown).
+
+If your supervisor is not registered, use its pid.

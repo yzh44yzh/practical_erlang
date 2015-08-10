@@ -1,3 +1,17 @@
+- источники инфы:
+  - Real World OCaml, где-то там было про обработку ошибок
+    исключения vs option/result types
+  - notes.org
+  - erlang-school
+  - официальные доки
+  - Армстронг
+  - Цезарини
+  - Хеберт
+  - erlang in anger
+  - OTP in action
+  - yzh44yzh.by
+
+
 ## Let it crash
 
 http://learnyousomeerlang.com/errors-and-processes
@@ -9,6 +23,27 @@ nothing can stop hardware failures all the time. The idea is thus to
 find good ways to handle errors and problems rather than trying to
 prevent them all.
 
+In C
+we are taught to write defensive code. Programs should check their arguments
+and not crash. There is a very good reason for this in C: writing multiprocess
+code is extremely difficult and most applications have only one process, so if
+this process crashes the entire application, you’re in big trouble. Unfortunately,
+this leads to large quantities of error checking code, which is intertwined with
+the non-error-checking code.
+
+In Erlang we do exactly the opposite. We build our applications in two parts:
+a part that solves the problem and a part that corrects errors if they have
+occurred.
+
+The part that solves the problem is written with as little defensive code as
+possible; we assume that all arguments to functions are correct and the
+programs will execute without errors.
+
+The part that corrects errors is often generic, so the same error-correcting
+code can be used for many different applications.
+
+We write code that solves problems
+and code that fixes problems, but the two are not intertwined.
 
 ```
 {ok, Res} = do_something(Arg),
@@ -81,6 +116,14 @@ It is important to know that the protected part of an exception can't be tail re
 The VM must always keep a reference there in case there's an exception popping up.
 
 ## supervisor
+
+в однопоточной программе краш потока -- это краш всей программы, поэтому
+sequential languages have concentrated on the prevention of failure and an
+emphasis on defensive programming.
+
+Instead of handling an error in the process
+where the error occurs, we let the process die and correct the error in some
+other process.
 
 Some studies proved that the main sources of downtime in large scale
 software systems are intermittent or transient bugs (source). Then,
