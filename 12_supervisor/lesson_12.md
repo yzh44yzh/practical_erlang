@@ -1,61 +1,44 @@
-TODO:
-- http://learnyousomeerlang.com/supervisors
+# Supervisor
 
-# supervisor
+## Немного теории
 
-http://www.erlang.org/doc/man/supervisor.html
+На прошлом уроке мы выяснили, что стратегия эрланг -- разделить потоки
+на рабочие (worker) и системные (supervisor), и поручить системным
+потокам обрабатывать падения рабочих потоков.
 
-## Теория
+Существуют научные работы, которые доказывают, что значительная часть
+ошибок в серверных системах вызваны временными условиями, и перегрузка
+части системы в известное стабильное состояние позволяет с ними
+справиться. Среди таких работ [докторская диссертация](http://www.sics.se/~joe/thesis/armstrong_thesis_2003.pdf)
+Джо Армстронга, одного из создателей эрланг.
 
-мы рассмотрели link и monitor
+Систему на эрланг рекомендуется строить так, чтобы любой поток был под
+наблюдением супервизора, а сами супервизоры были организованы в
+дерево.
 
-обработка ошибок основывается на том, что один поток может быть связан с другим потоком
-и если с другим потоком что-то случится, то получить событие и обработать эту ситуацию:
-перезапустить поток в известном стабильном состоянии
+![supervision_tree](http://yzh44yzh.github.io/img/practical_erlang/supervision_tree.png)
 
-Считается, что это позволяет пережить значительную часть ошибок. (На сей счет есть
-научные работы, в т.ч. докторская диссертация Джо Армстронга). Значительная часть,
-но не все, конечно. Поэтому нужны разные стратегии обработки ошибок.
+На картинке нарисовано такое дерево. Узлы в нем -- супервизоры, а
+листья -- рабочие процессы.  Падение любого потока и любой части
+системы не останется незамеченным.
 
-In complex production systems, most faults and errors are transient, and retrying an opera-
-tion is a good way to do things — Jim Gray’s paper quotes Mean Times Between Failures
-(MTBF) of systems handling transient bugs being better by a factor of 4 when doing this.
-http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop
+Дерево супервизоров разворачивается на старте системы. Каждый
+супервизор отвечает за то, чтобы запустить своих потомков, наблюдать
+за их состоянием, рестартовать и корректно завершать, если надо.
 
-Supervisors are used to build a hierarchical process structure called
-a supervision tree, a nice way to structure a fault tolerant
-application.
-
-The supervisor is responsible for starting, stopping and monitoring its child processes.
-The basic idea of a supervisor is that it shall keep its child processes alive by restarting them when necessary.
-
-TODO
-дерево воркеров и супервизоров (картинка нужна)
-OTP behaviors include worker processes, which do the actual processing, and super-
-visors, whose task is to monitor workers and other supervisors. Worker behaviors, often
-denoted in diagrams as circles, include servers, event handlers, and finite state ma-
-chines. Supervisors, denoted in illustrations as squares, monitor their children, both
-workers and other supervisors, creating what is called a supervision tree (see Fig-
-ure 12-1).
-
-In large Erlang systems, you should never allow processes that are not part of a super-
-vision tree;
-
-Children can be started either in the initialization
-phase of the supervisor, or dynamically, once the supervisor has been started.
-
-Supervisors will trap exits and link to their children when spawning them. If a child process
-terminates, the supervisor will receive the exit signal. The supervisor can then use the
-Pid of the child in the exit signal to identify the process and restart it.
-
-These actions might include:
-- doing nothing,
-- restarting the process,
-- restarting the whole subtree,
-- or terminating, making its supervisor resolve the problem.
+В эрланг есть [стандартная реализация супервизора](http://www.erlang.org/doc/man/supervisor.html).
+Она работает аналогично gen_server: вы должны написать кастомный
+модуль, реализующий поведение supervisor, куда входит одна функция
+обратного вызова **init/1**.  С одной стороны это просто -- всего один
+callback. С другой стороны **init** должен вернуть довольно не простую
+структуру данных, с которой нужно как следует разобраться.
 
 
 ## Запуск супервизора
+
+TODO
+
+Схема инициализации, как была для gen_server
 
 supervisor:start_link(ServerName, CallBackModule, Arguments)
 supervisor:start_link(CallBackModule, Arguments)
@@ -73,7 +56,6 @@ Is a valid Erlang term that is passed to the init/1 callback function when it is
 The start
 and start_link functions will spawn a new process that calls the init/1 callback function.
 
-TODO картинка, как для gen_server init процесс.
 
 
 ## Настройка супервизора
@@ -135,6 +117,7 @@ execute in its terminate callback function after receiving the shutdown signal f
 its supervisor, either because the supervisor has reached its maximum number of
 allowed child restarts or because of a rest_for_one or one_for_all restart strategy.
 
+TODO:
 Вот этого я не понял. Что, terminate вызывается, только если у воркера стоит trap_exit=true?
 Очень странно. Надо проверить.
 
