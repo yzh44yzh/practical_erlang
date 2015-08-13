@@ -36,6 +36,8 @@ callback. С другой стороны **init** должен вернуть д
 
 ## Запуск супервизора
 
+![supervision_tree](http://yzh44yzh.github.io/img/practical_erlang/supervisor_init.png)
+
 TODO
 
 Схема инициализации, как была для gen_server
