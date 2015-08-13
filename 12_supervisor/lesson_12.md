@@ -36,31 +36,45 @@ callback. С другой стороны **init** должен вернуть д
 
 ## Запуск супервизора
 
+Запуск supervisor похож на запуск gen_server.
+Вот картинка, аналогичная той, что мы видели в 10-м уроке:
+
 ![supervision_tree](http://yzh44yzh.github.io/img/practical_erlang/supervisor_init.png)
 
-TODO
+Напомню, что два левых квадрата (верхний и нижний), соответствуют
+нашему модулю.  Два правых квадрата соответствуют коду OTP. Два
+верхних квадрата выполняются в потоке родителя, два нижних квадрата
+выполняются в потоке потомка.
 
-Схема инициализации, как была для gen_server
+Начинаем с функции **start\_link/0**:
 
-supervisor:start_link(ServerName, CallBackModule, Arguments)
-supervisor:start_link(CallBackModule, Arguments)
+```erlang
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+```
 
-ServerName
-Is the name to be registered for the supervisor, and is a tuple of the format {local,
-Name} or {global, Name} .
+Здесь мы просим supervisor запустить новый поток.
 
-CallbackModule
-Is the name of the module in which the init/1 callback function is placed.
+Первый аргумент **{local, ?MODULE}** -- это имя, под которым нужно
+зарегистрировать поток. Есть вариант **supervisor:start_link/2** на случай,
+если мы не хотим регистрировать поток.
 
-Arguments
-Is a valid Erlang term that is passed to the init/1 callback function when it is called.
+Второй аргумент **?MODULE** -- это имя модуля, callback-функции
+которого будет вызывать supervisor.
 
-The start
-and start_link functions will spawn a new process that calls the init/1 callback function.
+Третий аргумент -- это набор параметров, которые нужны при
+инициализации.
 
+Дальше происходит некая магия в недрах OTP, в результате
+которой создается дочерний поток, и вызывается callback **init/1**.
+
+Из **init/1** нужно вернуть структуру данных, содержащую всю
+необходимую информацию для работы супервизора.
 
 
 ## Настройка супервизора
+
+TODO
 
 {ok, {SupervisorSpecification, ChildSpecificationList}}
 The supervisor specification is a tuple containing information on how to handle process
