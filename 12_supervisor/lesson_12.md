@@ -74,47 +74,65 @@ start_link() ->
 
 ## Настройка супервизора
 
-TODO
-
+Разберем подробнее:
+```erlang
 {ok, {SupervisorSpecification, ChildSpecificationList}}
-The supervisor specification is a tuple containing information on how to handle process
-crashes and restarts. The child specification list specifies which children the supervisor
-has to start and monitor, together with information on how to terminate and restart
-them.
+```
 
-структура child spec
-{ok, {{RestartStrategy, MaxRestart, MaxTime},[ChildSpecs]}}.
+Нам нужно описать спецификацию самого супервизора, и дочерних
+процессов, за которыми он будет наблюдать.
 
-    RestartStrategy = one_for_one, % one_for_one | one_for_all | rest_for_one | simple_one_for_one.
+Спецификация супервизора -- это кортеж из трех значений:
+```erlang
+{RestartStrategy, Intensity, Period}
+```
 
-    MaxRestarts = 10,
-    MaxSecondsBetweenRestarts = 60,
+Restartstrategy описывает политику перезапуска дочерних потоков.
+Есть 4 варианта стратегии:
 
-maximum restart intensity: intensity, period
+**one_for_one** -- при падении одного потока перезапускается только
+этот поток, остальные продолжают работать.
 
-What will happen if your process gets into a cyclic restart? It crashes and is restarted,
-only to come across the same corrupted data, and as a result, it crashes again. This can’t
-go on forever! This is where AllowedRestarts comes in, by specifying the maximum
-number of abnormal terminations the supervisor is allowed to handle in MaxSeconds
-seconds. If more abnormal terminations occur than are allowed, it is assumed that the
-supervisor has not been able to resolve the problem, and it terminates. The supervisor’s
-supervisor receives the exit signal and, based on its configuration, decides how to
-proceed.
+**one_for_all** -- при падении одного потока перезапускаются все
+дочерние потоки.
 
-Finding reasonable values for AllowedRestarts and MaxSeconds is not easy, as they will
-be application-dependent. In production, we’ve used anything from ten restarts per
-second to one per hour. Your choice will have to depend on what your child processes
-do, how many of them you expect the supervisor to monitor, and how you’ve set up
-your supervision strategy.
+**rest_for_one** -- промежуточный вариант между двумя первыми
+стратегиями. Суть в том, что изначально потоки запущены один за одним,
+в определенной последовательности. И при падении одного потока,
+перезапускается он, и те потоки, которые были запущены позже него. Те,
+которые были запущены раньше, продолжают работать.
 
-В 18 эрланг используется map
-    #{strategy => strategy(),
-      intensity => non_neg_integer(),
-      period => pos_integer()}
-вместо котрежа
-    {RestartStrategy, MaxRestart, MaxTime}
+**simple_one_for_one** -- это особый вариант, будет рассмотрен ниже.
+
+Многие проблемы можно решить рестартом, но не все. Супервизор должен
+как-то справляться с ситуацией, когда рестарт не помогает.  Для этого
+есть еще две настройки: **Intensity** -- максимальное количество
+рестартов, и **Period** -- за промежуток времени.
+
+Например, если Intensity = 10, а Period = 1000, это значит, что
+разрешено не более 10 рестартов за 1000 милисекунд. Если за это время
+поток падает 11-й раз, то супервизор понимает, что он не может
+справится с ситуацией.  И тогда супервизор завершается сам. И проблему
+пытается решить его родитель -- супервизор уровнем выше.
+
+В 18-й версии эрланг вместо кортежа:
+```erlang
+{RestartStrategy, Intensity, Period}
+```
+используется map:
+
+```erlang
+ #{strategy => strategy(),
+   intensity => non_neg_integer(),
+   period => pos_integer()}
+```
+
+Но и кортеж поддерживается для обратной совместимости.
+
 
 ### child specifications
+
+TODO:
 
 {ChildId, StartFunc, Restart, Shutdown, Type, Modules}.
 
