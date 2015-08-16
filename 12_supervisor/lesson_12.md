@@ -1,3 +1,8 @@
+TODO: Клонировать erl-proj-tpl и проверить:
+- Что, terminate вызывается, только если у воркера стоит trap_exit=true?
+  Очень странно. Надо проверить.
+- убедиться, что версия для эрланг 18 нормально работает
+
 # Supervisor
 
 ## Немного теории
@@ -76,7 +81,7 @@ start_link() ->
 
 Разберем подробнее:
 ```erlang
-{ok, {SupervisorSpecification, ChildSpecificationList}}
+{ok, {SupervisorSpecification, ChildSpecifications}}
 ```
 
 Нам нужно описать спецификацию самого супервизора, и дочерних
@@ -132,62 +137,132 @@ Restartstrategy описывает политику перезапуска до�
 
 ### child specifications
 
-TODO:
+Теперь разберем, как описываются дочерние потоки.
+Каждый из них описывается кортежем из 6-ти элементов:
 
-{ChildId, StartFunc, Restart, Shutdown, Type, Modules}.
+```erlang
+{ChildId, Start, Restart, Shutdown, Type, Modules}.
+```
 
-**ChildId**
-идентификатор потока. Pid не используется в этой роли, т.к. он будет меняться при рестарте.
+**ChildId** -- идентификатор потока. Тут может быть любое значение.
+Супервизор не использует Pid дочернего потока, потому что Pid будет
+меняться при рестарте.
+
+
+**Start** -- кортеж {Module, Function, Args}, описывает, с какой
+функции стартует новый поток.
+
+
+**Restart** -- атом, указывающий необходимость рестарта дочернего потока.
+Возможны 3 варианта:
+- permanent -- поток нужно рестартовать всегда.
+- transient -- поток нужно рестартовать, если он завершился аварийно. При нормальном завершении рестартовать не нужно.
+- temporary -- поток не нужно рестартовать.
+
+
+**Shutdown** -- определяет, сколько времени супервизор дает дочернему
+потоку на нормальное завершение работы.
+
+Когда супервизор хочет остановить дочерний поток, он шлет сигнал
+shutdown, и ждет заданное время.  Если за это время дочерний поток не
+завершился, супервизор останавливает его сигналом kill.
+
+Shutdown может быть указан как время в милисекунах, либо атомами:
+- brutal_kill -- не давать время, завершать принудительно сразу же.
+- infinity -- не ограничивать время, пусть дочерний поток завершается сколько, сколько ему нужно.
+
+Обычно для worker-потоков указывают время в милисекундах, а для supervisor-потоков указывают infinity.
+
+
+**Type** -- тип дочернего потока. Может быть либо worker, либо supervisor.
+
+
+**Modules** -- модули, в которых будет выполнятся очерний поток. Обычно это один модуль,
+и он совпадает с указанным в коржете Start.
+
+Пример child specitication:
+```erlang
+{some_worker,
+ {some_worker, start_link, []},
+ permanent,
+ 2000,
+ worker,
+ [some_worker]},
+```
+
+В 18-й версии эрланг используется map:
+```erlang
+ #{id => some_worker
+   start => {some_worker, start_link, []},
+   restart => permanent,
+   shutdown => 2000,
+   type => worker,
+   modules => [some_worker]
+  }
+```
+
+Пример функции init:
+
+```erlang
+init(_Args) ->
+    RestartStrategy = one_for_one, % one_for_one | one_for_all | rest_for_one
+    Intensity = 10, %% max restarts
+    Period = 60, %% in period of time
+    SupervisorSpecification = {RestartStrategy, Intensity, Period},
 
     Restart = permanent, % permanent | transient | temporary
-    Shutdown = 2000,     % brutal_kill | int() >= 0 | infinity
-    Type = worker | supervisor %
+    Shutdown = 2000, % milliseconds | brutal_kill | infinity
 
-**Shutdown**
+    ChildSpecifications =
+        [
+         {some_worker,
+          {some_worker, start_link, []},
+          Restart,
+          Shutdown,
+          worker,
+          [some_worker]},
+         {other_worker,
+          {other_worker, start_link, []},
+          Restart,
+          Shutdown,
+          worker,
+          [other_worker]}
+        ],
+    {ok, {SupervisorSpecification, ChildSpecifications}}.
+```
 
-TODO:
-Specifies how many milliseconds a behavior that is trapping exits is allowed to
-execute in its terminate callback function after receiving the shutdown signal from
-its supervisor, either because the supervisor has reached its maximum number of
-allowed child restarts or because of a rest_for_one or one_for_all restart strategy.
+То же самое для 18-й версии эрланг:
 
-TODO:
-Вот этого я не понял. Что, terminate вызывается, только если у воркера стоит trap_exit=true?
-Очень странно. Надо проверить.
+```erlang
+init(_Args) ->
+    SupervisorSpecification = #{
+        strategy => one_for_one, % one_for_one | one_for_all | rest_for_one
+        intensity => 10
+        period => 60},
 
-If the child process has not terminated by this time, the supervisor will kill it un-
-conditionally.
+    ChildSpecifications =
+        [#{id => some_worker
+           start => {some_worker, start_link, []},
+           restart => permanent, % permanent | transient | temporary
+           shutdown => 2000, % milliseconds | brutal_kill | infinity
+           type => worker,
+           modules => [some_worker]},
+         #{id => other_worker
+           start => {other_worker, start_link, []},
+           restart => permanent,
+           shutdown => 2000,
+           type => worker,
+           modules => [other_worker]}
+        ],
+    {ok, {SupervisorSpecification, ChildSpecifications}}.
+```
 
-Shutdown will also take the atom infinity , a value which should
-always be chosen if the process is a supervisor, or the atom brutal_kill , if the
-process is to be killed unconditionally.
+С map это все выглядит понятнее и лаконичнее.
 
-**Type**
-This will be important when upgrading applications with more advanced
-OTP features, but you do not really need to care about this at the
-moment
-
-**Modules**
-name of the callback module used by the child behavior.
-важно для горячего обновления
-
-Is a list of the modules that implement the process. The release handler uses it to
-determine which processes it should suspend during a software upgrade. As a rule
-of thumb, always include the behavior callback module.
-
-В 18 эрланг используется map
-    #{id => child_id(),       % mandatory
-     start => mfargs(),      % mandatory
-     restart => restart(),   % optional
-     shutdown => shutdown(), % optional
-     type => worker(),       % optional
-     modules => modules()}   % optional
-
-TODO
-Пример с парой воркеров и одним дочерним супервизором
-наблюдать через observer
 
 ## Динамическое создание воркеров
+
+TODO:
 
 Тут два варианта:
 - вызовы start\_child/2, terminate\_child/2, restart\_child/2, delete\_child/2
