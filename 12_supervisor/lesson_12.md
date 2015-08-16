@@ -2,6 +2,8 @@ TODO: Клонировать erl-proj-tpl и проверить:
 - Что, terminate вызывается, только если у воркера стоит trap_exit=true?
   Очень странно. Надо проверить.
 - убедиться, что версия для эрланг 18 нормально работает
+- работающий пример start_child|terminate_child
+- работающий пример simple one for one
 
 # Supervisor
 
@@ -262,76 +264,101 @@ init(_Args) ->
 
 ## Динамическое создание воркеров
 
-TODO:
+Дерево супервизоров не обязательно должно быть статичным. При
+необходимости, его можно менять: добавлять/удалять новые рабочие
+потоки, и даже новые ветки супервизоров.  Есть два способа это
+сделать: либо вызовами **start_child** либо использованием
+**simple_one_for_one** стратегии.
 
-Тут два варианта:
-- вызовы start\_child/2, terminate\_child/2, restart\_child/2, delete\_child/2
-- simple\_one\_for\_one стратегия
 
 ### start_child
 
-**start_child**
-**supervisor:start_child(SupervisorName, ChildSpec)
-
-SupervisorName
-Is either the process identifier of the supervisor or its registered name
-ChildSpec
-Is a single child specification tuple
-
-**terminate\_child/2**
-
-supervisor:terminate_child(SupervisorName, Id)
-Id Is the unique child identifier defined in the ChildSpec
-
-The process, if there is one, is terminated and, unless it is a
-temporary child, the child specification is kept by the
-supervisor. The child process may later be restarted by the
-supervisor.
-
-**restart\_child/2**
-restart a child process corresponding to the child specification
-identified by Id. The child specification must exist and the
-corresponding child process must not be running.
-
-**delete\_child/2**
-Tells the supervisor SupRef to delete the child specification
-identified by Id. The corresponding child process must not be running,
-use terminate_child/2 to terminate it.
+4 функции супервизора позволяют добавлять и убирать дочерние потоки.
 
 
-### start\_child/2, delete\_child/2
+**start_child/2**
 
-Годится для небольшого количества детей
+Функция позволяет добавить новый дочерний поток, не описанный в **init**.
+Она принимает 2 аргумента: имя/pid супервизора, и спецификацию дочернего потока.
 
-TODO пример кода и попробовать в консоли
-наблюдать через observer
+```erlang
+supervisor:start_child(
+    MySupervisor,
+    {some_worker,
+     {some_worker, start_link, []},
+      Restart,
+      Shutdown,
+      worker,
+      [some_worker]})
+```
+
+**terminate_child/2**
+
+Функция позволяет остановить работающий дочерний поток.
+Она принимает 2 аргумента: имя/pid супервизора, и Id дочернего потока.
+
+```erlang
+supervisor:terminate_child(MySupervisor, some_worker)
+```
+
+После того, как поток остановлен, его можно либо рестартовать вызовом **restart_child/2**,
+либо вообще убрать его спецификацию из списка дочерних потоков вызовом **delete_child/2**.
 
 
-### simple\_one\_for\_one
+### simple_one_for_one стратегия
 
-Годится для большого количества детей
+Использование **simple_one_for_one** стратегии -- это особый случай,
+когда нам нужно иметь большое количество потоков: десятки и сотни.
 
-он умеет создавать воркеров только динамически, и только одинаковых
-если кроме этого нужны и другие воркеры, то нужно 2 супервизора
+При использовании этой стратегии супервизор может иметь потомков
+только одного типа. И, соответственно, должен указать только одну
+child specitication.
 
-a simple\_one\_for\_one supervisor just sits around there, and it knows
-it can produce one kind of child only. Whenever you want a new one,
-you ask for it and you get it
+```erlang
+init(_Args) ->
+    SupervisorSpecification = {simple_one_for_one, 10, 60},
+    ChildSpecifications =
+        [
+         {some_worker,
+          {some_worker, start_link, [A, B, C]},
+          transient,
+          2000,
+          worker,
+          [some_worker]}
+        ],
+    {ok, {SupervisorSpecification, ChildSpecifications}}.
+```
 
-TODO пример кода и попробовать в консоли
-наблюдать через observer
+Дочерние потоки нужно запускать явно, вызовом **start_child/2**.
+Причем, тут меняется роль второго аргумета. Это теперь не child
+specification, а дополнительные аргументы дочернему потоку.
+
+```erlang
+supervisor:start_child(MySupervisor, [D, E, F]).
+```
+
+И дочерний поток в своей функции **start_link** получит аргументы и из
+child specification, и из **start_child**.
+
+```erlang
+-module(some_worker).
+
+start_link(A, B, C, D, E, F) ->
+    ...
+```
 
 
-## stop
+## Остановка супервизора
 
-it does not export a stop function.
-As supervisors are never meant to be stopped by anyone other than their
-parent supervisors, this function was not implemented.
+В АПИ супервизора не предусмотрено функции для его остановки. Он
+останавливается либо по своей стратегии, либо по сигналу родителя.
 
-You can easily add your own stop function by including the following
-code in your supervisor callback module. However, this will work only
-if stop is called by the parent:
+При этом он завершает все свои дочерние потоки в очередности, обратной
+их запуску, затем останавливается сам.
 
-stop() -> exit(whereis(?MODULE), shutdown).
+Но при необходимости его можно остановить, как и любой другой поток,
+вызовом **exit/2**
 
-If your supervisor is not registered, use its pid.
+```erlang
+exit(MySupervisor, shutdown)
+```
