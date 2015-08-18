@@ -25,9 +25,9 @@
  9. gen_server
  10. gen_server, продолжение
  11. link, monitor
+ 12. supervisor
 
 Уроки в разработке:
- 12. supervisor
  13. application
  14. OTP фреймворк
  15. Обработка ошибок на разных уровнях

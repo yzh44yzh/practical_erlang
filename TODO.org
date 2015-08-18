@@ -1,5 +1,4 @@
 * TODO theory, quiz
-** TODO 12. supervisor
 
 ** TODO 13. application
    - application, gen_fsm, gen_event
