@@ -1,3 +1,12 @@
+- источники инфы:
+  - официальные доки
+    http://www.erlang.org/doc/design_principles/applications.html
+    http://www.erlang.org/doc/man/application.html
+  - Хеберт
+  - Армстронг
+  - Цезарини
+  - OTP in action
+
 ## application
 
 http://www.erlang.org/doc/man/application.html
@@ -93,3 +102,8 @@ transient
 permanent
 
 application:stop(ApplicationName).
+
+
+## OTP
+
+gen_fsm, gen_event пару слов про них
