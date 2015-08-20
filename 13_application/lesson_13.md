@@ -1,7 +1,6 @@
 - источники инфы:
-  - официальные доки
-    http://www.erlang.org/doc/design_principles/applications.html
-    http://www.erlang.org/doc/man/application.html
+  + http://www.erlang.org/doc/design_principles/applications.html
+  - http://www.erlang.org/doc/man/application.html
   - Хеберт
   - Армстронг
   - Цезарини
@@ -9,7 +8,10 @@
 
 ## application
 
+http://www.erlang.org/doc/design_principles/applications.html
 http://www.erlang.org/doc/man/application.html
+
+component that can be started and stopped as a unit, and which can also be reused in other systems.
 
 Supervision trees are packaged into a behavior called an application. OTP applications
 not only are the building blocks of Erlang systems, but also are a way to package reus-
@@ -31,7 +33,7 @@ will start the supervision tree and all of the relevant static workers.
 contain library modules but do not start the supervision tree.
 
 
-### app file
+### Application Resource File
 
 ebin/some.app
 application resource file, also known as the app file
@@ -41,6 +43,11 @@ with every application not only describes it, but also specifies its modules, re
 processes, and other configuration data.
 
 {application, ApplicationName, Properties}.
+
+ApplicationName, an atom, is the name of the application. The file must be named ApplicationName.app.
+
+
+All keys are optional
 
 {description, "Some description of your application"}
 
@@ -53,11 +60,16 @@ src/some.app.src
 rebar генерирует ebin/some.app
 
 {registered, AtomList}
+All names of registered processes in the application. systools uses this list to detect name clashes between applications.
 
 {env, [{Key, Val}]}
+Key is to be an atom. Val is any term.
 
 {applications, AtomList}
-A list of applications on which yours depends.
+All applications that must be started before this application is started
+all applications have dependencies to at least Kernel and STDLIB.
+
+description, vsn, modules, registered, and application -- важны для сборки релизов
 
 есть некоторое дублирование зависимостей
 в rebar.config описаны зависимые библиотеки
@@ -66,10 +78,13 @@ A list of applications on which yours depends.
 
 
 {mod, {CallbackMod, Args}}
-Defines a callback module for the application
+The key mod defines the callback module and start argument of the application
 
 
-### callbacks
+### Application Callback Module
+
+start(StartType, StartArgs) -> {ok, Pid} | {ok, Pid, State}
+stop(State)
 
  start_type() = normal
              | {takeover, Node :: node()}
@@ -77,6 +92,9 @@ Defines a callback module for the application
 
 restart_type() = permanent | transient | temporary
 
+to create the supervision tree by starting the top supervisor.
+
+stop/1 is called after the application has been stopped and is to do any necessary cleaning up
 
 ### настройки
 
@@ -86,10 +104,26 @@ application:get\_all\_env(Name).
 из app file
 или из sys.config
 
+The values in the .app file can be overridden by values in a system configuration file.
+
 
 ### запуск
 
-application:start(ApplicationName).
+When an Erlang runtime system is started, a number of processes are started as part of the Kernel application. One of these processes is the application controller process, registered as application_controller.
+
+All operations on applications are coordinated by the application controller. It is interacted through the functions in the module application, see the application(3) manual page in Kernel. In particular, applications can be loaded, unloaded, started, and stopped.
+
+The application controller then creates an application master for the application. The application master is the group leader of all the processes in the application. The application master starts the application by calling the application callback function start/2 in the module, and with the start argument, defined by the mod key in the .app file.
+
+The application master stops the application by telling the top supervisor to shut down. The top supervisor tells all its child processes to shut down, and so on; the entire tree is terminated in reversed start order. The application master then calls the application callback function stop/1 in the module defined by the mod key.
+
+application:load(my_app).
+application:unload(my_app).
+application:loaded_applications().
+
+application:start(my_app).
+application:stop(my_app).
+application:which_applications().
 
 ensure_started(Application)
 Equivalent to application:start/1,2 except it returns ok for already started applications.
@@ -101,8 +135,13 @@ temporary
 transient
 permanent
 
-application:stop(ApplicationName).
+If a permanent application terminates, all other applications and the runtime system are also terminated.
+If a transient application terminates with reason normal, this is reported but no other applications are terminated. If a transient application terminates abnormally, that is with any other reason than normal, all other applications and the runtime system are also terminated.
+If a temporary application terminates, this is reported but no other applications are terminated.
 
+An application can always be stopped explicitly by calling application:stop/1. Regardless of the mode, no other applications are affected.
+
+The transient mode is of little practical use, since when a supervision tree terminates, the reason is set to shutdown, not normal.
 
 ## OTP
 
