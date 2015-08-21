@@ -1,6 +1,4 @@
 - источники инфы:
-  + http://www.erlang.org/doc/design_principles/applications.html
-  - http://www.erlang.org/doc/man/application.html
   - Хеберт
   - Армстронг
   - Цезарини
@@ -35,6 +33,10 @@ contain library modules but do not start the supervision tree.
 
 ### Application Resource File
 
+application specification
+
+http://www.erlang.org/doc/man/app.html (не уверен, что нужно давать эту ссылку)
+
 ebin/some.app
 application resource file, also known as the app file
 
@@ -50,6 +52,7 @@ ApplicationName, an atom, is the name of the application. The file must be named
 All keys are optional
 
 {description, "Some description of your application"}
+A one-line description of the application.
 
 {vsn, "1.2.3"}
 
@@ -99,12 +102,37 @@ stop/1 is called after the application has been stopped and is to do any necessa
 ### настройки
 
 application:get\_env(Name,Tag)
+
+If the application argument is omitted, it defaults to the application of the calling process.
+
+If the specified application is not loaded, or the specification key
+does not exist, or if the process executing the call does not belong
+to any application, the function returns undefined.
+
+внимание, тут разница в возвращаемом значении:
+    get_env(Par) -> undefined | {ok, Val}
+    get_env(Application, Par, Def) -> Val
+
+не редакая ошибка такой код
+
+    {ok, Val} = application:get_env(my_app, my_key)
+
+заменить на такой
+
+    {ok, Val} = application:get_env(my_app, my_key, DefaultValue)
+
+и тут будет badmatch, т.к. нужно еще заменить {ok, Val} на Val.
+
+
 application:get\_all\_env(Name).
 
 из app file
 или из sys.config
 
 The values in the .app file can be overridden by values in a system configuration file.
+
+set_env(Application, Par, Val) - пожалуй об этом лучше не писать,
+а то придется описывать приоритеты настроек при рестарте приложения
 
 
 ### запуск
@@ -117,13 +145,9 @@ The application controller then creates an application master for the applicatio
 
 The application master stops the application by telling the top supervisor to shut down. The top supervisor tells all its child processes to shut down, and so on; the entire tree is terminated in reversed start order. The application master then calls the application callback function stop/1 in the module defined by the mod key.
 
-application:load(my_app).
-application:unload(my_app).
-application:loaded_applications().
+#### application:start(my_app).
 
-application:start(my_app).
-application:stop(my_app).
-application:which_applications().
+The application controller checks the value of the application specification key applications, to ensure that all applications that should be started before this application are running. If not, {error,{not_started,App}} is returned, where App is the name of the missing application.
 
 ensure_started(Application)
 Equivalent to application:start/1,2 except it returns ok for already started applications.
@@ -142,6 +166,26 @@ If a temporary application terminates, this is reported but no other application
 An application can always be stopped explicitly by calling application:stop/1. Regardless of the mode, no other applications are affected.
 
 The transient mode is of little practical use, since when a supervision tree terminates, the reason is set to shutdown, not normal.
+
+#### Module:start(StartType, StartArgs) -> {ok, Pid} | {ok, Pid, State} | {error, Reason}
+
+This function is called whenever an application is started using application:start/1,2, and should start the processes of the application. If the application is structured according to the OTP design principles as a supervision tree, this means starting the top supervisor of the tree.
+
+#### stop(Application) -> ok | {error, Reason}
+
+The application master calls Module:prep_stop/1, if such a function is defined,
+and then tells the top supervisor of the application to shutdown
+This means that the entire supervision tree, including included applications, is terminated in reversed start order.
+After the shutdown, the application master calls Module:stop/1.
+Last, the application master itself terminates
+
+
+#### which_applications() -> [{Application, Description, Vsn}]
+
+Returns a list with information about the applications which are currently running. Application is the application name. Description and Vsn are the values of its description and vsn application specification keys, respectively.
+
+
+Распределенное приложение -- за рамками курса. Есть глава у Фреда.
 
 ## OTP
 
