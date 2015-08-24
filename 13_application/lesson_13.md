@@ -1,15 +1,13 @@
-- источники инфы:
-  - Хеберт
-  - Армстронг
-  - Цезарини
-  - OTP in action
-
 ## application
 
 http://www.erlang.org/doc/design_principles/applications.html
 http://www.erlang.org/doc/man/application.html
 
 component that can be started and stopped as a unit, and which can also be reused in other systems.
+
+An Erlang system will consist of a set of loosely coupled applications. Some are devel-
+oped by the programmer or the open source community, and others will be part of the
+OTP distribution.
 
 Supervision trees are packaged into a behavior called an application. OTP applications
 not only are the building blocks of Erlang systems, but also are a way to package reus-
@@ -23,12 +21,6 @@ An Erlang system will consist of a set of loosely coupled applications.
 a component implementing some specific functionality, that can be
 started and stopped as a unit, and which can be re-used in other
 systems as well.
-
-**normal applications**
-will start the supervision tree and all of the relevant static workers.
-
-**Library applications**
-contain library modules but do not start the supervision tree.
 
 
 ### Application Resource File
@@ -55,6 +47,7 @@ All keys are optional
 A one-line description of the application.
 
 {vsn, "1.2.3"}
+It's usually a good idea to stick to a scheme of the form <major>.<minor>.<patch>
 
 {modules, ModuleList}
 Contains a list of all the modules that your application introduces to the system.
@@ -62,8 +55,14 @@ Contains a list of all the modules that your application introduces to the syste
 src/some.app.src
 rebar генерирует ebin/some.app
 
+The purpose of
+listing them is twofold. The first is to ensure that all of them are present when building
+the system and that there are no name clashes with any other applications. The second
+is to be able to load them either at startup or when loading the application.
+
 {registered, AtomList}
 All names of registered processes in the application. systools uses this list to detect name clashes between applications.
+entirely based on trusting the developers to give good data
 
 {env, [{Key, Val}]}
 Key is to be an atom. Val is any term.
@@ -82,6 +81,8 @@ description, vsn, modules, registered, and application -- важны для сб
 
 {mod, {CallbackMod, Args}}
 The key mod defines the callback module and start argument of the application
+какое значение по дефолту? А нету значения по дефолту. И нужно обязательно указывать для normal app,
+можно не указывать для library app.
 
 
 ### Application Callback Module
@@ -137,13 +138,43 @@ set_env(Application, Par, Val) - пожалуй об этом лучше не п
 
 ### запуск
 
-When an Erlang runtime system is started, a number of processes are started as part of the Kernel application. One of these processes is the application controller process, registered as application_controller.
+When an Erlang runtime system is started, a number of processes are
+started as part of the Kernel application. One of these processes is
+the application controller process, registered as
+**application_controller**.
 
-All operations on applications are coordinated by the application controller. It is interacted through the functions in the module application, see the application(3) manual page in Kernel. In particular, applications can be loaded, unloaded, started, and stopped.
+It starts all other applications and sits on top of most of them. In
+fact, you could say the application controller acts a bit like a
+supervisor for all applications. (есть исключения, kernel, например)
 
-The application controller then creates an application master for the application. The application master is the group leader of all the processes in the application. The application master starts the application by calling the application callback function start/2 in the module, and with the start argument, defined by the mod key in the .app file.
+All operations on applications are coordinated by the application
+controller. It is interacted through the functions in the module
+application, see the application(3) manual page in Kernel. In
+particular, applications can be loaded, unloaded, started, and
+stopped.
 
-The application master stops the application by telling the top supervisor to shut down. The top supervisor tells all its child processes to shut down, and so on; the entire tree is terminated in reversed start order. The application master then calls the application callback function stop/1 in the module defined by the mod key.
+The application controller then creates an **application master** for the
+application. The application master is the group leader of all the
+processes in the application. The application master starts the
+application by calling the application callback function start/2 in
+the module, and with the start argument, defined by the mod key in the
+.app file.
+
+The application master is in fact two processes taking charge of each
+individual application: they set it up and act like a middleman in
+between your application's top supervisor and the application
+controller.
+
+observer:start() тут как раз и видно, что каждое приложение начинается с двух безымянных процессов,
+и под ними корневой супервизор приложения.
+
+The application master stops the application by telling the top
+supervisor to shut down. The top supervisor tells all its child
+processes to shut down, and so on; the entire tree is terminated in
+reversed start order. The application master then calls the
+application callback function stop/1 in the module defined by the mod
+key.
+
 
 #### application:start(my_app).
 
