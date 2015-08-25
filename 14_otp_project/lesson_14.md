@@ -62,3 +62,12 @@ are started as part of a supervision tree belonging to another application.
 ## rebar
 
 rebar.config
+
+modules - Contains a list of all the modules that your application introduces to the system.
+поддерживать это вручную неудобно, поэтому
+src/some.app.src
+rebar генерирует ebin/some.app
+
+
+## gen_fsm, gen_event
+пару слов про них

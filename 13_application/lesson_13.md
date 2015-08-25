@@ -1,139 +1,116 @@
-## application
+## Application
 
-http://www.erlang.org/doc/design_principles/applications.html
-http://www.erlang.org/doc/man/application.html
+На уровне синтаксиса языка код структурируется в функции и модули.
+На уровне потоков код структурируется в дерево супервизоров.
+Эти две структуры существуют независимо друг от друга.
+Но есть **Application**, которое связывает их вместе.
 
-component that can be started and stopped as a unit, and which can also be reused in other systems.
+Во многих языка мы привыкли, что после функций и модулей, следующим
+уровнем идут пакеты.  В эрланг нет пакетов, но Application отчасти
+выполняет эту роль -- группирует несколько модулей в одну сущность.
+_(К сожалению, Application не создает пространства имен.  Имена всех
+модулей находятся в одной области видимости, и конфликты имен иногда
+случаются.)_
 
-An Erlang system will consist of a set of loosely coupled applications. Some are devel-
-oped by the programmer or the open source community, and others will be part of the
-OTP distribution.
+С другой стороны, Application контролирует часть дерева супервизоров и
+группирует потоки подобно тому, как пакет группирует модули. Эта
+группа (поддерево) может быть запущена и остановлена как единое целое.
 
-Supervision trees are packaged into a behavior called an application. OTP applications
-not only are the building blocks of Erlang systems, but also are a way to package reus-
-able components. Industrial-grade systems consist of a set of loosely coupled, possibly
-distributed applications. These applications are part of the standard Erlang distribution
-or are specific applications developed by you, the programmer.
+Ну и Application следует рассматривать как некий компонент,
+предназначенный для повторного использования в разных проектах.
+Причем, для повторного использования предназначены обе структуры: и
+структура кода (функции-модули), и структура потоков (поддерево
+супервизоров).
 
-to package Erlang modules into reusable components.
-An Erlang system will consist of a set of loosely coupled applications.
+Проект на эрланг обычно состоит из нескольких приложений:
 
-a component implementing some specific functionality, that can be
-started and stopped as a unit, and which can be re-used in other
-systems as well.
+Во-первых, это приложения, которые пишут разработчики --
+непосредственно код проекта.
+
+Во-вторых, это используемые библиотеки. Обычно каждая библиотека
+оформляется как Application. Например, библиотека для логирования
+[lager](https://github.com/basho/lager), библиотека для сериализации
+JSON [jiffy](https://github.com/davisp/jiffy), драйвер для работы с
+PostgreSQL [epgsql](https://github.com/epgsql/epgsql) и другие.
+
+В-третьих, это приложения, входящие в состав OTP. Например, приложение
+для работы с сетью **inets**, приложения, отвечающие за шифрование
+**crypto** и **ssl**, приложение для модульного тестирования **eunit**
+и другие.
+
+Application состоит, как минимум, из главного модуля, реализующего
+**behaviour(application)**, нескольких других модулей и специального
+файла с метаинформацией. (Полную структуру мы рассмотрим на следующем уроке).
 
 
 ### Application Resource File
 
-application specification
+Начнем с файла, описывающего метаинформацию о приложении.
+Он должен называться по имени приложения и иметь расширение **app**.
+Например, **my_cool_component.app**.
 
-http://www.erlang.org/doc/man/app.html (не уверен, что нужно давать эту ссылку)
+Внутри он содержит кортеж из трех элементов:
 
-ebin/some.app
-application resource file, also known as the app file
-
-A resource file associated
-with every application not only describes it, but also specifies its modules, registered
-processes, and other configuration data.
-
+```erlang
 {application, ApplicationName, Properties}.
+```
 
-ApplicationName, an atom, is the name of the application. The file must be named ApplicationName.app.
+**ApplicationName** -- имя приложения в виде атома. Например, **my_cool_component**.
 
+**Properties** -- свойства приложения в виде proplist, где, обычно, присутствуют такие элементы:
+- **description** -- краткое описание приложения одной строкой;
+- **vsn** -- версия приложения, обычно в формате "major.minor.patch";
+- **modules** -- список всех модулей, входящих в состав приложения;
+- **registered** -- список всех имен под которыми регистрируются потоки;
+- **env** -- настройки приложения в виде вложенного proplist;
+- **applications** -- список других приложений, от которых зависит данное приложение;
+- **mod** -- основной модуль приложения, реализующий behaviour(application).
 
-All keys are optional
+Все опции считаются необязательными, но лучше указывать их явно.
+Большинство из них важны для сборки релиза.  Инструменты, собирающие
+релиз, проверяют наличие указанных модулей, определяют очередность
+загрузки приложенией, выявляют конфликты имен потоков. _(Сборка релиза
+не входит в данный курс, разные команды делают это по-разному.)_
 
-{description, "Some description of your application"}
-A one-line description of the application.
+Пример ресурс файла, взят из cowboy 1.0.1:
 
-{vsn, "1.2.3"}
-It's usually a good idea to stick to a scheme of the form <major>.<minor>.<patch>
+```erlang
+{application, cowboy, [
+	{description, "Small, fast, modular HTTP server."},
+	{vsn, "1.0.1"},
+	{id, "git"},
+	{modules, []},
+	{registered, [cowboy_clock, cowboy_sup]},
+	{applications, [
+		kernel,
+		stdlib,
+		ranch,
+		cowlib,
+		crypto
+	]},
+	{mod, {cowboy_app, []}},
+	{env, []}
+]}.
+```
 
-{modules, ModuleList}
-Contains a list of all the modules that your application introduces to the system.
-поддерживать это вручную неудобно, поэтому
-src/some.app.src
-rebar генерирует ebin/some.app
+Из этого файла видно следующее:
 
-The purpose of
-listing them is twofold. The first is to ensure that all of them are present when building
-the system and that there are no name clashes with any other applications. The second
-is to be able to load them either at startup or when loading the application.
+Ключ **id** не документирован, это авторы cowboy сами что-то
+придумали :)
 
-{registered, AtomList}
-All names of registered processes in the application. systools uses this list to detect name clashes between applications.
-entirely based on trusting the developers to give good data
+Список модулей оставлен пустым. Его трудно поддерживать вручную,
+обычно он генерируется автоматически при сборке проекта.
 
-{env, [{Key, Val}]}
-Key is to be an atom. Val is any term.
+Cowboy регистритует 2 потока с именами **cowboy_clock** и
+**cowboy_sup**.
 
-{applications, AtomList}
-All applications that must be started before this application is started
-all applications have dependencies to at least Kernel and STDLIB.
+Cowboy зависит от 5-ти других приложений. kernel, stdlib и crypto --
+это часть OTP, ranch и cowlib -- это еще 2 приложения от тех же
+авторов.
 
-description, vsn, modules, registered, and application -- важны для сборки релизов
+Главный модуль -- **cowboy_app**.
 
-есть некоторое дублирование зависимостей
-в rebar.config описаны зависимые библиотеки
-здесь описаны зависимые app, которые должны быть запущены, чтобы могло нормально работать это app
-важно поддерживать эти зависимости, чтобы правильно собирался релиз
-
-
-{mod, {CallbackMod, Args}}
-The key mod defines the callback module and start argument of the application
-какое значение по дефолту? А нету значения по дефолту. И нужно обязательно указывать для normal app,
-можно не указывать для library app.
-
-
-### Application Callback Module
-
-start(StartType, StartArgs) -> {ok, Pid} | {ok, Pid, State}
-stop(State)
-
- start_type() = normal
-             | {takeover, Node :: node()}
-             | {failover, Node :: node()}
-
-restart_type() = permanent | transient | temporary
-
-to create the supervision tree by starting the top supervisor.
-
-stop/1 is called after the application has been stopped and is to do any necessary cleaning up
-
-### настройки
-
-application:get\_env(Name,Tag)
-
-If the application argument is omitted, it defaults to the application of the calling process.
-
-If the specified application is not loaded, or the specification key
-does not exist, or if the process executing the call does not belong
-to any application, the function returns undefined.
-
-внимание, тут разница в возвращаемом значении:
-    get_env(Par) -> undefined | {ok, Val}
-    get_env(Application, Par, Def) -> Val
-
-не редакая ошибка такой код
-
-    {ok, Val} = application:get_env(my_app, my_key)
-
-заменить на такой
-
-    {ok, Val} = application:get_env(my_app, my_key, DefaultValue)
-
-и тут будет badmatch, т.к. нужно еще заменить {ok, Val} на Val.
-
-
-application:get\_all\_env(Name).
-
-из app file
-или из sys.config
-
-The values in the .app file can be overridden by values in a system configuration file.
-
-set_env(Application, Par, Val) - пожалуй об этом лучше не писать,
-а то придется описывать приоритеты настроек при рестарте приложения
+Настроек тут нет, cowboy конфигурируется другим способом.
 
 
 ### запуск
@@ -218,6 +195,38 @@ Returns a list with information about the applications which are currently runni
 
 Распределенное приложение -- за рамками курса. Есть глава у Фреда.
 
-## OTP
 
-gen_fsm, gen_event пару слов про них
+### настройки
+
+application:get\_env(Name,Tag)
+
+If the application argument is omitted, it defaults to the application of the calling process.
+
+If the specified application is not loaded, or the specification key
+does not exist, or if the process executing the call does not belong
+to any application, the function returns undefined.
+
+внимание, тут разница в возвращаемом значении:
+    get_env(Par) -> undefined | {ok, Val}
+    get_env(Application, Par, Def) -> Val
+
+не редакая ошибка такой код
+
+    {ok, Val} = application:get_env(my_app, my_key)
+
+заменить на такой
+
+    {ok, Val} = application:get_env(my_app, my_key, DefaultValue)
+
+и тут будет badmatch, т.к. нужно еще заменить {ok, Val} на Val.
+
+
+application:get\_all\_env(Name).
+
+из app file
+или из sys.config
+
+The values in the .app file can be overridden by values in a system configuration file.
+
+set_env(Application, Par, Val) - пожалуй об этом лучше не писать,
+а то придется описывать приоритеты настроек при рестарте приложения
