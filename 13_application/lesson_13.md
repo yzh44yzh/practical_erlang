@@ -69,7 +69,7 @@ Application состоит, как минимум, из главного мод�
 Все опции считаются необязательными, но лучше указывать их явно.
 Большинство из них важны для сборки релиза.  Инструменты, собирающие
 релиз, проверяют наличие указанных модулей, определяют очередность
-загрузки приложенией, выявляют конфликты имен потоков. _(Сборка релиза
+загрузки приложений, выявляют конфликты имен потоков. _(Сборка релиза
 не входит в данный курс, разные команды делают это по-разному.)_
 
 Пример ресурс файла, взят из cowboy 1.0.1:
@@ -113,120 +113,177 @@ Cowboy зависит от 5-ти других приложений. kernel, std
 Настроек тут нет, cowboy конфигурируется другим способом.
 
 
-### запуск
+### Запуск и остановка приложения
 
-When an Erlang runtime system is started, a number of processes are
-started as part of the Kernel application. One of these processes is
-the application controller process, registered as
-**application_controller**.
+В эрланговской ноде всегда стартуют минимум 2 приложения: kernel и stdlib.
 
-It starts all other applications and sits on top of most of them. In
-fact, you could say the application controller acts a bit like a
-supervisor for all applications. (есть исключения, kernel, например)
+```erlang
+$ erl
+Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
+Eshell V6.3  (abort with ^G)
+1> application:which_applications().
+[{stdlib,"ERTS  CXC 138 10","2.3"},
+ {kernel,"ERTS  CXC 138 10","3.1"}]
+```
 
-All operations on applications are coordinated by the application
-controller. It is interacted through the functions in the module
-application, see the application(3) manual page in Kernel. In
-particular, applications can be loaded, unloaded, started, and
-stopped.
+Один из потоков, которые запускает kernel, называется **application_controller**.
+Он отвечает за загрузку и запуск других приложений.
 
-The application controller then creates an **application master** for the
-application. The application master is the group leader of all the
-processes in the application. The application master starts the
-application by calling the application callback function start/2 in
-the module, and with the start argument, defined by the mod key in the
-.app file.
+Чтобы запустить приложение, нужно вызвать
+**application:start(my_app_name)**.  При этом application_controller
+загружает метаданные приложения, проверяет, что все зависимые
+приложения уже запущены, и вызывает callback **my_app_name:start/2**.
 
-The application master is in fact two processes taking charge of each
-individual application: they set it up and act like a middleman in
-between your application's top supervisor and the application
-controller.
+Обработчик **start/2** получает аргументы StartType и StartArgs. Они
+важны в распределенных приложениях, которые в данном курсе не
+описываются.  _(Но вам никто не запретит посмотреть
+[документацию](http://www.erlang.org/doc/apps/kernel/application.html#Module:start-2)
+:)_ Здесь нужно запустить корневой супервизор приложения, и вернуть его Pid.
 
-observer:start() тут как раз и видно, что каждое приложение начинается с двух безымянных процессов,
-и под ними корневой супервизор приложения.
+Чтобы остановить приложение, нужно вызывать **application:stop(my_app_name)**.
+При этом будут вызваны обработчики **my_app_name:pre_stop/1** до остановки приложения,
+и **my_app_name:stop/1** после его остановки.
 
-The application master stops the application by telling the top
-supervisor to shut down. The top supervisor tells all its child
-processes to shut down, and so on; the entire tree is terminated in
-reversed start order. The application master then calls the
-application callback function stop/1 in the module defined by the mod
-key.
+**pre_stop/1** необязательный обработчик, так что его не нужно
+определять, если в нем не планируете ничего делать. А вот **stop/1** --
+обязательный обработчик, так что его всегда определяют, хотя чаще
+всего оставляют пустым.
 
+При остановке приложения завершается его поддерево супервизоров в
+очередности, противоположной запуску.  То есть, сперва завершаются
+рабочие потоки, потом дочерние супервизоры, и последним завершается
+корневой супервизор.
 
-#### application:start(my_app).
+В процессе разработки на локальной машине приложения не редко запускают вручную,
+вызовом application:start/1. При этом приходится заботиться о том, чтобы
+запускать их в нужном порядке, иначе start вернет
 
-The application controller checks the value of the application specification key applications, to ensure that all applications that should be started before this application are running. If not, {error,{not_started,App}} is returned, where App is the name of the missing application.
+```erlang
+{error, {not_started, SomeOtherApp}}.
+```
 
-ensure_started(Application)
-Equivalent to application:start/1,2 except it returns ok for already started applications.
+Процесс упрощается вызовом
 
-ensure\_all\_started(Application)
-Equivalent to calling application:start/1,2 repeatedly on all dependencies that have not yet been started for an application.
+```erlang
+application:ensure_all_started(my_cool_app).
+```
 
-temporary
-transient
-permanent
+Этот вызов сперва проверяет, что все зависимые приложения запущены. И
+если не запущены, запускает их. И затем запускает my\_cool\_app.
 
-If a permanent application terminates, all other applications and the runtime system are also terminated.
-If a transient application terminates with reason normal, this is reported but no other applications are terminated. If a transient application terminates abnormally, that is with any other reason than normal, all other applications and the runtime system are also terminated.
-If a temporary application terminates, this is reported but no other applications are terminated.
+```erlang
+1> application:start(ssl).
+{error,{not_started,crypto}}
+2> application:ensure_all_started(ssl).
+{ok,[crypto,asn1,public_key,ssl]}
+```
 
-An application can always be stopped explicitly by calling application:stop/1. Regardless of the mode, no other applications are affected.
+Здесь мы попытались запустить ssl, но не получилось, потому что ssl
+зависит от crypto и public\_key.  А public\_key еще зависит от asn1.
+Вызов ensure\_all\_started запустил ssl и все эти зависимые приложения.
 
-The transient mode is of little practical use, since when a supervision tree terminates, the reason is set to shutdown, not normal.
-
-#### Module:start(StartType, StartArgs) -> {ok, Pid} | {ok, Pid, State} | {error, Reason}
-
-This function is called whenever an application is started using application:start/1,2, and should start the processes of the application. If the application is structured according to the OTP design principles as a supervision tree, this means starting the top supervisor of the tree.
-
-#### stop(Application) -> ok | {error, Reason}
-
-The application master calls Module:prep_stop/1, if such a function is defined,
-and then tells the top supervisor of the application to shutdown
-This means that the entire supervision tree, including included applications, is terminated in reversed start order.
-After the shutdown, the application master calls Module:stop/1.
-Last, the application master itself terminates
-
-
-#### which_applications() -> [{Application, Description, Vsn}]
-
-Returns a list with information about the applications which are currently running. Application is the application name. Description and Vsn are the values of its description and vsn application specification keys, respectively.
-
-
-Распределенное приложение -- за рамками курса. Есть глава у Фреда.
+При использовании релизов запуск отличается. Здесь от разработчика
+требуется правильно указать зависимости приложений друг от друга в
+файле ресурсов. Затем автоматически генерируется скрипт запуска ноды,
+и там предусмотрен запуск всех приложений в нужном порядке.
 
 
 ### настройки
 
-application:get\_env(Name,Tag)
+Приложение можно конфигурировать внешними настройками. Один источник
+таких настроек мы уже знаем -- это файл ресурсов.
 
-If the application argument is omitted, it defaults to the application of the calling process.
+Узел **env** в таком файле хранит настройки в виде proplist.
 
-If the specified application is not loaded, or the specification key
-does not exist, or if the process executing the call does not belong
-to any application, the function returns undefined.
+```erlang
+{application, my_cool_app,
+ [
+  {description, "The best app ever"},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {mod, {my_cool_app, []}},
+  {env, [{key1, "value 1"},
+         {key2, 42},
+         {key3, [1,2,3,4]},
+         {key4, <<"value 4">>}
+        ]}
+ ]}.
+```
 
-внимание, тут разница в возвращаемом значении:
-    get_env(Par) -> undefined | {ok, Val}
-    get_env(Application, Par, Def) -> Val
+Ключи должны быть атомами, а значения могут быть любого типа.
 
-не редакая ошибка такой код
+Другой источник, который используется чаще, это внешний конфигурационный файл.
+Он может иметь любое имя, но с расширением **.config**.
 
-    {ok, Val} = application:get_env(my_app, my_key)
+```erlang
+%% file my_project.config
+[
+ %% some app settings
+  {my_cool_app, [
+         {key1, "value 1"},
+         {key2, 42},
+         {key3, [1,2,3,4]},
+         {key4, <<"value 4">>}
+        ]}
+ %% sasl app settings
+ {sasl, [
+         {errlog_type, error}
+        ]},
+ %% lager app settings
+ {lager, [...]}
+]
+```
 
-заменить на такой
+В файле должен быть список кортежей вида {AppName, AppSettings}, где
+AppName -- атом, имя приложения, а AppSettings -- proplist, такой же,
+как в файле ресурсов.
 
-    {ok, Val} = application:get_env(my_app, my_key, DefaultValue)
+При запуске ноды нужно указать опцию **-config my_project**.
 
-и тут будет badmatch, т.к. нужно еще заменить {ok, Val} на Val.
+```erlang
+erl -config my_project ... other options
+```
 
+Однако в случае конфликта, настройки в файле ресурсов будут иметь приоритет.
 
-application:get\_all\_env(Name).
+Для чтения настроек используются функции **applications:get_env**:
 
-из app file
-или из sys.config
+```erlang
+3> application:get_env(param1).
+undefined
+4> application:get_env(my_cool_app, param1).
+{ok,"val1"}
+5> application:get_env(my_cool_app, param2).
+{ok,"val2"}
+6> application:get_env(my_cool_app, param3).
+undefined
+7> application:get_env(my_cool_app, param3, "default value").
+"default value"
+```
 
-The values in the .app file can be overridden by values in a system configuration file.
+**get_env/1** работает внутри модуля, принадлежащего конкретному приложению,
+и возвращает настройку для этого приложения.
 
-set_env(Application, Par, Val) - пожалуй об этом лучше не писать,
-а то придется описывать приоритеты настроек при рестарте приложения
+**get_env/2** требует указать приложение и ключ, и возвращает {ok, Value} или undefined.
+
+**get_env/3** позволяет указать дефолтное значение на случай, если настройки нет в конфиге.
+
+Есть нюанс, что в отличие от get\_env/2, которая возвращает {ok, Value},
+get\_env/3 возвращает просто Value, Об этом нюансе нужно
+помнить, если у нас в коде изначально был вызов get\_env/2, и мы
+дописываем к нему 3-й аргумент. Тут, скорее всего, нужно будет
+поправить и код, принимающий значение из функции.
+
+С настройками на рабочих серверах чаще имеют дело администраторы, чем
+разработчики.  И для них такой синтаксис файла настроек неудобен.
+Честно говоря, этот синтаксис неудобен и для самих разработчиков,
+легко можно ошибиться в запятых и скобках. А компилятор этот файл не
+проверяет, так что ошибка в синтаксисе проявится только при старте ноды.
+
+Поэтому некоторые (и я в том числе), предпочитают использовать более
+привычные **ini**-файлы, или что-то подобное. Хотя тут придется
+приложить дополнительные усилия, чтобы загрузить и распарсить настройки.
+
+Ну каждая команда в своем проекте делает выбор сама,
+так что я воздержусь от рекомендаций.
