@@ -1,9 +1,5 @@
 * TODO theory, quiz
 
-** TODO 13. application
-- теория
-- quiz
-
 ** TODO 14. OTP фреймворк
    - erl-proj-tpl, структура проекта
      объяснить каждую папку и файл
