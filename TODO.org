@@ -1,13 +1,11 @@
 * TODO theory, quiz
 
 ** TODO 14. OTP фреймворк
-   - erl-proj-tpl, структура проекта
-     объяснить каждую папку и файл
-     запуск
-     конфигурация, логирование, lager
-     rebar, rebar config
-   - short_link как пример проекта
-     cowboy из short_link стоит убрать, наверное
+   - theory
+   - spellcheck, rewrite
+   - metainfo, publish
+   - quiz
+   - push to both origin
 
 ** TODO 15. Обработка ошибок на разных уровнях
    Defensive Programming vs Let it crash
@@ -76,6 +74,13 @@
 ** TODO 13. application
 
 ** TODO 14. OTP фреймворк
+- erl-proj-tpl, структура проекта
+  объяснить каждую папку и файл
+  запуск
+  конфигурация, логирование, lager
+  rebar, rebar config
+- short_link как пример проекта
+  cowboy из short_link стоит убрать, наверное
 
 ** TODO 15. Обработка ошибок на разных уровнях
 
