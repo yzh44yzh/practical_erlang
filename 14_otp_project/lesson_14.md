@@ -1,105 +1,179 @@
-# OTP фреймворк
+# Инфраструктура: OTP фреймворк и rebar
 
-OTP stands for the Open Telecom Platform.
-название устарело, т.к. это фреймворк общего назначения, для любых проектов, а не только Telecom
+OTP фреймворк важная часть эрланг. Настолько важная, что язык на самом
+деле называется не просто Erlang, а Erlang/OTP. Проекты на эрланг без
+использования OTP встречаются крайне редко, и обычно это небольшие
+библиотеки.
 
-единственный фреймворк в эрланг, стандарт де-факто, и без него проекты не делаются
+Рассмотренные на предыдущих уроках gen\_server, supervisor и
+application являются частью OTP.
 
-It’s an application
-operating system and a set of libraries and procedures used for building large-
-scale, fault-tolerant, distributed applications.
+OTP -- это аббревиатура, которая читается как Open Telecom Platform.
+То есть, платформа для создания проектов в области Telecom.  Название
+не совсем правильное, на самом деле это платформа общего назначения,
+для создания любых проектов.
 
-The entire purpose of the Erlang/ OTP ecosystem is building stable, fault-tolerant systems
+OTP включает:
+- приложения, формирующие базовое окружение: kernel, stdlib, erts, sasl;
+- другие приложения, реализующие полезные функции: crypto, ssh, ssl, mnesia, wx, xmerl;
+- поведения: gen\_server, supervisor, application, gen\_fms, gen\_event;
+- ряд библиотек: lists, dict, maps, rand, re, timer и другие;
+- инструменты для работы над проектом: компилятор, отладчик, профилировщик, статический анализатор, генератор документации.
 
-set of libraries that have been carefully engineered and battle-hardened over years
-
-The OTP framework is also a set of modules and standards
-
-Включает:
-- поведения (behaviour)
-  gen\_server, supervisor, application -- сердце OTP, используются везде
-  gen\_fsm, gen\_event -- используются редко
-- рекомендуемая структура проекта
-- системные библиотеки и приложения TODO примеры
-
-The power of OTP comes from the fact that properties such as fault tolerance,
-scalability, dynamic-code upgrade, and so on, can be provided by the behavior
-itself. In other words, the writer of the callback does not have to worry about
-things such as fault tolerance because this is provided by the behavior.
+За 20 лет своего существования OTP проверен во многих
+высоконагруженных и распределенных проектах. Так что гораздо лучше
+полагаться на уже имеющиеся средства: gen\_server, supervisor,
+библиотеки и т.д., чем пытаться реализовать свои аналогичные.
 
 
-## gen_fsm
+## Типичная структура проекта
 
-Finite-State Machine (FSM)
-
-усложненный вариант gen\_server, с несколькими состояниями и разными обработчиками для разных состояний
-(gen\_server можно рассматривать как вырожденный случай gen\_fms, у которого только одно состояние).
-
-TODO у Фреда есть инфа
-
-## gen_event
-
-In OTP, an event manager is a named object to which events can be sent. An event can be, for example, an error, an alarm, or some information that is to be logged.
-
-In the event manager, zero, one, or many event handlers are installed. When the event manager is notified about an event, the event is processed by all the installed event handlers. For example, an event manager for handling errors can by default have a handler installed, which writes error messages to the terminal. If the error messages during a certain period is to be saved to a file as well, the user adds another event handler that does this. When logging to the file is no longer necessary, this event handler is deleted.
-
-An event manager is implemented as a process and each event handler is implemented as a callback module.
-
-- start event manager
-- add/delete an Event Handler
-- Notifying about Events
-
-TODO у Фреда есть инфа
+Для эрланг есть рекомендуемая структура проекта. На эту структуру расчитаны
+инструменты, входящие в состав OTP. В первую очередь компилятор, и скрипты,
+собирающие релизы.
 
 
-## Типичная структура OTP проекта
+### Минимальная структура
 
-Well-behaved OTP applications usually have the files belonging to different
-parts of the application in well-defined places
+```
+├─ ebin
+│  ├── my_app.src
+│  └── my_app.beam
+└─ src
+   └── my_app.erl
+```
 
-С этой структурой изначально работают тулы, собирающие релизы (TODO какие?).
-Позже добавился rebar
-
-с дочерними приложениями и зависимыми библиотеками
-назначение каждой папки
-
-They give a directory structure,
-a way to handle configurations,
-a way to handle dependencies,
-create environment variables and configuration,
-ways to start and stop applications,
-
-http://www.erlang.org/doc/design_principles/applications.html
-7.4  Directory Structure
-    src - Contains the Erlang source code.
-    ebin - Contains the Erlang object code, the beam files. The .app file is also placed here.
-    priv - Used for application specific files. For example, C executables are placed here. The function code:priv_dir/1 is to be used to access this directory. (necessary scripts, graphics, configuration files, or other non-Erlang-related resources.)
-    include - Used for include files.
-(Contains all the Erlang header files ( hrl ) intended for use outside the application)
-
-при использовании rebar к этому еще добавляется
-**deps**
-**test**
-
-**.eunit** - автоматически создаются
-
-**docs** whenever you have EDoc documentation to add to your application.
-
-**logs** - это не стандарт, это добавляю уже я.
-Удобно локально, для разработки. Для прода логи обычно бывают где-то в другом месте. Например, в /var/log/your_project
+Самый простой OTP проект может иметь только две папки:
+**src** для исходников и **ebin** для скомпилированных модулей.
+В ebin также находится и файл ресурсов приложения.
 
 
-Виды проектов (по Фреду).
-Примеры проектов каждого вида.
+### Проект из одного приложения
 
-**normal applications**
-will start the supervision tree and all of the relevant static workers.
+```
+├─ ebin
+│  ├── my_app.src
+│  └── my_app.beam
+├─ include
+│  └── my_app.hrl
+├─ priv
+│  └── some.resource
+└─ src
+   └── my_app.erl
+```
 
-**Library applications**
-contain library modules but do not start the supervision tree.
-This is not
-to say that the code may not contain processes or supervision trees. It just means they
-are started as part of a supervision tree belonging to another application.
+Кроме этого к стандартным папкам еще относятся:
+**include** для заголовочных файлов,
+**priv** для хранения каких-либо ресурсов, необходимых проекту
+(файлы с данными, ssl-сертификаты, схемы валидации и т.д.)
+и **docs** для документации, сгенерированной инструментом EDoc.
+
+
+### Проект с использованием rebar
+
+Популярный инструмент для управления зависимостями и сборки проекта
+**rebar** добавляет к этой структуре еще несколько папок.  Они не
+упоминаются в рекомендациях OTP, но часто встречаются в проектах, где
+используется rebar.
+
+```
+├─ deps
+├─ ebin
+├─ .eunit
+├─ include
+├─ logs
+├─ priv
+├─ src
+└─ test
+```
+
+Тут появляется папка **deps**, куда rebar скачивает зависимости.
+И 3 папки, связанные с тестированием:
+**test** для хранения тестов (eunit и common test),
+**.eunit**, куда складываются скомпилированные модули и тесты,
+и **logs** куда складываются отчеты.
+
+Также в корне проекта появляется файл **rebar.config**, с описанием
+параметров сборки, зависимостей и прочего. (Подробнее о rebar
+и его конфигурации ниже).
+
+Ну и хорошим тоном считается иметь в корне проекта файл **README**,
+где кратко (ну или подробно) описать суть проекта.
+
+
+### Проект из нескольких приложений
+
+В более сложном случае проект может состоять из нескольких приложений.
+И тогда структура его меняется
+
+```
+├─ deps
+├─ app1
+│  ├── ebin
+│  ├── include
+│  ├── logs
+│  ├── priv
+│  ├── src
+│  └── test
+├─ app2
+│  ├── ebin
+│  ├── include
+│  ├── logs
+│  ├── priv
+│  ├── src
+│  └── test
+└─ appN
+│  ├── ebin
+│  ├── include
+│  ├── logs
+│  ├── priv
+│  ├── src
+│  └── test
+├── rebar.config
+└── README
+```
+
+Каждое приложение имеет свой собственный набор папко, кроме **deps**.
+**deps** остается одна на весь проект.
+
+
+### Еще в проекте могут быть
+
+
+#### Конфигурационные файлы
+
+Стандарты OTP не определяют, где должны быть конфигурационные
+файлы. Они могут быть в корне проекта, или в папке priv.  Чаще
+все-таки в корне проекта.
+
+
+#### Исходники на других языках
+
+Не редко проекты пишутся с использованием сразу нескольких языков
+программирования.  И эрланг-проекты тоже могут иметь исходники на
+других языках.  Стандарта на этот счет нет, но есть сложившаяся
+практика помещать такие исходники в папки **c_src**, **cpp_src**,
+**python_src** и т.д. на одном уровне с папкой **src**, то есть, на
+уровне приложения.
+
+
+#### Файлы веб-сервера
+
+Проект на эрланг может быть веб-проектом. И тогда нужно где-то
+хранить веб-ресурсы: html, js, css файлы и графику.
+
+OTP предлагает хранить ресурсы в папке **priv**. Но обычно корневым
+каталогом для веб-сервера делают не саму папку **priv**, а
+какую-нибудь вложенную:
+
+```
+└─ priv
+   └─ www
+      ├─ css
+      ├─ img
+      ├─ js
+      └─ index.html
+```
 
 
 ## rebar
@@ -110,3 +184,7 @@ modules - Contains a list of all the modules that your application introduces to
 поддерживать это вручную неудобно, поэтому
 src/some.app.src
 rebar генерирует ebin/some.app
+
+проблемы в управлении зависимостями
+
+rebar3
