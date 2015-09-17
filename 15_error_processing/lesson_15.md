@@ -1,18 +1,25 @@
 - источники инфы:
-  - Real World OCaml, где-то там было про обработку ошибок
-    исключения vs option/result types
-  - notes.org
-  - erlang-school
-  - официальные доки
   - Армстронг
   - Цезарини
   - Хеберт
-  - erlang in anger
   - OTP in action
-  - yzh44yzh.by
+  - erlang in anger
+  - Real World OCaml, где-то там было про обработку ошибок
+    исключения vs option/result types
+  - http://learnyousomeerlang.com/errors-and-exceptions
+  - http://learnyousomeerlang.com/errors-and-processes
 
 
 ## Let it crash
+
+Функция **dict:fetch/2** возвращает значение, если ключ найден. Или бросает
+исключение, если такого ключа нет.  Функция **dict:find/2** возвращает
+кортеж {ok, Val}, если ключ найден, или атом error, если ключа нет.
+
+Как видим, у нас есть два разных подхода к ситуации, когда ключ не
+найден.  Почему так, и какой подход в какой ситуации нужно
+использовать, мы выясним на одном из последующих уроков, когда будем
+изучать обработку ошибок.
 
 http://learnyousomeerlang.com/errors-and-processes
 
@@ -107,13 +114,15 @@ the calling process as a list of {Module,Function,Arity,Location}
 tuples.
 
 Для чего применять:
-- много точек выхода с разными ошибками
-  (валидация входящих данных)
+- нужна обработка отличная от дефолтной
+- нужны много точек выхода из функции
+  (например валидация входящих данных)
 - более понятное сообщение об ошибке
   не эрланговский стэк-трейс, а сообщение в терминах бизнес-логики, и содержащее контекст (данные)
 
 It is important to know that the protected part of an exception can't be tail recursive.
 The VM must always keep a reference there in case there's an exception popping up.
+
 
 ## supervisor
 
@@ -131,6 +140,14 @@ there's a principle that says that errors which corrupt data should
 cause the faulty part of the system to die as fast as possible in
 order to avoid propagating errors and bad data to the rest of the
 system.  (stidues -- диссертация Джо Армстронга, и другие)
+
+Это уже было в 12-м уроке про супервизор:
+
+Существуют научные работы, которые доказывают, что значительная часть
+ошибок в серверных системах вызваны временными условиями, и перегрузка
+части системы в известное стабильное состояние позволяет с ними
+справиться. Среди таких работ [докторская диссертация Джо Армстронга](http://www.sics.se/~joe/thesis/armstrong_thesis_2003.pdf),
+одного из создателей эрланг.
 
 
 ## распределенность

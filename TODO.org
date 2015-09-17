@@ -1,14 +1,12 @@
 * TODO theory, quiz
 
 ** TODO 15. Обработка ошибок на разных уровнях
-   Defensive Programming vs Let it crash
-   - let it crush
-   - try..catch
-     - нужна обработка отличная от дефолтной
-     - более понятные сообщения в логах + контекст
-     - способ выйти из функции в нескольких местах
-   - supervisor
-   - cluster
+  - theory
+  - spellcheck
+  - re-read, check links
+  - metainfo, publish
+  - quiz
+  - push to both origin
 
 ** TODO 16. Cowboy
    deps
