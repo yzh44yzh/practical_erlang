@@ -1,7 +1,6 @@
 * TODO theory, quiz
 
 ** TODO 14. OTP фреймворк
-   - spellcheck, rewrite
    - metainfo, publish
    - quiz
    - push to both origin
@@ -178,7 +177,11 @@
   - OTP in action
   - yzh44yzh.by
 - теория
-- конспект
+  - spellcheck
+  - re-read, check links
+  - metainfo, publish
+  - quiz
+  - push to both origin
 - quiz
 - практическое задание
 - видео
