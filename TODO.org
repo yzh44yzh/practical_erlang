@@ -1,7 +1,6 @@
 * TODO theory, quiz
 
 ** TODO 14. OTP фреймворк
-   - theory
    - spellcheck, rewrite
    - metainfo, publish
    - quiz
