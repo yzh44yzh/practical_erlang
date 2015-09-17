@@ -1,10 +1,5 @@
 * TODO theory, quiz
 
-** TODO 14. OTP фреймворк
-   - metainfo, publish
-   - quiz
-   - push to both origin
-
 ** TODO 15. Обработка ошибок на разных уровнях
    Defensive Programming vs Let it crash
    - let it crush
