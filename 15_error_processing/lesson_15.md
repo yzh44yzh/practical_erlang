@@ -1,27 +1,4 @@
-- источники инфы:
-  - Армстронг
-  - Цезарини
-  - Хеберт
-  - OTP in action
-  - erlang in anger
-  - Real World OCaml, где-то там было про обработку ошибок
-    исключения vs option/result types
-  - http://learnyousomeerlang.com/errors-and-exceptions
-  - http://learnyousomeerlang.com/errors-and-processes
-
-
 ## Let it crash
-
-Функция **dict:fetch/2** возвращает значение, если ключ найден. Или бросает
-исключение, если такого ключа нет.  Функция **dict:find/2** возвращает
-кортеж {ok, Val}, если ключ найден, или атом error, если ключа нет.
-
-Как видим, у нас есть два разных подхода к ситуации, когда ключ не
-найден.  Почему так, и какой подход в какой ситуации нужно
-использовать, мы выясним на одном из последующих уроков, когда будем
-изучать обработку ошибок.
-
-http://learnyousomeerlang.com/errors-and-processes
 
 The first writers of Erlang always kept in mind that failure is
 common. You can try to prevent bugs all you want, but most of the time
@@ -52,6 +29,13 @@ code can be used for many different applications.
 We write code that solves problems
 and code that fixes problems, but the two are not intertwined.
 
+
+In a sequential language with only one process, it is crucially
+important that this process does not crash. If we have large numbers of pro-
+cesses, it is not so important if a process crashes, provided some other process
+can detect the crash and take over whatever the crashed process was supposed
+to be doing.
+
 ```
 {ok, Res} = do_something(Arg),
 ```
@@ -63,6 +47,33 @@ case do_something(Arg) of
 end.
 ```
 
+## Maybe and Error
+
+the two basic approaches for reporting errors in OCaml: error-
+aware return types and exceptions.
+
+The best way in OCaml to signal an error is to include that error in your return value.
+
+монада Maybe (Option)
+{ok, Value} | None
+
+монада Error (Result) (TODO уточнить название в Haskell)
+{ok, Value} | {error, Reason}
+
+И тут примеры из модулей dict, proplists, maps, ets и т.д.
+
+Функция **dict:fetch/2** возвращает значение, если ключ найден. Или бросает
+исключение, если такого ключа нет.  Функция **dict:find/2** возвращает
+кортеж {ok, Val}, если ключ найден, или атом error, если ключа нет.
+
+Подчеркнуть бардак -- самые разные варианты maybe/error
+к сожалению нет такого, чтобы везде одинаково
+
+Including errors in the return values of your functions requires the caller to handle the
+error explicitly, allowing the caller to make the choice of whether to recover from the
+error or propagate it onward.
+
+
 Самые частые исключения:
 
 - no function/case clause matching
@@ -71,16 +82,21 @@ end.
 - undefined function
 - badarith
 
-как читать стэктрейс?
-
 
 ## try..catch
 
+Exceptions in OCaml are not that different from exceptions in many other languages,
+like Java, C#, and Python. Exceptions are a way to terminate a computation and report
+an error, while providing a mechanism to catch and handle (and possibly recover from)
+exceptions that are triggered by subcomputations.
+
 three kinds of exceptions in Erlang: throws, errors and exits
 
-throw(Exception)
-erlang:error(Reason)
-exit(Reason)
+throw(Exception) -- подразумевается перехват и восстановление работы
+erlang:error(Reason) -- восстановление не подразумевается, поток должен упасть
+exit(Reason) -- системный, использовать обычно не нужно. Это логика на уровне супервизора.
+
+A throw is a class of exceptions used for cases that the programmer can be expected to handle. In comparison with exits and errors, they don't really carry any 'crash that process!' intent behind them, but rather control flow.
 
 erlang:error/1 returns a stack trace and exit/1 doesn't.
 
@@ -107,12 +123,6 @@ end.
 
 как выглядит матчинг и стек трейс во всех этих случаях
 
-erlang:get_stacktrace().
-
-Get the call stack back-trace (stacktrace) of the last exception in
-the calling process as a list of {Module,Function,Arity,Location}
-tuples.
-
 Для чего применять:
 - нужна обработка отличная от дефолтной
 - нужны много точек выхода из функции
@@ -122,6 +132,70 @@ tuples.
 
 It is important to know that the protected part of an exception can't be tail recursive.
 The VM must always keep a reference there in case there's an exception popping up.
+
+
+## stack trace
+
+erlang:get_stacktrace().
+
+Get the call stack back-trace (stacktrace) of the last exception in
+the calling process as a list of {Module,Function,Arity,Location}
+tuples.
+
+The stack trace contains information about where the current function (which
+crashed) would have returned to had it succeeded. The individual tuples in
+the stack trace are of the form {Mod,Func,Arity,Info} . Mod , Func , and Arity denote a
+function, and Info contains the filename and line number of the item in the
+stack trace.
+
+TODO: пример какой-нибудь
+
+
+
+## catch all
+
+клозы функций
+
+клозы case и if
+
+gen\_server:handle\_*
+
+как минимум логировать ошибку
+можно вернуть {error, Reason} или бросить исключение
+
+
+## Выбор между {ok, Result} и throw
+
+функция/библиотека может:
+- вернуть ok | error (Maybe or Result ok|error)
+- бросить исключение
+вызывающий код может
+- матч на ok
+- case на ok|error
+- ловить исключение
+- игнорировать исключение
+
+
+Given that OCaml supports both exceptions and error-aware return types, how do you
+choose between them? The key is to think about the trade-off between concision and
+explicitness.
+
+Exceptions are more concise because they allow you to defer the job of error handling
+to some larger scope, and because they don’t clutter up your types. But this concision
+comes at a cost: exceptions are all too easy to ignore. Error-aware return types, on the
+other hand, are fully manifest in your type definitions, making the errors that your code
+might generate explicit and impossible to ignore.
+
+Это больше актуально для языков со статической типизацией -- Haskell, OCaml
+В Erlang что угодно можно проигнорировать )
+
+The maxim of “use ex‐
+ceptions for exceptional conditions” applies. If an error occurs sufficiently rarely, then
+throwing an exception is often the right behavior.
+
+In short, for errors that are a foreseeable and ordinary part of the execution of your
+production code and that are not omnipresent, error-aware return types are typically
+the right solution.
 
 
 ## supervisor
@@ -156,13 +230,14 @@ the next problem you get is hardware failures.  to have your program
  running on more than one computer at once, something that was needed
  for scaling anyway
 
+To build really fault-tolerant systems, we need more than one computer; after
+all, the entire computer might crash. So, the idea of detecting failure and
+resuming the computation elsewhere has to be extended to networked com-
+puters.
 
+TODO: у Фреда написано
+распределенное приложение
+takeover
+failover
 
-функция/библиотека может:
-- вернуть ok | error (Maybe or Result ok|error)
-- бросить исключение
-вызывающий код может
-- матч на ok
-- case на ok|error
-- ловить исключение
-- игнорировать исключение
+распределенный приложения -- отдельная большая тема
