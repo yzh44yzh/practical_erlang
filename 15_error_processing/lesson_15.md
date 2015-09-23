@@ -1,42 +1,59 @@
 # Способы обработки ошибок. Let it crash.
 
-## Let it crash
+## Defensive Programming vs Let it crash
 
-The first writers of Erlang always kept in mind that failure is
-common. You can try to prevent bugs all you want, but most of the time
-some of them will still happen. In the eventuality bugs don't happen,
-nothing can stop hardware failures all the time. The idea is thus to
-find good ways to handle errors and problems rather than trying to
-prevent them all.
+Когда вся программа выполняется в одном потоке, аварийное завершение
+этого потока означает аварийное завершение программы. И если это
+случилось в месте, где явно не предусмотрена обработка ошибок, то
+завершившаяся программа оставляет минимум информации для диагностики
+проблемы.
 
-In C
-we are taught to write defensive code. Programs should check their arguments
-and not crash. There is a very good reason for this in C: writing multiprocess
-code is extremely difficult and most applications have only one process, so if
-this process crashes the entire application, you’re in big trouble. Unfortunately,
-this leads to large quantities of error checking code, which is intertwined with
-the non-error-checking code.
+Поэтому программисты стараются предусмотреть обработку всех возможных
+ошибок во всех возможных местах. Такой стиль программирования
+называется **Defensive Programming**. И он не редко он приводит к
+тому, что в программе больше кода для обработки ошибок, чем кода,
+выполняющего основную задачу. Конечно, это усложняет и написание кода,
+и поддержку.
 
-In Erlang we do exactly the opposite. We build our applications in two parts:
-a part that solves the problem and a part that corrects errors if they have
-occurred.
+Эрланг предлагает другой подход: реализовать только основную логику
+(**happy path**) и не писать код для обработки ошибок. Благодаря
+многопоточности и разделению потоков на рабочие и супервизоры,
+любая ошибка всегда будет замечена и записана в лог. А система
+в целом продолжит работу. Этот подход называется **Let it crash**.
 
-The part that solves the problem is written with as little defensive code as
-possible; we assume that all arguments to functions are correct and the
-programs will execute without errors.
+Между тем, все инструменты для Defensive Programming есть.
+И полностью от этого подхода никто не отказывается.
+На практике каждый разработчик ищет свой баланс между
+Defensive Programming и Let it crash.
 
-The part that corrects errors is often generic, so the same error-correcting
-code can be used for many different applications.
-
-We write code that solves problems
-and code that fixes problems, but the two are not intertwined.
+В этом уроке рассмотрим, как оба подхода применяются в эрланг.
 
 
-In a sequential language with only one process, it is crucially
-important that this process does not crash. If we have large numbers of pro-
-cesses, it is not so important if a process crashes, provided some other process
-can detect the crash and take over whatever the crashed process was supposed
-to be doing.
+## Типы данных Maybe и Error
+
+Когда на 5-м уроке мы рассматривали Key-Value типы данных, мы
+заметили, что почти все они имеют по два варианта функций,
+возвращающих или обновляющих значение по ключу.
+
+TODO примеры
+
+Функции по-разному ведут себя в случае, когда ключ не
+найден. Одни функции в этом случае бросают исключение, другие
+возвращают специальное значение.
+
+Вот эти специальные значения мы сейчас и рассмотрим. Только придется
+обратиться к другим языкам программирования -- к Haskell и OCaml.
+Там эта концепция реализована четко, в отличие от эрланг.
+
+
+
+
+Функция **dict:fetch/2** возвращает значение, если ключ найден. Или бросает
+исключение, если такого ключа нет.  Функция **dict:find/2** возвращает
+кортеж {ok, Val}, если ключ найден, или атом error, если ключа нет.
+
+И тут примеры из модулей dict, proplists, maps, ets и т.д.
+
 
 ```
 {ok, Res} = do_something(Arg),
@@ -49,7 +66,6 @@ case do_something(Arg) of
 end.
 ```
 
-## Maybe and Error
 
 the two basic approaches for reporting errors in OCaml: error-
 aware return types and exceptions.
@@ -62,11 +78,7 @@ The best way in OCaml to signal an error is to include that error in your return
 монада Error (Result) (TODO уточнить название в Haskell)
 {ok, Value} | {error, Reason}
 
-И тут примеры из модулей dict, proplists, maps, ets и т.д.
 
-Функция **dict:fetch/2** возвращает значение, если ключ найден. Или бросает
-исключение, если такого ключа нет.  Функция **dict:find/2** возвращает
-кортеж {ok, Val}, если ключ найден, или атом error, если ключа нет.
 
 Подчеркнуть бардак -- самые разные варианты maybe/error
 к сожалению нет такого, чтобы везде одинаково
