@@ -82,187 +82,271 @@ end
 
 ## throw, try..catch
 
-Как в и большинстве языков программирования, в эрланг есть исключения и способ
-их перехватить и обработать. Но картина несколько усложняется тем, что
-есть три типа исключений, и три разных способа их генерировать.
+Как в и большинстве языков программирования, в эрланг есть исключения
+и способ их перехватить и обработать. Но картина несколько усложняется
+тем, что есть три типа исключений, и три разных способа их
+генерировать.
 
-TODO stopped here
+**throw(Reason)** -- генерирует обычное исключение.
+Чаще всего именно эту функцию используют разработчики.
 
-three kinds of exceptions in Erlang: throws, errors and exits
+**erlang:error(Reason)** -- генерирует фатальную ошибку,
+восстановление после которой не подразумевается, и текущий поток
+должен упасть.  Впрочем, это скорее соглашение, нежели техническое
+отличие.  Перехватить и обработать это исключение все равно можно.
 
-throw(Exception) -- подразумевается перехват и восстановление работы
-erlang:error(Reason) -- восстановление не подразумевается, поток должен упасть
-exit(Reason) -- системный, использовать обычно не нужно. Это логика на уровне супервизора.
-(рассматривал на 11 уроке)
+**exit(Reason)** -- генерирует системное сообщение. Мы это обсуждали в
+11-м уроке "Обработка ошибок на низком уровне", и помним, что с
+помощью системных сообщений реализуются связи между потоками. Обычно
+нет необходимости вмешиваться в этот механизм. Разве что в целях
+тестирования.
 
-A throw is a class of exceptions used for cases that the programmer can be expected to handle. In comparison with exits and errors, they don't really carry any 'crash that process!' intent behind them, but rather control flow.
+Аргумент **Reason** во всех этих функциях может быть любой структурой данных.
+Обычно это кортеж, либо одиночный атом, несущий какую-то информацию об ошибке.
 
-erlang:error/1 returns a stack trace and exit/1 doesn't.
+Перехватить исключения можно конструкцией **try..catch**:
 
-```
+```erlang
 try
-    Expression1,
-    Expression2,
-    Expression3
+    some code here
 catch
-    TypeOfError:ExceptionPattern1 -> Expression3;
-    TypeOfError:ExceptionPattern2 -> Expression4
+    TypeOfError:Reason1 -> some processing;
+    TypeOfError:Reason2 -> some processing
 end.
 ```
 
-```
-try Expression of
-    SuccessfulPattern1 [Guards] -> Expression1;
-    SuccessfulPattern2 [Guards] -> Expression2
+После catch мы видим сопоставление с образцом, но не совсем обычное.
+**TypeOfError** -- это тип исключения (throw, error или exit), а
+**Reason1** -- это шаблон, который должен совпасть с аргументом
+**Reason** соответствующих функций.
+
+Вот более конкретный пример, как могут вылядеть эти шаблоны:
+
+```erlang
+try
+    some code here
 catch
-    TypeOfError:ExceptionPattern1 -> Expression3;
-    TypeOfError:ExceptionPattern2 -> Expression4
+    throw:my_exception -> some processing;
+    throw:{error, some_reason} -> some processing;
+    throw:{error, {some, [complex, data]}} -> some processing;
+    error:{some_error, details} -> log details and die;
+    exit:{signal, details} -> log details and die;
 end.
 ```
 
-как выглядит матчинг и стек трейс во всех этих случаях
+При обработке исключения нас обычно интересует стек вызовов функций.
+Получить этот стек можно вызовом **erlang:get_stacktrace()**.
 
-Для чего применять:
-- нужна обработка отличная от дефолтной
-- нужны много точек выхода из функции
-  (например валидация входящих данных)
-- более понятное сообщение об ошибке
-  не эрланговский стэк-трейс, а сообщение в терминах бизнес-логики, и содержащее контекст (данные)
+Чтобы понять, как этот стек выглядит, лучше всего увидеть его на практике.
 
-It is important to know that the protected part of an exception can't be tail recursive.
-The VM must always keep a reference there in case there's an exception popping up.
+Возьмем такой простой модуль из 3-х функций:
 
+```erlang
+-module(test).
+-export([run/0]).
+run() ->
+    try
+        1 + some_fun()
+    catch
+        throw:my_exception ->
+            StackTrace = erlang:get_stacktrace(),
+            io:format("~p", [StackTrace])
+    end.
+some_fun() ->
+    2 + other_fun().
+other_fun() ->
+    throw(my_exception).
+```
 
-### stack trace
+и запустим его:
 
-erlang:get_stacktrace().
+```erlang
+3> test:run().
+[{test,other_fun,0,[{file,"test.erl"},{line,20}]},
+ {test,some_fun,0,[{file,"test.erl"},{line,16}]},
+ {test,run,0,[{file,"test.erl"},{line,7}]},
+ {erl_eval,do_apply,6,[{file,"erl_eval.erl"},{line,661}]},
+ {shell,exprs,7,[{file,"shell.erl"},{line,684}]},
+ {shell,eval_exprs,7,[{file,"shell.erl"},{line,639}]},
+ {shell,eval_loop,3,[{file,"shell.erl"},{line,624}]}]ok
+```
 
-Get the call stack back-trace (stacktrace) of the last exception in
-the calling process as a list of {Module,Function,Arity,Location}
-tuples.
-
-The stack trace contains information about where the current function (which
-crashed) would have returned to had it succeeded. The individual tuples in
-the stack trace are of the form {Mod,Func,Arity,Info} . Mod , Func , and Arity denote a
-function, and Info contains the filename and line number of the item in the
-stack trace.
-
-TODO: пример какой-нибудь
+Стек представляет собой список кортежей, где каждый кортеж указывает
+функцию и строку в исходном коде.  Мы видим, что исключение возникло в
+модуле **test**, в функции **other_fun** с арностью 0, которая
+определена в файле **test.erl**, в 20-й строке кода. И дальше мы видим
+цепочку вызовов функций, которые привели к этому месту.
 
 
 ## Выбор способа обработки ошибок
 
-В итоге, у разработчика есть несколько вариантов.
+Итак, у разработчика есть несколько вариантов.
 
-Внутри функции сообщить об ошибке можно с помощью исключения,
-либо возвратом специального значения (Option, Result).
-Когда выбирать исключение, когда Result?
-
-А снаружи, при вызове функции, можно либо обработать ошибку (defensive process)
+Внутри функции можно сообщить об ошибке с помощью исключения, либо
+возвратом специального значения (Option или Result).  А снаружи, при
+вызове функции, можно либо обработать ошибку (defensive programming)
 либо проигнорировать (let it crash).
-Когда выбирать обработку, когда игнор?
 
-Для эрланга, и ФП вообще, более типично использовать Result, а исключения -- редкость.
-Если использовать исключения, то throw. error и exit использовать не рекомендую.
-Аргументы за исключение:
-- множественные точки выхода из функции
-- что еще?
+В эрланг, и вообще в функциональном программировании, предпочитают
+использовать специальные значения, а исключениями применяют редко.
+Можно обойтись и вообще без исключений, что подтверждает язык Go,
+в котором их нет. Но это не всегда удобно.
 
+Например, сервер обрабатывает HTTP запрос со сложными входными
+данными.  Эти данные нужно валидировать по многим условиям, и при
+несоответствии данных любому из этих условий, сервер отказывается их
+принимать.
+
+Вариант без исключений может выглядеть примерно так:
+
+```erlang
+case check1(Data) of
+    ok -> case check2(Data) of
+              ok -> case check3(Data) of
+                        ok -> process_data(Data);
+                        {error, Reason3} -> {error, Reason3}
+              {error, Reason2} -> {error, Reason2}
+    {error, Reason1} -> {error, Reason1}
+end.
+```
+
+Причем, таких проверок может быть десяток и больше.
+Проблему можно решать по-разному. Например, применив монады
+(библиотека [erlando](https://github.com/rabbitmq/erlando)
+реализует для эрланг некоторые монады из Haskell).
+Это даст лаконичный, но более сложный для понимания код.
+
+А с помощью исключений можно сделать простое и понятное решение:
 
 ```erlang
 try
-    my_fun(Args)
+    check1(Data),
+    check2(Data),
+    check3(Data)
 catch
-    throw:Error -> ...
-end,
-case my_other_fun(Args) of
-    {ok, Value} -> ...
-    {error, Reason} -> ...
-end,
+    throw:Reason1 -> {error, Reason1};
+    throw:Reason2 -> {error, Reason2};
+    throw:Reason3 -> {error, Reason3}
+end.
 ```
 
-и тогда это будет Defensive Programming. Либо можно игнорировать вероятную ошибку:
+В функциональном программировании считается правильным иметь только
+одну точку выхода из функции.  Но на практике иногда удобно иметь
+много точек выхода. И в этой ситуации помогают исключения.
+
+Я могу дать такую рекомендацию: в большинстве случаев использовать
+специальные типы **Option** и **Result**. Исключения использовать
+редко, только если они дают более простой и понятный код, чем код со
+специальными типами.
+
+Итак, мы сообщили об ошибке. Следующий вопрос: нужно ли обрабатывать
+эту ошибку, или лучше игнорировать ее? Тут нужно четко понимать, что
+происходит, если ошибка проигнорирована.
+
+А происходит следующее: текущий поток падает и перезапускается
+супервизором из некоего известного стабильного состояния.
+Информация, хранящаяся в памяти потока (стек и куча), теряется.
+В лог пишется сообщение об ошибке.
+
+Часто нас такое поведение устраивает. И тогда лучше не усложнять код и
+игнорировать ошибку.
+
+Но есть случаи, когда это поведение не подходит:
+- ошибка может быть не ошибкой, а штатной ситуацией, для которой мы знаем, что нужно делать;
+- нужно сохранить данные из памяти потока;
+- информации в логе недостаточно, чтобы понять, что происходит.
+
+И тогда нужно явно обработать ошибки.
+
+
+## catch all шаблоны
+
+Отдельная, но близкая к обработке ошибок тема -- использование
+catch all шаблонов при сопоставлении с образцом.
 
 ```erlang
-Result = my_fun(Args),
-{ok, Value} = my_other_fun(Args),
+case some(Arg) of
+    {tag1, Result1} -> do_something;
+    {tag2, Reslut2} -> do_other;
+end
 ```
 
-и тогда это будет Let it crash. Такой вариант, как видим, заметно проще :)
+Первый вариант -- это let it crash подход. Если some(Arg) вернет
+какой-то результат, для которого нет шаблона, то поток упадет.
+
+```erlang
+case some(Arg) of
+    {tag1, Result1} -> do_something;
+    {tag2, Reslut2} -> do_other;
+    Any -> process_unknown_data(Any)
+end
+```
+
+Второй вариант -- это defensive programming. Результат, для которого
+нет шаблона мы явно обрабатываем каким-то образом.
+
+Я рекомендую использовать catch all шаблоны для обработчиков
+handle\_call, handle\_cast, handle\_info в gen\_server.  Это позволяет
+четко логировать запросы к gen\_server, для которых не реализована
+обработка.
 
 
+```erlang
+handle_call({some, Data}, _From, State) ->
+    ...
+handle_call({other, Data}, _From, State) ->
+    ...
+handle_call(Any, _From, State) ->
+    lager:error("unknown call ~p in ~p ~n", [Any, ?MODULE]),
+    {noreply, State}.
+```
+
+Информацию об ошибке мы получим в любом случае. Если есть catch all шаблон:
+
+```erlang
+1> gen_server:call(some_worker, blablabla).
+16:53:06.529 [error] unknown call blablabla in some_worker
+```
+
+и если нету:
+
+```erlang
+1> gen_server:call(some_worker, blablabla).
+ ** exception exit: {{function_clause,[{some_worker,handle_call,
+                                                   [blablabla,{<0.42.0>,#Ref<0.0.0.984>},no_state],
+                                                   [{file,"src/some_worker.erl"},{line,25}]},
+                                      {gen_server,try_handle_call,4,
+                                                  [{file,"gen_server.erl"},{line,607}]},
+                                      {gen_server,handle_msg,5,
+                                                  [{file,"gen_server.erl"},{line,639}]},
+                                      {proc_lib,init_p_do_apply,3,
+                                                [{file,"proc_lib.erl"},{line,237}]}]},
+                    {gen_server,call,[some_worker,blablabla]}}
+     in function  gen_server:call/2 (gen_server.erl, line 182)
+2> 16:53:53.353 [error] gen_server some_worker terminated with reason: ...
+16:53:53.353 [error] CRASH REPORT Process some_worker with 0 neighbours exited with reason: ...
+```
+
+Но в первом случае это будет просто аккуратная запись в error.log. А
+во втором случае gen\_server упадет и потеряет свое состояние.
 
 
-Given that OCaml supports both exceptions and error-aware return types, how do you
-choose between them? The key is to think about the trade-off between concision and
-explicitness.
+## Supervisor и распределенность
 
-Exceptions are more concise because they allow you to defer the job of error handling
-to some larger scope, and because they don’t clutter up your types. But this concision
-comes at a cost: exceptions are all too easy to ignore. Error-aware return types, on the
-other hand, are fully manifest in your type definitions, making the errors that your code
-might generate explicit and impossible to ignore.
+Супервизоры мы уже рассматривали в 11-м и 12-м уроках. Повторяться не
+буду.  Добавлю только, что если считать try..catch первым уровнем
+обработки ошибок, то супервизоры будут вторым уровнем.
 
-Это больше актуально для языков со статической типизацией -- Haskell, OCaml
-В Erlang что угодно можно проигнорировать )
+Для кода в стиле let it crash супервизоры -- это главное средство.
+Но важно, чтобы каждый рабочий поток был запущен под супервизором.
 
-The maxim of “use ex‐
-ceptions for exceptional conditions” applies. If an error occurs sufficiently rarely, then
-throwing an exception is often the right behavior.
+Распределенность обеспечивает третий уровень обработки ошибок.
+Правильно построенный кластер продолжает обслуживать клиентов
+при выходе из строя одного или даже нескольких узлов.
+Здесь работают похожие механизмы. Узлы в кластере мониторят друг друга
+подобно тому, как мониторят друг друга потоки в рамках одного узла.
 
-In short, for errors that are a foreseeable and ordinary part of the execution of your
-production code and that are not omnipresent, error-aware return types are typically
-the right solution.
-
-
-### catch all
-
-клозы функций
-
-клозы case и if
-
-gen\_server:handle\_*
-
-не нужен, если мы делаем let it crush
-нужен, если мы кастомно обрабатываем ошибку
-
-для gen_server:handle лучше сделать
-чтобы правильно залогировать ошибку
-иначе поток упадет, но будет мало информации для диагностики
-TODO: посмотреть, какая тут будет информация
-
-
-## supervisor
-
-в однопоточной программе краш потока -- это краш всей программы, поэтому
-sequential languages have concentrated on the prevention of failure and an
-emphasis on defensive programming.
-
-Instead of handling an error in the process
-where the error occurs, we let the process die and correct the error in some
-other process.
-
-Some studies proved that the main sources of downtime in large scale
-software systems are intermittent or transient bugs (source). Then,
-there's a principle that says that errors which corrupt data should
-cause the faulty part of the system to die as fast as possible in
-order to avoid propagating errors and bad data to the rest of the
-system.  (stidues -- диссертация Джо Армстронга, и другие)
-
-Это уже было в 12-м уроке про супервизор:
-
-Существуют научные работы, которые доказывают, что значительная часть
-ошибок в серверных системах вызваны временными условиями, и перегрузка
-части системы в известное стабильное состояние позволяет с ними
-справиться. Среди таких работ [докторская диссертация Джо Армстронга](http://www.sics.se/~joe/thesis/armstrong_thesis_2003.pdf),
-одного из создателей эрланг.
-
-
-## распределенность
-
-the next problem you get is hardware failures.  to have your program
- running on more than one computer at once, something that was needed
- for scaling anyway
+TODO
 
 To build really fault-tolerant systems, we need more than one computer; after
 all, the entire computer might crash. So, the idea of detecting failure and
