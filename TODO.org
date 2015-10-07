@@ -1,9 +1,3 @@
-* TODO все остальные темы убрать из этого курса
-  - перенести туда полезные материалы erlang-school (кажись, только dchat)
-  - запушить в закрытый репозиторий на bitbucket
-  - удалить erlang-school репозиторий
-
-
 * TODO theory, quiz
 
 ** TODO 15. Способы обработки ошибок. Let it crash.
@@ -97,29 +91,6 @@
 
 * TODO Когда курс будет закончен, вывести из sanbox на hexlet
   Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)
-
-
-* По каждому уроку:
-- источники инфы:
-  - notes.org
-  - erlang-school
-  - официальные доки
-  - Армстронг
-  - Цезарини
-  - Хеберт
-  - erlang in anger
-  - OTP in action
-  - yzh44yzh.by
-- теория
-  - spellcheck
-  - re-read, check links
-  - metainfo, publish
-  - quiz
-  - push to both origin
-- quiz
-- практическое задание
-- видео
-
 
 * Инфа
 

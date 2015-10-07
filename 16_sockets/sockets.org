@@ -1,3 +1,19 @@
+- источники инфы:
+  - официальные доки
+  - Армстронг
+  - Цезарини
+  - Хеберт
+  - erlang in anger
+  - OTP in action
+  - yzh44yzh.by
+- теория
+  - spellcheck
+  - re-read, check links
+  - metainfo, publish
+  - quiz
+  - push to both origin
+- quiz
+
 * Работа с сокетами
 
 ** UDP сокет
