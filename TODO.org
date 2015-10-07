@@ -1,3 +1,15 @@
+* TODO все остальные темы убрать из этого курса
+  + завести новый курс erlang_for_web
+  + перенести туда лишнее из
+    + TODO
+    + notes
+    + README
+  + перенести туда лишние темы
+  - перенести туда полезные материалы erlang-school (кажись, только dchat)
+  - запушить в закрытый репозиторий на bitbucket
+  - удалить erlang-school репозиторий
+
+
 * TODO theory, quiz
 
 ** TODO 15. Способы обработки ошибок. Let it crash.
@@ -8,37 +20,14 @@
   - quiz
   - push to both origin
 
-** TODO 16. Cowboy
-   deps
-   routing, start,
-   not_found or ping_ handler
-   http_handler
-   work with Req object
 
-** TODO 17. JSON
-   jiffy, ej, jessy
-
-** TODO 18. eunit
-   http://www.erlang.org/doc/apps/eunit/chapter.html
-     exceptions, generators, mock
-     samples: erma, herd
-
-** TODO 19. common test
-   http://learnyousomeerlang.com/common-test-for-uncommon-tests
-     one node, two nodes rpc, black box http
-     groups, parallel, race conditions, dead locks
-
-** TODO 20. types, dialyzer
-   http://www.erlang.org/doc/reference_manual/typespec.html
-   http://learnyousomeerlang.com/dialyzer
-     build_plt, add_plt
-     warn_missing_spec
-     игнорирование предупреждений лагера
-
-
-* TODO пересмотреть все материалы erlang-school
-  что-то еще забрать сюда
-  dchat
+** TODO 16. TCP и UDP сокеты
+   TCP, UDP
+   Активный и пассивный режим сокета
+   Наивный tcp сервер
+   Два вида протоколов: бинарные с размером впереди, текстовые с разделителем
+   опробовать оба через telnet
+   Ranch Acceptor Pool
 
 
 * TODO exercises
@@ -62,7 +51,9 @@
 
 ** TODO 12. supervisor
 
+
 ** TODO 13. application
+
 
 ** TODO 14. OTP фреймворк
 - erl-proj-tpl, структура проекта
@@ -73,17 +64,19 @@
 - short_link как пример проекта
   cowboy из short_link стоит убрать, наверное
 
+
 ** TODO 15. Обработка ошибок на разных уровнях
 
-** TODO 16. Cowboy
 
-** TODO 17. JSON
+** TODO 16. TCP и UDP сокеты
 
-** TODO 18. eunit
 
-** TODO 19. common test
+* TODO курсовая работа
+  консольная 2048 http://habrahabr.ru/post/261801/
+  telnet-client, TCP-socket, ranch
+  Может быть какой-то многопользовательский вариант игры.
+  Или что-то из Codewars.
 
-** TODO 20. types, dialyzer
 
 * TODO video
 
@@ -105,57 +98,11 @@
 
 ** TODO 15. Обработка ошибок на разных уровнях
 
-** TODO 16. Cowboy
+** TODO 16. TCP и UDP сокеты
 
-** TODO 17. JSON
-
-** TODO 18. eunit
-
-** TODO 19. common test
-
-** TODO 20. types, dialyzer
-
-* TODO курсовая работа
-  консольная 2048 http://habrahabr.ru/post/261801/
-  важно как-то это уметь тестировать
-  Браузерная, с JS-клиентом и веб-сокетами. Клиент выходит за рамки курса.
-  Может быть клиента положить уже готового.
-  Может быть какой-то многопользовательский вариант игры.
-  Или что-то из Codewars.
 
 * TODO Когда курс будет закончен, вывести из sanbox на hexlet
   Дать ссылку на github/yzh44yzh/practial_erlang в своем блоге и своих аккаунтах (гуглоплюс, фейсбукс и т.д.)
-
-* Дополнительные темы
-** история эрланг на фоне истории программирования
-** Работа с сокетами
-   TCP, UDP
-   Активный и пассивный режим сокета
-   Наивный tcp сервер
-   Два вида протоколов: бинарные с размером впереди, текстовые с разделителем
-   опробовать оба через telnet
-   Ranch Acceptor Pool
-** Работа с базой данных
-   epgsql, emysql
-** Rebar
-   управление зависимостями
-   сборка проекта
-   rebar 3,
-   Makefile, EMakefile
-** cowboy, сессии
-** cowboy, websocket, bullet
-** wgnet: sheep, herd, wg_push, erma
-** tracing
-** Релизы, relx
-** кластер, dchat
-** Валидация данных
-   many inner case..of
-   try..catch
-   json scheme
-   maybe/error monads
-   list of validation functions, return: ok | {error, term()} | {stop, term()}
-   get-данные можно перегнать в JSON и валидировать по схеме.
-   Схема не годится там, где валидация с побочными эффектами: обращение к базе, к стороннему сервису и т.д.
 
 
 * По каждому уроку:
@@ -178,6 +125,7 @@
 - quiz
 - практическое задание
 - видео
+
 
 * Инфа
 
