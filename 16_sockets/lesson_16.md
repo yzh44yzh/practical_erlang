@@ -5,59 +5,52 @@
   - Хеберт
   - erlang in anger
   - OTP in action
-  - yzh44yzh.by
-- теория
-  - spellcheck
-  - re-read, check links
-  - metainfo, publish
-  - quiz
-  - push to both origin
-- quiz
 
-* Работа с сокетами
 
-** UDP сокет
+# Эрланг на практике. TCP и UDP сокеты
+
+## UDP сокет
 
 http://www.erlang.org/doc/man/gen_udp.html
 
 Запустим 2 ноды, и пообщаемся по UDP между ними.
 
 На 1й ноде откроем UDP на порту 2000:
-#+BEGIN_SRC Erlang
+```erlang
 1> {ok, Socket} = gen_udp:open(2000, [binary, {active, true}]).
 {ok,#Port<0.587>}
-#+END_SRC
+```
 
 На 2й ноде откроем UDP на порту 2001:
-#+BEGIN_SRC Erlang
+```erlang
 1> {ok, Socket} = gen_udp:open(2001, [binary, {active, true}]).
 {ok,#Port<0.587>}
-#+END_SRC
+```
 
 Пошлем сообщение с 1-й на 2-ю ноду:
-#+BEGIN_SRC Erlang
+```erlang
 2> gen_udp:send(Socket, {127,0,0,1}, 2001, <<"Hello from 2000">>).
 ok
-#+END_SRC
+```
 
 На второй ноде убедимся, что сообщение пришло. И пошлем ответ:
-#+BEGIN_SRC Erlang
+```erlang
 2> flush().
 Shell got {udp,#Port<0.587>,{127,0,0,1},2000,<<"Hello from 2000">>}
 ok
 3> gen_udp:send(Socket, {127,0,0,1}, 2000, <<"Hello from 2001">>).
 ok
-#+END_SRC
+```
 
 На первой убедимся, что сообщение пришло:
-#+BEGIN_SRC Erlang
+```erlang
 3> flush().
 Shell got {udp,#Port<0.587>,{127,0,0,1},2001,<<"Hello from 2001">>}
 ok
-#+END_SRC
+```
 
 
-** Активный и пассивный режим сокета
+## Активный и пассивный режим сокета
 
 И gen_udp, и gen_tcp, оба имеют одну важную настройку: режим работы с входящими данными.
 
@@ -81,12 +74,12 @@ ok
 В пассивном режиме данные нужно забрать самому, вызовом
 gen_udp:recv/3, gen_tcp:recv/3
 
-#+BEGIN_SRC Erlang
+```erlang
 gen_udp:recv(Socket, Length, Timeout) ->
         {ok, {Address, Port, Packet}} | {error, Reason}
 
 gen_tcp:recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
-#+END_SRC
+```
 
 Здесь мы указываем, сколько байт данных хотим прочитать из сокета. Если там есть
 эти данные, то мы получаем их сразу. Если нет, то вызов блокируется, пока не
@@ -96,19 +89,19 @@ gen_tcp:recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
 получает первый пакет данных как сообщение, и сразу переключается в пассивный режим.
 
 
-** TCP сокет
+## TCP сокет
 
 http://www.erlang.org/doc/man/gen_tcp.html
 
 С TCP сокетом немного сложнее. Сперва нужно начать прослушивание порта:
-#+BEGIN_SRC Erlang
+```erlang
 gen_tcp:listen(Port, Options) -> {ok, ListenSocket} | {error, Reason}
-#+END_SRC
+```
 
 Затем начать принимать на этом порту соединения для клиентов:
-#+BEGIN_SRC Erlang
+```erlang
 accept(ListenSocket) -> {ok, Socket} | {error, Reason}
-#+END_SRC
+```
 
 Вызов accept блокируется, пока не появится клиент, желающий подключиться.
 И нам нужен отдельный поток на каждого клиента.
@@ -118,7 +111,7 @@ accept(ListenSocket) -> {ok, Socket} | {error, Reason}
 новый поток, ожидающий следующего клиента. А сам уходит в цикл для
 обработки данных, приходящих от клиента:
 
-#+BEGIN_SRC Erlang
+```erlang
 listen(Port) ->
     {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, true}]),
     spawn(?MODULE, accept, [ListenSocket]),
@@ -137,17 +130,37 @@ handle() ->
             gen_tcp:send(Socket, Msg),
             handle()
     end.
-#+END_SRC
+```
 
 Ну или в пассивном режиме нужно самому читать данные из сокета:
-#+BEGIN_SRC Erlang
+```erlang
 recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
-#+END_SRC
+```
 
 Попробуем подключиться telnet клиентом и потестить.
 
 
-** Ranch Acceptor Pool
+## Бинарные и текстовые протоколы
+
+Два вида протоколов: бинарные с размером впереди, текстовые с разделителем
+опробовать оба через telnet
+
+Бинарные обычно устроены по принципу {Tag, Length, Data}
+Нужно прочитать заголовок, по нему определить, сколько данных читать дальше.
+Размер заголовка 1,2,4 байта
+Реализация вручную. Или готовые настройки в gen_tcp.
+
+Примеры: ANS1 (как там правильно?), BERT, Protocol Buffer, Thrift
+
+Текстовые нужно читать побайтно и накапливать в буфере, пока не встретится символ
+окончания пакета. Обычно 0 - zero byte.
+
+Примеры: JSON, XML
+данные могут быть сжаты, и тогда их нужно прочитать как бинарные, распаковать,
+и потом интерпретировать
+
+
+## Ranch Acceptor Pool
 
 Эта реализация работает, но не очень эффективно. Гораздо эффективнее заранее создать пул
 из пары сотен процессов, которые будут висеть в gen_tcp:accept и ждать клиентских соединений.
@@ -160,3 +173,5 @@ http://yzh44yzh.by/post/ranch.html
 Надежный базис для построения своего TCP сервера. Поверх него построен cowboy :)
 
 И я использовал в своих проектах.
+
+TODO: пример использования

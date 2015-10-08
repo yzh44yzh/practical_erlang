@@ -20,7 +20,6 @@
 
 -record(state, {
           max_rooms = 5 :: integer(),
-          max_users_in_room = 5 :: integer(),
           rooms = maps:new() :: map()
          }).
 
@@ -60,10 +59,12 @@ get_users_list(Server, RoomId) ->
     call(Server, {get_users_list, RoomId}).
 
 
+-spec send_message(server(), room_id(), name(), binary()) -> ok.
 send_message(Server, RoomId, UserName, Message) ->
     call(Server, {send_message, RoomId, UserName, Message}).
 
 
+-spec get_messages_history(server(), room_id()) -> [message()].
 get_messages_history(Server, RoomId) ->
     call(Server, {get_messages_history, RoomId}).
 
