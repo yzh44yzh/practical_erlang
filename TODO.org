@@ -1,8 +1,8 @@
 * TODO theory, quiz
 
 ** TODO 15. Способы обработки ошибок. Let it crash.
-  - theory
-  - spellcheck
+  + theory
+  + spellcheck
   - re-read, check links
   - metainfo, publish
   - quiz

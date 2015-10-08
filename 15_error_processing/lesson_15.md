@@ -20,7 +20,7 @@
 ошибка всегда будет замечена и записана в лог. А система в целом
 продолжит работу. Этот подход называется **Let it crash**.
 
-Между тем, все инструменты для Defensive Programming в эрланге есть.
+Между тем, все инструменты для Defensive Programming в эрланг есть.
 И полностью от этого подхода никто не отказывается.  На практике
 каждый разработчик ищет свой баланс между Defensive Programming
 и Let it crash.
@@ -346,16 +346,5 @@ handle_call(Any, _From, State) ->
 Здесь работают похожие механизмы. Узлы в кластере мониторят друг друга
 подобно тому, как мониторят друг друга потоки в рамках одного узла.
 
-TODO
-
-To build really fault-tolerant systems, we need more than one computer; after
-all, the entire computer might crash. So, the idea of detecting failure and
-resuming the computation elsewhere has to be extended to networked com-
-puters.
-
-TODO: у Фреда написано
-распределенное приложение
-takeover
-failover
-
-распределенный приложения -- отдельная большая тема
+В итоге эрланг позволяет построить очень надежные системы.
+Но надежность не возникнет сама собой, это должен сделать разработчик.
