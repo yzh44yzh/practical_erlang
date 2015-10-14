@@ -1,30 +1,25 @@
-- официальные доки
-  - UDP https://en.wikipedia.org/wiki/User_Datagram_Protocol
-  - TCP https://en.wikipedia.org/wiki/Transmission_Control_Protocol
-  - gen_tcp http://www.erlang.org/doc/man/gen_tcp.html
-  - gen_udp http://www.erlang.org/doc/man/gen_udp.html
-  - inet http://www.erlang.org/doc/man/inet.html
-  - inets http://www.erlang.org/doc/apps/inets/index.html
-
-
-
 # Эрланг на практике. TCP и UDP сокеты
 
-TODO: нужна какая-то вводная
+Пора применить эрланг по его прямому назначению -- для реализации
+сетевого сервиса.  Чаще всего такие сервисы делают на базе
+веб-сервера, поверх протокола [HTTP](https://ru.wikipedia.org/wiki/HTTP).
+Но мы возьмем уровень ниже -- TCP и UDP сокеты.
 
-A socket is a communication channel that allows machines to communicate
-over the Internet using the Internet Protocol (IP). In this chapter, we’ll concen-
-trate on the two core protocols of the Internet: Transmission Control Protocol
-(TCP) and User Datagram Protocol (UDP).
+Я полагаю, вы уже знаете, как устроена сеть, что такое
+[Internet Protocol](https://ru.wikipedia.org/wiki/IP),
+[User Datagram Protocol](https://ru.wikipedia.org/wiki/UDP) и
+[Transmission Control Protocol](https://ru.wikipedia.org/wiki/TCP).
+Эта тема большинству программистов известна.  Но если вы почему-то ее
+упустили, то придется сперва наверстать упущенное, и потом вернуться к
+этому уроку.
 
-If you are interested in reading more about other Internet Protocol implementations,
-two good books are Internet Core Protocols by Eric Hall (O’Reilly) and TCP Illustra-
-ted by W. Richard Stevens (Addison-Wesley Professional Computing Series).
 
 ## UDP сокет
 
 TODO: нужна какая-то вводная
-https://en.wikipedia.org/wiki/User_Datagram_Protocol
+
+
+http://www.erlang.org/doc/man/gen_udp.html
 
 stateless protocol
 without a session
@@ -43,8 +38,6 @@ basic operations with UDP:
 - sending messages,
 - receiving messages
 - closing a connection.
-
-http://www.erlang.org/doc/man/gen_udp.html
 
 Запустим 2 ноды, и пообщаемся по UDP между ними.
 
@@ -83,6 +76,9 @@ ok
 3> gen_udp:send(Socket, {127,0,0,1}, 2000, <<"Hello from 2001">>).
 ok
 ```
+
+{udp, Socket, IP, InPortNo, Packet}
+IP and InPortNo define the address from which Packet came
 
 На первой убедимся, что сообщение пришло:
 ```erlang
@@ -154,7 +150,8 @@ gen_tcp:recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
 
 TODO: нужна какая-то вводная
 
-https://en.wikipedia.org/wiki/Transmission_Control_Protocol
+http://www.erlang.org/doc/man/gen_tcp.html
+
 stateful, connection-based
 
 protocol takes care of
@@ -179,9 +176,6 @@ server:
 - send
 - receive
 - close socket
-
-
-http://www.erlang.org/doc/man/gen_tcp.html
 
 С TCP сокетом немного сложнее. Сперва нужно начать прослушивание порта:
 
@@ -256,6 +250,7 @@ TODO подробнее
 Нужно прочитать заголовок, по нему определить, сколько данных читать дальше.
 Размер заголовка 1,2,4 байта
 Реализация вручную. Или готовые настройки в gen_tcp.
+http://www.erlang.org/doc/man/erlang.html#decode_packet-3
 
 Options
 most options are going to be similar for all IP sockets
@@ -272,6 +267,7 @@ TODO Это понятно для активного режима, но не п�
 
 Примеры: ASN.1, BERT, Protocol Buffer, Thrift
 TODO ссылки
+https://ru.wikipedia.org/wiki/ASN.1
 http://www.erlang.org/doc/apps/asn1/index.html
 
 BERT ссылка на доку, и ссылка на сайт про bert, с либами для других языков
@@ -289,6 +285,7 @@ TODO напомнить про тип данных iolist()
 
 TODO реализация примитивного текстового протокола, с разделителем по \n
 пассивный режим (считывание по одному байту), накопление в буфере.
+использовать line http://www.erlang.org/doc/man/erlang.html#decode_packet-3
 сессия telnet клиента
 
 
