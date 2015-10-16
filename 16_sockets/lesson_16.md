@@ -1,4 +1,4 @@
-# Эрланг на практике. TCP и UDP сокеты
+# Эрланг на практике. TCP и UDP сокеты.
 
 Пора применить эрланг по его прямому назначению -- для реализации
 сетевого сервиса.  Чаще всего такие сервисы делают на базе
@@ -16,82 +16,84 @@
 
 ## UDP сокет
 
-TODO: нужна какая-то вводная
+Вспомним в общих чертах, что такое UDP:
+- протокол передачи коротких сообщений (Datagram);
+- быстрая доставка;
+- без постоянного соединения между клиентом и сервером, без состояния;
+- доставка сообщения и очередность доставки не гарантируется.
 
+Для работы с UDP используется модуль [gen_udp](http://www.erlang.org/doc/man/gen_udp.html).
 
-http://www.erlang.org/doc/man/gen_udp.html
+Давайте запустим две ноды и наладим общение между ними.
 
-stateless protocol
-without a session
-there is no guarantee that the fragments you received were sent in the same order as you got them.
-In fact, there is no guarantee that if someone sends a packet, you'll receive it at all.
+На 1-й ноде откроем UDP на порту 2000:
 
-use UDP when:
-- packets are small, short messages (called datagrams)
-- can sometimes be lost with little consequences
-- when low latency is absolutely necessary.
-
-We set up a socket over a given port, and that socket can both send and receive data:
-
-basic operations with UDP:
-- setting up a socket,
-- sending messages,
-- receiving messages
-- closing a connection.
-
-Запустим 2 ноды, и пообщаемся по UDP между ними.
-
-На 1й ноде откроем UDP на порту 2000:
 ```erlang
 1> {ok, Socket} = gen_udp:open(2000, [binary, {active, true}]).
 {ok,#Port<0.587>}
 ```
 
-TODO смысл опций
-активный/пассивный режим ниже
-текстовый/бинарный протокол ниже
+Вызываем **gen_udp:open/2**, передаем номер порта и список опций.
+Список всех возможных опций довольно большой, но нас интересуют две из них:
 
-RemoteAddress can be either a string or an atom containing a domain name ("example.org"),
-a 4-tuple describing an IPv4 address or a 8-tuple describing an IPv6 address.
+_binary_ -- сокет открыт в бинарном режиме. Как вариант, сокет можно
+открыть в текстовом режиме, указав опцию _list_. Разница в том, как мы
+интерпретируем данные, полученные из сокета -- как поток байт, или как текст.
 
-_#Port<0.587>_ -- This is the representation of the socket we have just opened
+_{active, true}_ -- сокет открыт в активном режиме, значит данные,
+приходящие в сокет, будут посылаться в виде сообщений в почтовый ящик потока,
+владельца сокета. Подробнее об этом ниже.
 
-На 2й ноде откроем UDP на порту 2001:
+На 2-й ноде откроем UDP на порту 2001:
+
 ```erlang
 1> {ok, Socket} = gen_udp:open(2001, [binary, {active, true}]).
 {ok,#Port<0.587>}
 ```
 
-Пошлем сообщение с 1-й на 2-ю ноду:
+И пошлем сообщение с 1-й ноды на 2-ю:
+
 ```erlang
 2> gen_udp:send(Socket, {127,0,0,1}, 2001, <<"Hello from 2000">>).
 ok
 ```
 
-На второй ноде убедимся, что сообщение пришло. И пошлем ответ:
+Вызываем **gen_udp:send/4**, передаем сокет, адрес и порт получателя, и само сообщение.
+
+Адрес может быть доменным именем в виде строки или атома, или адресом IPv4 в виде кортежа
+из 4-х чисел, или адресом IPv6 в виде кортежа из 8 чисел.
+
+На 2-й ноде убедимся, что сообщение пришло:
+
 ```erlang
 2> flush().
 Shell got {udp,#Port<0.587>,{127,0,0,1},2000,<<"Hello from 2000">>}
 ok
+```
+
+Сообщение приходит в виде кортежа _{udp, Socket, SenderAddress, SenderPort, Packet}_.
+
+Пошлем сообщение с 2-й ноды на 1-ю:
+
+```erlang
 3> gen_udp:send(Socket, {127,0,0,1}, 2000, <<"Hello from 2001">>).
 ok
 ```
 
-{udp, Socket, IP, InPortNo, Packet}
-IP and InPortNo define the address from which Packet came
+На 1-й ноде убедимся, что сообщение пришло:
 
-На первой убедимся, что сообщение пришло:
 ```erlang
 3> flush().
 Shell got {udp,#Port<0.587>,{127,0,0,1},2001,<<"Hello from 2001">>}
 ok
 ```
 
-{udp, Socket, FromIp, FromPort, Message}
-Using these fields, we'll be able to know where a message is from, what socket it went through, and what the contents were.
+Как видим, тут все просто.
 
 
 ## Активный и пассивный режим сокета
+
+TODO
 
 И **gen_udp**, и **gen_tcp**, оба имеют одну важную настройку: режим работы с входящими данными.
 
