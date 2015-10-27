@@ -180,78 +180,96 @@ Length присутствует в АПИ.
 
 Для работы с TCP используется модуль [gen_tcp](http://www.erlang.org/doc/man/gen_tcp.html).
 
-
-A client will behave with the following operations:
-- connect
-- send
-- receive
-- close socket
-
-server:
-- listen
-- accept
-- send
-- receive
-- close socket
-
-С TCP сокетом немного сложнее. Сперва нужно начать прослушивание порта:
+Работать с TCP сокетом сложнее, чем с UDP. У нас появляются роли клиента и сервера,
+требующие разной реализации. Рассмотрим вариант реализации сервера.
 
 ```erlang
-gen_tcp:listen(Port, Options) -> {ok, ListenSocket} | {error, Reason}
-```
+-module(server).
 
-Затем начать принимать на этом порту соединения для клиентов:
+-export([start/0, start/1, server/1, accept/2]).
 
-```erlang
-accept(ListenSocket) -> {ok, Socket} | {error, Reason}
-```
+start() ->
+    start(1234).
 
-TODO нужно какое-то более красивое решение, без timer:sleep(infinity)
-и подробнее его описать. Хотя у Фреда сделано так.
-
-Вызов accept блокируется, пока не появится клиент, желающий подключиться.
-И нам нужен отдельный поток на каждого клиента.
-
-Самое простое решение, после listen запускать новый поток для accept.
-И этот новый поток, получив соединение с клиентом, опять запускает
-новый поток, ожидающий следующего клиента. А сам уходит в цикл для
-обработки данных, приходящих от клиента:
-
-```erlang
-listen(Port) ->
-    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, true}]),
-    spawn(?MODULE, accept, [ListenSocket]),
-    timer:sleep(infinity), % поток-владелец сокета не должен завершаться
+start(Port) ->
+    spawn(?MODULE, server, [Port]),
     ok.
 
-accept(ListenSocket) ->
-    {ok, _Socket} = gen_tcp:accept(ListenSocket),
-    spawn(?MODULE, accept, [ListenSocket]),
-    handle().
+server(Port) ->
+    io:format("start server at port ~p~n", [Port]),
+    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, true}]),
+    [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, 5)],
+    timer:sleep(infinity),
+    ok.
 
-handle() ->
+accept(Id, ListenSocket) ->
+    io:format("Socket #~p wait for client~n", [Id]),
+    {ok, _Socket} = gen_tcp:accept(ListenSocket),
+    io:format("Socket #~p, session started~n", [Id]),
+    handle_connection(Id, ListenSocket).
+
+handle_connection(Id, ListenSocket) ->
     receive
         {tcp, Socket, Msg} ->
-            io:format("handle ~p~n", [Msg]),
+            io:format("Socket #~p got message: ~p~n", [Id, Msg]),
             gen_tcp:send(Socket, Msg),
-            handle()
+            handle_connection(Id, ListenSocket);
+        {tcp_closed, _Socket} ->
+            io:format("Socket #~p, session closed ~n", [Id]),
+            accept(Id, ListenSocket)
     end.
 ```
 
-The idling (sleep infinity) is necessary because the listen socket is
-bound to the process that opened it, so that one needs to remain alive
-as long as we want to handle connections.
+Есть два вида сокета: **Listen Socket** и **Accept Socket**. Listen
+Socket один, он принимает все запросы на соединение.  Accept Socket
+нужно много, по одному для каждого соединения. Поток, в котором
+создается сокет, становится владельцем сокета.  Если поток-владелец
+завершается, то сокет автоматически закрывается. Поэтому для каждого
+сокета мы создаем отдельнй поток.
 
-Ну или в пассивном режиме нужно самому читать данные из сокета:
+Listen Socket должен работать всегда, а для этого его поток-владелец
+не должен завершаться. Поэтому в **server/1** мы добавили вызов
+_timer:sleep(infinity)_. Это заблокирует поток и не даст ему
+завершиться.  Такая реализация, конечно, учебная. По хорошему нужно
+предусмотреть возможность корректно остановить сервер. Здесь этого
+нет.
+
+Accept Socket и поток для него можно было бы создавать динамически, по
+мере появления клиентов. В начале можно создать один такой поток,
+вызвать в нем **gen_tcp:accept/1** и ждать клиента. Этот вызов
+является блокирующим. Он завершается, когда появляется клиент.
+Дальше можно обслуживать текущего клиента в этом потоке, и создать новый
+поток, ожидающий нового клиента.
+
+Но здесь у нас другая реализация. Мы заранее создаем пул из нескольких
+потоков, и все они ждут клиентов. После завершения работы с одним клиентом
+сокет не закрывается, а ждет нового. Таким образом, вместо того, чтобы
+постоянно открывать новые сокеты и закрывать старые, мы используем пул
+долгоживущих сокетов.
+
+Это эффективнее при большом количестве клиентов. Во-первых из-за того,
+что мы быстрее принимаем соединения. Во-вторых из-за того, что мы
+более аккуратно распоряжаемся сокетами как системным ресурсом.
+
+Потоки принадлежат эрланговской ноде, и мы можем создавать их сколько
+угодно.  Но сокеты принадлежат операционной системе. Их количество
+лимитировано, хотя и довольно большое. (Речь идет о лимите на
+количество файловых дескрипторов, которое операционная система
+позволяет открыть пользовательской программе, обычно это 2^10 - 2^16).
+
+Размер пула у нас игрушечный -- 5 пар поток-сокет. Реально нужен пул
+из нескольких сотен сокетов. Хорошо бы еще иметь возможность
+увеличивать и уменьшать этот пул в рантайме, чтобы подстраиваться под
+текущую нагрузку.
+
+TODO пример сессии с несколькими telnet-клиентами
+
+TODO: вариант с пассивным режимом
 ```erlang
 recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
 ```
-
-Попробуем подключиться telnet клиентом и потестить.
-
 TODO
 сессия telnet клиента
-активный режим
 показать, как короткое сообщение приходит одним пакетом,
 а длинное двумя пакетами
 
