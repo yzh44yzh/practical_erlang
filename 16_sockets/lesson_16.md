@@ -255,23 +255,221 @@ Accept Socket и поток для него можно было бы созда�
 угодно.  Но сокеты принадлежат операционной системе. Их количество
 лимитировано, хотя и довольно большое. (Речь идет о лимите на
 количество файловых дескрипторов, которое операционная система
-позволяет открыть пользовательской программе, обычно это 2^10 - 2^16).
+позволяет открыть пользовательскому процессу, обычно это 2^10 - 2^16).
 
 Размер пула у нас игрушечный -- 5 пар поток-сокет. Реально нужен пул
-из нескольких сотен сокетов. Хорошо бы еще иметь возможность
+из нескольких сотен таких пар. Хорошо бы еще иметь возможность
 увеличивать и уменьшать этот пул в рантайме, чтобы подстраиваться под
 текущую нагрузку.
 
-TODO пример сессии с несколькими telnet-клиентами
+Текущая сессия с клиентом обрабатывается в функции **handle_connection/2**.
+Видно, что сокет работает в активном режиме, и поток получает сообщения вида
+_{tcp, Socket, Msg}_, где _Msg_ -- это бинарные данные, пришедшие от клиента.
+Эти данные мы отравляет обратно клиенту, то есть, реализуем банальный эхо-сервис :)
+
+Когда клиент закрывает соединение, поток получает сообщение
+_{tcp_closed, _Socket}_, возвращается обратно в **accept/2** и ждет
+следующего клиента.
+
+Вот как выглядит работа такого сервера с двумя telnet-клиентами:
+
+Клиент 1:
+
+```
+$ telnet localhost 1234
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+hello from client 1
+hello from client 1
+some message from client 1
+some message from client 1
+new message from client 1
+new message from client 1
+client 1 is going to close connection
+client 1 is going to close connection
+^]
+telnet> quit
+Connection closed.
+```
+
+Клиент 2:
+
+```
+$ telnet localhost 1234
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+hello from client 2
+hello from client 2
+message from client 2
+message from client 2
+client 2 is still active
+client 2 is still active
+but client 2 is still active
+but client 2 is still active
+and now client 2 is going to close connection
+and now client 2 is going to close connection
+^]
+telnet> quit
+Connection closed.
+```
+
+Сервер:
+
+```
+2> server:start().
+start server at port 1234
+ok
+Socket #1 wait for client
+Socket #2 wait for client
+Socket #3 wait for client
+Socket #4 wait for client
+Socket #5 wait for client
+Socket #1, session started
+Socket #1 got message: <<"hello from client 1\r\n">>
+Socket #1 got message: <<"some message from client 1\r\n">>
+Socket #2, session started
+Socket #2 got message: <<"hello from client 2\r\n">>
+Socket #2 got message: <<"message from client 2\r\n">>
+Socket #1 got message: <<"new message from client 1\r\n">>
+Socket #2 got message: <<"client 2 is still active\r\n">>
+Socket #1 got message: <<"client 1 is going to close connection\r\n">>
+Socket #1, session closed
+Socket #1 wait for client
+Socket #2 got message: <<"but client 2 is still active\r\n">>
+Socket #2 got message: <<"and now client 2 is going to close connection\r\n">>
+Socket #2, session closed
+Socket #2 wait for client
+```
+
+
+## Сервер в пассивном режиме
 
 TODO: вариант с пассивным режимом
 ```erlang
 recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
 ```
-TODO
-сессия telnet клиента
-показать, как короткое сообщение приходит одним пакетом,
-а длинное двумя пакетами
+
+Нужен еще и клиент, который будет ставить заголовки, а сервер их читать.
+Сперва заголовки вручную
+
+```erlang
+-module(server2).
+
+-export([start/0, start/1, server/1, accept/2]).
+
+start() ->
+    start(1234).
+
+start(Port) ->
+    spawn(?MODULE, server, [Port]),
+    ok.
+
+server(Port) ->
+    io:format("start server at port ~p~n", [Port]),
+    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}, {packet, raw}]),
+    [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, 5)],
+    timer:sleep(infinity),
+    ok.
+
+accept(Id, ListenSocket) ->
+    io:format("Socket #~p wait for client~n", [Id]),
+    {ok, Socket} = gen_tcp:accept(ListenSocket),
+    io:format("Socket #~p, session started~n", [Id]),
+    handle_connection(Id, ListenSocket, Socket).
+
+handle_connection(Id, ListenSocket, Socket) ->
+    case gen_tcp:recv(Socket, 2) of
+        {ok, Header} -> <<Size:16/integer>> = Header,
+                        {ok, Msg} = gen_tcp:recv(Socket, Size),
+                        io:format("Socket #~p got message: ~p~n", [Id, Msg]),
+                        gen_tcp:send(Socket, Msg),
+                        handle_connection(Id, ListenSocket, Socket);
+        {error, closed} ->
+            io:format("Socket #~p, session closed ~n", [Id]),
+            accept(Id, ListenSocket)
+    end.
+```
+
+```erlang
+-module(client2).
+
+-export([start/0, start/2, send/2, stop/1, client/2]).
+
+start() ->
+    start("localhost", 1234).
+
+start(Host, Port) ->
+    spawn(?MODULE, client, [Host, Port]).
+
+send(Pid, Msg) ->
+    Pid ! {send, Msg},
+    ok.
+
+stop(Pid) ->
+    Pid ! stop,
+    ok.
+
+client(Host, Port) ->
+    io:format("Client ~p connects to ~p:~p~n", [self(), Host, Port]),
+    {ok, Socket} = gen_tcp:connect(Host, Port, [binary, {active, true}, {packet, raw}]),
+    loop(Socket).
+
+loop(Socket) ->
+    receive
+        {send, Msg} ->
+            io:format("Client ~p send ~p~n", [self(), Msg]),
+            Size = byte_size(Msg),
+            Header = <<Size:16/integer>>,
+            gen_tcp:send(Socket, <<Header/binary, Msg/binary>>),
+            loop(Socket);
+        {tcp, Socket, Msg} ->
+            io:format("Client ~p got message: ~p~n", [self(), Msg]),
+            loop(Socket);
+        stop ->
+            io:format("Client ~p closes connection and stops~n", [self()]),
+            gen_tcp:close(Socket)
+    after 200 ->
+            loop(Socket)
+    end.
+```
+
+
+```
+2> Pid = client2:start().
+Client <0.40.0> connects to "localhost":1234
+<0.40.0>
+3> client2:send(Pid, <<"Hello">>).
+Client <0.40.0> send <<"Hello">>
+ok
+Client <0.40.0> got message: <<"Hello">>
+4> client2:send(Pid, <<"Hello again">>).
+Client <0.40.0> send <<"Hello again">>
+ok
+Client <0.40.0> got message: <<"Hello again">>
+5> client2:stop(Pid).
+Client <0.40.0> closes connection and stops
+ok
+```
+
+```
+2> server2:start().
+start server at port 1234
+ok
+Socket #1 wait for client
+Socket #2 wait for client
+Socket #3 wait for client
+Socket #4 wait for client
+Socket #5 wait for client
+Socket #1, session started
+Socket #1 got message: <<"Hello">>
+Socket #1 got message: <<"Hello again">>
+Socket #1, session closed
+Socket #1 wait for client
+```
+
+Затем воспользоваться настройкой {packet, 4}
 
 
 ## Бинарные и текстовые протоколы
