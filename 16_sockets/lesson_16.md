@@ -184,40 +184,40 @@ Length присутствует в АПИ.
 требующие разной реализации. Рассмотрим вариант реализации сервера.
 
 ```erlang
--module(server).
+    -module(server).
 
--export([start/0, start/1, server/1, accept/2]).
+    -export([start/0, start/1, server/1, accept/2]).
 
-start() ->
-    start(1234).
+    start() ->
+        start(1234).
 
-start(Port) ->
-    spawn(?MODULE, server, [Port]),
-    ok.
+    start(Port) ->
+        spawn(?MODULE, server, [Port]),
+        ok.
 
-server(Port) ->
-    io:format("start server at port ~p~n", [Port]),
-    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, true}]),
-    [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, 5)],
-    timer:sleep(infinity),
-    ok.
+    server(Port) ->
+        io:format("start server at port ~p~n", [Port]),
+        {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, true}]),
+        [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, 5)],
+        timer:sleep(infinity),
+        ok.
 
-accept(Id, ListenSocket) ->
-    io:format("Socket #~p wait for client~n", [Id]),
-    {ok, _Socket} = gen_tcp:accept(ListenSocket),
-    io:format("Socket #~p, session started~n", [Id]),
-    handle_connection(Id, ListenSocket).
+    accept(Id, ListenSocket) ->
+        io:format("Socket #~p wait for client~n", [Id]),
+        {ok, _Socket} = gen_tcp:accept(ListenSocket),
+        io:format("Socket #~p, session started~n", [Id]),
+        handle_connection(Id, ListenSocket).
 
-handle_connection(Id, ListenSocket) ->
-    receive
-        {tcp, Socket, Msg} ->
-            io:format("Socket #~p got message: ~p~n", [Id, Msg]),
-            gen_tcp:send(Socket, Msg),
-            handle_connection(Id, ListenSocket);
-        {tcp_closed, _Socket} ->
-            io:format("Socket #~p, session closed ~n", [Id]),
-            accept(Id, ListenSocket)
-    end.
+    handle_connection(Id, ListenSocket) ->
+        receive
+            {tcp, Socket, Msg} ->
+                io:format("Socket #~p got message: ~p~n", [Id, Msg]),
+                gen_tcp:send(Socket, Msg),
+                handle_connection(Id, ListenSocket);
+            {tcp_closed, _Socket} ->
+                io:format("Socket #~p, session closed ~n", [Id]),
+                accept(Id, ListenSocket)
+        end.
 ```
 
 Есть два вида сокета: **Listen Socket** и **Accept Socket**. Listen
@@ -346,95 +346,122 @@ Socket #2 wait for client
 
 ## Сервер в пассивном режиме
 
-TODO: вариант с пассивным режимом
-```erlang
-recv(Socket, Length, Timeout) -> {ok, Packet} | {error, Reason}
-```
+Это все хорошо, но хороший сервер должен работать в пассивном режиме.
+То есть, он должен получать данные от клиента не в виде сообщений в
+почтовый ящик, а вызовом **gen_tcp:recv/2,3**.
 
-Нужен еще и клиент, который будет ставить заголовки, а сервер их читать.
-Сперва заголовки вручную
+Нюанс в том, что тут нужно указать, сколько данных мы хотим прочитать.
+А откуда сервер может знать, сколько данных ему прислал клиент?
+Ну, видимо, клиент сам должен сказать, сколько данных он собирается
+прислать.  Для этого клиент сперва послывает небольшой служебный
+пакет, в котором указывает размер своих данных, и затем посылает сами
+данные.
 
-```erlang
--module(server2).
+Например, если клиент хочет послать данные _<<"Hello">>_, размер
+которых 5 байт, то он посылает сперва _<<5>>_, затем _<<"Hello">>_.
+Соответственно, сервер сперва читает этот служебный пакет, и по нему
+определяет, сколько данных нужно прочитать дальше.
 
--export([start/0, start/1, server/1, accept/2]).
+Теперь нужно решить, сколько байт должен занимать этот служебный
+пакет.  Если это будет 1 байт, то в него нельзя упаковать число
+больше 255.  В 2 байта можно упаковать число 65535, в 4
+байта 4294967295.  1 байт, очевидно, мало. Вполне вероятно, что
+клиенту будет нужно послать данных больше, чем 255 байт. Заголовок в 2
+байта вполне подходит. Заголовок в 4 байта иногда бывает нужен.
 
-start() ->
-    start(1234).
-
-start(Port) ->
-    spawn(?MODULE, server, [Port]),
-    ok.
-
-server(Port) ->
-    io:format("start server at port ~p~n", [Port]),
-    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}, {packet, raw}]),
-    [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, 5)],
-    timer:sleep(infinity),
-    ok.
-
-accept(Id, ListenSocket) ->
-    io:format("Socket #~p wait for client~n", [Id]),
-    {ok, Socket} = gen_tcp:accept(ListenSocket),
-    io:format("Socket #~p, session started~n", [Id]),
-    handle_connection(Id, ListenSocket, Socket).
-
-handle_connection(Id, ListenSocket, Socket) ->
-    case gen_tcp:recv(Socket, 2) of
-        {ok, Header} -> <<Size:16/integer>> = Header,
-                        {ok, Msg} = gen_tcp:recv(Socket, Size),
-                        io:format("Socket #~p got message: ~p~n", [Id, Msg]),
-                        gen_tcp:send(Socket, Msg),
-                        handle_connection(Id, ListenSocket, Socket);
-        {error, closed} ->
-            io:format("Socket #~p, session closed ~n", [Id]),
-            accept(Id, ListenSocket)
-    end.
-```
+Итак, клиент посылает служебный пакет размером в 2 байта, где
+указано, сколько данных последуют за ним, а затем сами эти данные:
 
 ```erlang
--module(client2).
-
--export([start/0, start/2, send/2, stop/1, client/2]).
-
-start() ->
-    start("localhost", 1234).
-
-start(Host, Port) ->
-    spawn(?MODULE, client, [Host, Port]).
-
-send(Pid, Msg) ->
-    Pid ! {send, Msg},
-    ok.
-
-stop(Pid) ->
-    Pid ! stop,
-    ok.
-
-client(Host, Port) ->
-    io:format("Client ~p connects to ~p:~p~n", [self(), Host, Port]),
-    {ok, Socket} = gen_tcp:connect(Host, Port, [binary, {active, true}, {packet, raw}]),
-    loop(Socket).
-
-loop(Socket) ->
-    receive
-        {send, Msg} ->
-            io:format("Client ~p send ~p~n", [self(), Msg]),
-            Size = byte_size(Msg),
-            Header = <<Size:16/integer>>,
-            gen_tcp:send(Socket, <<Header/binary, Msg/binary>>),
-            loop(Socket);
-        {tcp, Socket, Msg} ->
-            io:format("Client ~p got message: ~p~n", [self(), Msg]),
-            loop(Socket);
-        stop ->
-            io:format("Client ~p closes connection and stops~n", [self()]),
-            gen_tcp:close(Socket)
-    after 200 ->
-            loop(Socket)
-    end.
+Msg = <<"Hello">>,
+Size = byte_size(Msg),
+Header = <<Size:16/integer>>,
+gen_tcp:send(Socket, <<Header/binary, Msg/binary>>),
 ```
 
+Полный код клиента:
+
+```erlang
+    -module(client2).
+
+    -export([start/0, start/2, send/2, stop/1, client/2]).
+
+    start() ->
+        start("localhost", 1234).
+
+    start(Host, Port) ->
+        spawn(?MODULE, client, [Host, Port]).
+
+    send(Pid, Msg) ->
+        Pid ! {send, Msg},
+        ok.
+
+    stop(Pid) ->
+        Pid ! stop,
+        ok.
+
+    client(Host, Port) ->
+        io:format("Client ~p connects to ~p:~p~n", [self(), Host, Port]),
+        {ok, Socket} = gen_tcp:connect(Host, Port, [binary, {active, true}, {packet, raw}]),
+        loop(Socket).
+
+    loop(Socket) ->
+        receive
+            {send, Msg} ->
+                io:format("Client ~p send ~p~n", [self(), Msg]),
+                Size = byte_size(Msg),
+                Header = <<Size:16/integer>>,
+                gen_tcp:send(Socket, <<Header/binary, Msg/binary>>),
+                loop(Socket);
+            {tcp, Socket, Msg} ->
+                io:format("Client ~p got message: ~p~n", [self(), Msg]),
+                loop(Socket);
+            stop ->
+                io:format("Client ~p closes connection and stops~n", [self()]),
+                gen_tcp:close(Socket)
+        after 200 ->
+                loop(Socket)
+        end.
+```
+
+Сервер сперва читает 2 байта, определяет размер данных и затем читает все данные:
+
+```erlang
+{ok, Header} = gen_tcp:recv(Socket, 2),
+<<Size:16/integer>> = Header,
+{ok, Msg} = gen_tcp:recv(Socket, Size),
+```
+
+В коде сервера функции **start/0** и **start/1** не изменелись, остальное немного поменялось:
+
+```erlang
+    server(Port) ->
+        io:format("start server at port ~p~n", [Port]),
+        {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}, {packet, raw}]),
+        [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, 5)],
+        timer:sleep(infinity),
+        ok.
+
+    accept(Id, ListenSocket) ->
+        io:format("Socket #~p wait for client~n", [Id]),
+        {ok, Socket} = gen_tcp:accept(ListenSocket),
+        io:format("Socket #~p, session started~n", [Id]),
+        handle_connection(Id, ListenSocket, Socket).
+
+    handle_connection(Id, ListenSocket, Socket) ->
+        case gen_tcp:recv(Socket, 2) of
+            {ok, Header} -> <<Size:16/integer>> = Header,
+                            {ok, Msg} = gen_tcp:recv(Socket, Size),
+                            io:format("Socket #~p got message: ~p~n", [Id, Msg]),
+                            gen_tcp:send(Socket, Msg),
+                            handle_connection(Id, ListenSocket, Socket);
+            {error, closed} ->
+                io:format("Socket #~p, session closed ~n", [Id]),
+                accept(Id, ListenSocket)
+        end.
+```
+
+Пример сессии со стороны клиента:
 
 ```
 2> Pid = client2:start().
@@ -453,6 +480,8 @@ Client <0.40.0> closes connection and stops
 ok
 ```
 
+И со стороны сервера:
+
 ```
 2> server2:start().
 start server at port 1234
@@ -469,7 +498,45 @@ Socket #1, session closed
 Socket #1 wait for client
 ```
 
-Затем воспользоваться настройкой {packet, 4}
+Все это хорошо, но на самом деле нет необходимости вручную разбираться
+с заголовочным пакетом.  Это уже реализовано в **gen_tcp**.
+Нужно указать размер служебного пакета в настройках при открытии сокета
+на стороне клиента:
+
+```erlang
+{ok, Socket} = gen_tcp:connect(Host, Port, [binary, {active, true}, {packet, 2}]),
+```
+
+и на стороне сервера:
+
+```erlang
+{ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}, {packet, 2}]),
+```
+
+и необходимость самому формировать и разбирать эти заголовки пропадает.
+
+На стороне клиента упрощается отправка:
+
+```erlang
+gen_tcp:send(Socket, Msg),
+```
+
+и на стороне сервера упрощается получение:
+
+```erlang
+handle_connection(Id, ListenSocket, Socket) ->
+    case gen_tcp:recv(Socket, 0) of
+        {ok, Msg} -> io:format("Socket #~p got message: ~p~n", [Id, Msg]),
+                     gen_tcp:send(Socket, Msg),
+                     handle_connection(Id, ListenSocket, Socket);
+        {error, closed} ->
+            io:format("Socket #~p, session closed ~n", [Id]),
+            accept(Id, ListenSocket)
+    end.
+```
+
+Теперь при вызове **gen_tcp:recv/2** мы указываем Length = 0.
+**gen_tcp** сам знает, сколько байт нужно прочитать из сокета.
 
 
 ## Бинарные и текстовые протоколы
