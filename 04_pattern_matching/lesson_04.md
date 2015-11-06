@@ -194,10 +194,10 @@ end.
 ```erlang
 check_user({user, _, Gender, Age}) when Gender =:= female, Age < 14 -> girl;
 check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 14, Age < 21 -> teenage_girl;
-check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 21 -> women;
+check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 21 -> woman;
 check_user({user, _, Gender, Age}) when Gender =:= male, Age < 14 -> boy;
 check_user({user, _, Gender, Age}) when Gender =:= male, Age >= 14, Age < 21 -> teenage_boy;
-check_user({user, _, Gender, Age}) when Gender =:= male, Age >= 21 -> men.
+check_user({user, _, Gender, Age}) when Gender =:= male, Age >= 21 -> man.
 ```
 
 Гард срабатывает (разрешает выполнение данной ветки кода), если все
@@ -211,7 +211,7 @@ check_user({user, _, Gender, Age})
        Gender =:= male, Age < 14
        -> child;
 check_user({user, _, Gender, Age})
-  when Gender =:= male, Age >= 21;
+  when Gender =:= female, Age >= 21;
        Gender =:= male, Age >= 21
        -> adult.
 ```
