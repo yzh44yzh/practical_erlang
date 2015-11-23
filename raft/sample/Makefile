@@ -9,3 +9,6 @@ run:
 # make run NODE=charlie
 # make run NODE=delta
 # make run NODE=echo
+
+test:
+	erl -pa . -name test@127.0.0.1 -s raft start
