@@ -5,7 +5,7 @@
 -export([init/1, follower/2, candidat/2, leader/2]).
 
 -define(APPEND_LOG_TIMEOUT, 2000).
--define(NO_LEADER_TIMEOUT, 5000).
+-define(ELECTION_TIMEOUT, 5000).
 
 -define(CLUSTER, ['alpha@127.0.0.1',
                   'bravo@127.0.0.1',
@@ -15,7 +15,7 @@
 
 
 -record(state, {append_log_timeout :: reference(),
-                no_leader_timeout :: reference()
+                election_timeout :: reference()
                }).
 
 %%% Module API
@@ -41,26 +41,26 @@ append_entries(Data) ->
 
 init([]) ->
     log("raft fsm init, go to follower state"),
-    Ref = gen_fsm:start_timer(?NO_LEADER_TIMEOUT, no_leader),
-    {ok, follower, #state{no_leader_timeout = Ref}}.
+    Ref = gen_fsm:start_timer(?ELECTION_TIMEOUT, election),
+    {ok, follower, #state{election_timeout = Ref}}.
 
 
-follower({request_vote, _FromCandidat}, #state{no_leader_timeout = Ref} = State) ->
+follower({request_vote, _FromCandidat}, #state{election_timeout = Ref} = State) ->
     %% TODO vote for candidat
     gen_fsm:cancel_timer(Ref),
-    Ref2 = gen_fsm:start_timer(?NO_LEADER_TIMEOUT, no_reply_from_leader),
-    {next_state, follower, State#state{no_leader_timeout = Ref2}};
+    Ref2 = gen_fsm:start_timer(?ELECTION_TIMEOUT, no_reply_from_leader),
+    {next_state, follower, State#state{election_timeout = Ref2}};
 
-follower({append_entries, _Data}, #state{no_leader_timeout = Ref} = State) ->
+follower({append_entries, _Data}, #state{election_timeout = Ref} = State) ->
     %% wait for Append-Entries during  ?TIMEOUT * 2
     gen_fsm:cancel_timer(Ref),
-    Ref2 = gen_fsm:start_timer(?NO_LEADER_TIMEOUT, no_reply_from_leader),
-    {next_state, follower, State#state{no_leader_timeout = Ref2}};
+    Ref2 = gen_fsm:start_timer(?ELECTION_TIMEOUT, no_reply_from_leader),
+    {next_state, follower, State#state{election_timeout = Ref2}};
 
-follower({timeout, Ref, no_leader}, #state{no_leader_timeout = Ref} = State) ->
-    log("follower state, no_leader event, go to candidat state"),
+follower({timeout, Ref, election}, #state{election_timeout = Ref} = State) ->
+    log("follower state, election event, go to candidat state"),
     gen_fsm:send_event(?MODULE, start_election),
-    {next_state, candidat, State#state{no_leader_timeout = undefined}};
+    {next_state, candidat, State#state{election_timeout = undefined}};
 
 follower(Event, State) ->
     log("unknown event in the follower state ~p, ~p", [Event, State]),
@@ -82,7 +82,7 @@ candidat({request_vote, _FromCandidat}, State) ->
     {next_state, candidat, State};
 
 candidat({append_entries, _Data}, State) ->
-    %% go to follower if data have higher term
+    %% go to follower if data have higher or same term
     {next_state, candidat, State};
 
 candidat(Event, State) ->

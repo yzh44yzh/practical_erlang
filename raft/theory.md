@@ -72,6 +72,7 @@ Raft обеспечивает надёжную доставку сигналов
 
 
 **Явно выделенный лидер**
+
 на кластере всегда существует явно выделенный лидер. Только этот лидер отправляет новые записи на другие ноды кластера.
 
 остальные ноды следуют за лидером и не взаимодействуют между собой (за исключением фазы голосования).
@@ -80,6 +81,7 @@ Raft обеспечивает надёжную доставку сигналов
 
 
 **Записи добавляются строго последовательно, без пропусков**
+
 Raft строго нумерует все записи в протоколе работы. Записи должны идти строго последовательно.
 Эти номера играют важную роль в работе алгоритма. По ним определяется степень актуальности состояния ноды.
 
@@ -87,6 +89,7 @@ Raft строго нумерует все записи в протоколе р�
 
 
 **Изменение размера кластера**
+
 Raft позволяет легко менять конфигурацию кластера, не останавливая работы: добавлять или удалять ноды.
 
 Raft’s mechanism for
@@ -122,9 +125,7 @@ https://raft.github.io/
 At any given time each server is in one of three states:
 **leader**, **follower**, or **candidate**.
 
-In normal operation there
-is exactly one leader and all of the other servers are fol-
-lowers.
+In normal operation there is exactly one leader and all of the other servers are followers.
 
 **Followers** are passive: they issue no requests on
 their own but simply respond to requests from leaders
@@ -240,7 +241,7 @@ if many followers become candidates at the same time,
 votes could be split so that no candidate obtains a majority.
 
 each candidate will time out
-and start a new election by incre menting its term
+and start a new election by incrementing its term
 and initiating another round of Request-Vote RPCs.
 
 Raft uses randomized election timeouts to ensure that

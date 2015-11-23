@@ -5,9 +5,23 @@
   http://www.erlang.org/doc/design_principles/fsm.html
 
 - реализовать стейт-машину для выбора мастера
-- ручки, чтобы бросать события
+  - start election
+    - increments its current term
+    - It then votes for itself
+    - send vote_request to all nodes
+    - wait for replies
+      - got majority of replies -- leader or follower
+      - didn't get replies during time -- start election again after random timeout
+  - follower
+    - vote for candidat (true for first candidat in term, false for other candidats)
+      need to keep term and voted candidat in state
+    - accept append_entries
+  - leader
+    - broadcast append_entries
+  - process request_vote and append_enteries in all states
+    (check term, update term, reject request)
 
-- реализовать 2 RPC
+- review theory, is it all done
 
 - отладить все это в кластере
 
