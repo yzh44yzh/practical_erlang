@@ -1,21 +1,15 @@
-+ запуск кластера
-
-+ разобраться с FSM
-  как его запускать, как переключать стейты
-  http://www.erlang.org/doc/design_principles/fsm.html
-
 - реализовать стейт-машину для выбора мастера
   - start election
-    - increments its current term
-    - It then votes for itself
-    - send vote_request to all nodes
+    + increments its current term
+    + It then votes for itself
+    + send vote_request to all nodes
     - wait for replies
-      - got majority of replies -- leader or follower
+      + got majority of replies -- leader or follower
       - didn't get replies during time -- start election again after random timeout
   - follower
-    - vote for candidat (true for first candidat in term, false for other candidats)
+    + vote for candidat (true for first candidat in term, false for other candidats)
       need to keep term and voted candidat in state
-    - accept append_entries
+    + accept append_entries
   - leader
     - broadcast append_entries
   - process request_vote and append_enteries in all states
