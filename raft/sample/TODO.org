@@ -3,9 +3,9 @@
     + increments its current term
     + It then votes for itself
     + send vote_request to all nodes
-    - wait for replies
+    + wait for replies
       + got majority of replies -- leader or follower
-      - didn't get replies during time -- start election again after random timeout
+      + didn't get replies during time -- start election again after random timeout
   - follower
     + vote for candidat (true for first candidat in term, false for other candidats)
       need to keep term and voted candidat in state

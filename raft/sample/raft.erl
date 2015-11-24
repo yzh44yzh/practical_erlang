@@ -18,8 +18,8 @@
           term = 0 :: integer(),
           votes = 0 :: integer(),
           voted_candidat :: atom(),
-          append_log_timeout :: reference(),
-          election_timeout :: reference()
+          election_timeout :: reference(),
+          wait_for_votes_timeout :: reference()
          }).
 
 
@@ -76,13 +76,12 @@ follower({append_entries, Term, Data}, #state{election_timeout = Ref} = State) -
     log("follower got append_entries with Term:~p and Data:~p", [Term, Data]),
     %% do something with Data
     Ref2 = restart_election_timer(Ref),
-    gen_fsm:cancel_timer(Ref2), %% TEMP
     {next_state, follower, State#state{election_timeout = Ref2}};
 
 follower({timeout, Ref, election}, #state{election_timeout = Ref} = State) ->
     log("follower state, election event, go to candidat state"),
     gen_fsm:send_event(?MODULE, start_election),
-    {next_state, candidat, State#state{election_timeout = undefined, votes = 0}};
+    {next_state, candidat, State#state{votes = 0}};
 
 follower(Event, State) ->
     log("unknown event in the follower state ~p, ~p", [Event, State]),
@@ -93,23 +92,32 @@ candidat(start_election, #state{term = Term} = State) ->
     log("candidat state, start election"),
     Term2 = Term + 1,
     broadcast({request_vote, node(), Term2}),
-    %% TODO run election timeout timer
-    %% timeouts are chosen randomly from a fixed interval (e.g., 150–300ms)
-    {next_state, candidat, State#state{term = Term2, votes = 1, voted_candidat = node()}};
+    Ref = set_wait_for_votes_timer(),
+    {next_state, candidat, State#state{term = Term2,
+                                       votes = 1,
+                                       voted_candidat = node(),
+                                       wait_for_votes_timeout = Ref
+                                      }};
 
-candidat(vote, #state{votes = Votes} = State) ->
+candidat(vote, #state{votes = Votes, wait_for_votes_timeout = Ref} = State) ->
     Votes2 = Votes + 1,
     Majority = length(?CLUSTER) div 2 + 1,
     log("got one vote, votes:~p majority:~p", [Votes2, Majority]),
     if
         Votes2 >= Majority ->
             log("got majority, go to leader state"),
+            gen_fsm:cancel_timer(Ref),
             gen_fsm:send_event(?MODULE, start_as_leader),
             {next_state, leader, State#state{votes = Votes2}};
         true ->
             %% wait for more votes
             {next_state, candidat, State#state{votes = Votes2}}
     end;
+
+candidat({timeout, Ref, wait_for_votes}, #state{wait_for_votes_timeout = Ref} = State) ->
+    log("wait_for_votes timeout"),
+    gen_fsm:send_event(?MODULE, start_election),
+    {next_state, candidat, State#state{votes = 0}};
 
 candidat({request_vote, _FromCandidat, _Term}, State) ->
     %% TODO check term
@@ -159,6 +167,13 @@ restart_election_timer(Ref) ->
     gen_fsm:cancel_timer(Ref),
     gen_fsm:start_timer(?ELECTION_TIMEOUT, election).
 
+
+set_wait_for_votes_timer() ->
+    Min = ?ELECTION_TIMEOUT div 2,
+    Max = ?ELECTION_TIMEOUT,
+    Time = crypto:rand_uniform(Min, Max),
+    log("wait for votes during ~p", [Time]),
+    gen_fsm:start_timer(Time, wait_for_votes).
 
 log(Msg) ->
     io:format(Msg ++ "~n").
