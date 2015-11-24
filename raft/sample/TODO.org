@@ -1,36 +1,36 @@
-- реализовать стейт-машину для выбора мастера
-  - start election
+* реализовать стейт-машину для выбора мастера
+
+** DONE start election
     + increments its current term
     + It then votes for itself
     + send vote_request to all nodes
     + wait for replies
       + got majority of replies -- leader or follower
       + didn't get replies during time -- start election again after random timeout
-  - follower
+
+** DONE follower
     + vote for candidat (true for first candidat in term, false for other candidats)
       need to keep term and voted candidat in state
     + accept append_entries
-  - leader
-    - broadcast append_entries
-  - process request_vote and append_enteries in all states
-    (check term, update term, reject request)
 
-- review theory, is it all done
+** DONE leader
+    - broadcast append_entries regulary
 
-- отладить все это в кластере
+** process request_vote and append_enteries in all states
+   (check term, update term, reject request)
 
-- протестить сценарии:
+** на 3 нодах могут быть многократные перевыборы
+   нужно повозиться с таймерами
+
+* review theory, is it all done
+
+* отладить все это в кластере
+
+* протестить сценарии:
   - старт кластера, выбор мастера
   - падение мастера, выбор нового мастера, возврат ноды в роли follower
   - падение follower, возврат follower
 
-- может быть добавить дополнительные условия
+* может быть добавить дополнительные условия
 
-- сделать несколько листингов кода, отражающих поэтапное развитие
-  распечатать их
-
-===========
-
-Презентация
-
-Демка
+* сделать несколько листингов кода, отражающих поэтапное развитие

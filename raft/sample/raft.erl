@@ -16,10 +16,12 @@
 
 -record(state, {
           term = 0 :: integer(),
+          log_id = 0 :: integer(),
           votes = 0 :: integer(),
           voted_candidat :: atom(),
           election_timeout :: reference(),
-          wait_for_votes_timeout :: reference()
+          wait_for_votes_timeout :: reference(),
+          append_entries_timeout :: reference()
          }).
 
 
@@ -120,13 +122,12 @@ candidat({timeout, Ref, wait_for_votes}, #state{wait_for_votes_timeout = Ref} = 
     {next_state, candidat, State#state{votes = 0}};
 
 candidat({request_vote, _FromCandidat, _Term}, State) ->
-    %% TODO check term
-    %% ignore candidat with lower or same term
-    %% go to follower if candidat have higher term
+    %% TODO ignore candidat with lower or same term
+    %% TODO go to follower if candidat have higher term, and vote for candidat
     {next_state, candidat, State};
 
 candidat({append_entries, _Term, _Data}, State) ->
-    %% go to follower if data have higher or same term
+    %% TODO go to follower if data have higher or same term
     {next_state, candidat, State};
 
 candidat(Event, State) ->
@@ -134,19 +135,26 @@ candidat(Event, State) ->
     {next_state, candidat, State}.
 
 
-leader(start_as_leader, #state{term = Term} = State) ->
+leader(start_as_leader, #state{term = Term, log_id = LogID} = State) ->
     log("start as leader"),
-    broadcast({append_entries, Term, 1}),
-    %% TODO repeat broadcast with APPEND_LOG_TIMEOUT
-    {next_state, leader, State};
+    broadcast({append_entries, Term, LogID + 1}),
+    Ref = gen_fsm:start_timer(?APPEND_LOG_TIMEOUT, broadcast_append_entries),
+    {next_state, leader, State#state{log_id = LogID + 1, append_entries_timeout = Ref}};
+
+leader({timeout, Ref, broadcast_append_entries},
+       #state{term = Term, log_id = LogID, append_entries_timeout = Ref} = State) ->
+    broadcast({append_entries, Term, LogID + 1}),
+    Ref2 = gen_fsm:start_timer(?APPEND_LOG_TIMEOUT, broadcast_append_entries),
+    {next_state, leader, State#state{log_id = LogID + 1, append_entries_timeout = Ref2}};
 
 leader({request_vote, _FromCandidat, _Term}, State) ->
-    %% TODO go to follower if candidat have higher term
+    %% TODO go to follower if candidat have higher term, and vote for candidat
+    %% TODO also cancel append_entries_timeout
     {next_state, leader, State};
 
 leader({append_entries, _Term, _Data}, State) ->
     %% TODO go to follower if data have higher term
-    %% TODO discover other leader with higher term -> [Candidat]
+    %% TODO also cancel append_entries_timeout
     {next_state, leader, State};
 
 leader(Event, State) ->
