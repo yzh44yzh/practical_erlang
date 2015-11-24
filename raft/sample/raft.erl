@@ -4,8 +4,9 @@
 -export([start/0, event/1]).
 -export([init/1, follower/2, candidat/2, leader/2]).
 
--define(APPEND_LOG_TIMEOUT, 1000).
 -define(ELECTION_TIMEOUT, 4000).
+-define(WAIT_FOR_VOTES_TIMEOUT, 2000).
+-define(APPEND_ENTRIES_TIMEOUT, 1000).
 
 -define(CLUSTER, ['alpha@127.0.0.1',
                   'bravo@127.0.0.1',
@@ -108,7 +109,7 @@ candidat(vote, #state{votes = Votes, wait_for_votes_timeout = Ref} = State) ->
     if
         Votes2 >= Majority ->
             log("got majority, go to leader state"),
-            gen_fsm:cancel_timer(Ref),
+            safe_cancel_timer(Ref),
             gen_fsm:send_event(?MODULE, start_as_leader),
             {next_state, leader, State#state{votes = Votes2}};
         true ->
@@ -121,14 +122,26 @@ candidat({timeout, Ref, wait_for_votes}, #state{wait_for_votes_timeout = Ref} = 
     gen_fsm:send_event(?MODULE, start_election),
     {next_state, candidat, State#state{votes = 0}};
 
-candidat({request_vote, _FromCandidat, _Term}, State) ->
-    %% TODO ignore candidat with lower or same term
-    %% TODO go to follower if candidat have higher term, and vote for candidat
-    {next_state, candidat, State};
+candidat({request_vote, Candidat, CTerm}, #state{term = Term, wait_for_votes_timeout = Ref} = State) ->
+    if
+        CTerm > Term ->
+            log("Candidat with higher term, vote for ~p", [Candidat]),
+            safe_cancel_timer(Ref),
+            rpc:cast(Candidat, ?MODULE, event, [vote]),
+            {next_state, follower, State#state{voted_candidat = Candidat, term = CTerm}};
+        true ->
+            {next_state, candidat, State}
+    end;
 
-candidat({append_entries, _Term, _Data}, State) ->
-    %% TODO go to follower if data have higher or same term
-    {next_state, candidat, State};
+candidat({append_entries, CTerm, _Data}, #state{term = Term, wait_for_votes_timeout = Ref} = State) ->
+    if
+        CTerm >= Term ->
+            log("Leader with higher term"),
+            safe_cancel_timer(Ref),
+            {next_state, follower, State#state{term = CTerm}};
+        true ->
+            {next_state, candidat, State}
+    end;
 
 candidat(Event, State) ->
     log("unknown event in the candidat state ~p, ~p", [Event, State]),
@@ -138,23 +151,37 @@ candidat(Event, State) ->
 leader(start_as_leader, #state{term = Term, log_id = LogID} = State) ->
     log("start as leader"),
     broadcast({append_entries, Term, LogID + 1}),
-    Ref = gen_fsm:start_timer(?APPEND_LOG_TIMEOUT, broadcast_append_entries),
+    Ref = gen_fsm:start_timer(?APPEND_ENTRIES_TIMEOUT, broadcast_append_entries),
     {next_state, leader, State#state{log_id = LogID + 1, append_entries_timeout = Ref}};
 
 leader({timeout, Ref, broadcast_append_entries},
        #state{term = Term, log_id = LogID, append_entries_timeout = Ref} = State) ->
     broadcast({append_entries, Term, LogID + 1}),
-    Ref2 = gen_fsm:start_timer(?APPEND_LOG_TIMEOUT, broadcast_append_entries),
+    Ref2 = gen_fsm:start_timer(?APPEND_ENTRIES_TIMEOUT, broadcast_append_entries),
     {next_state, leader, State#state{log_id = LogID + 1, append_entries_timeout = Ref2}};
 
-leader({request_vote, _FromCandidat, _Term}, State) ->
-    %% TODO go to follower if candidat have higher term, and vote for candidat
-    %% TODO also cancel append_entries_timeout
-    {next_state, leader, State};
+leader({request_vote, Candidat, CTerm}, #state{term = Term, append_entries_timeout = Ref} = State) ->
+    if
+        CTerm > Term ->
+            log("Candidat with higher term, vote for ~p", [Candidat]),
+            safe_cancel_timer(Ref),
+            rpc:cast(Candidat, ?MODULE, event, [vote]),
+            {next_state, follower, State#state{voted_candidat = Candidat, term = CTerm}};
+        true ->
+            {next_state, leader, State}
+    end;
 
-leader({append_entries, _Term, _Data}, State) ->
-    %% TODO go to follower if data have higher term
-    %% TODO also cancel append_entries_timeout
+leader({append_entries, CTerm, _Data}, #state{term = Term, append_entries_timeout = Ref} = State) ->
+    if
+        CTerm >= Term ->
+            log("Leader with higher term"),
+            safe_cancel_timer(Ref),
+            {next_state, follower, State#state{term = CTerm}};
+        true ->
+            {next_state, leader, State}
+    end;
+
+leader(vote, State) ->
     {next_state, leader, State};
 
 leader(Event, State) ->
@@ -172,16 +199,23 @@ broadcast(Event) ->
 
 
 restart_election_timer(Ref) ->
-    gen_fsm:cancel_timer(Ref),
+    safe_cancel_timer(Ref),
     gen_fsm:start_timer(?ELECTION_TIMEOUT, election).
 
 
 set_wait_for_votes_timer() ->
-    Min = ?ELECTION_TIMEOUT div 2,
-    Max = ?ELECTION_TIMEOUT,
+    Min = ?WAIT_FOR_VOTES_TIMEOUT div 3,
+    Max = ?WAIT_FOR_VOTES_TIMEOUT,
     Time = crypto:rand_uniform(Min, Max),
     log("wait for votes during ~p", [Time]),
     gen_fsm:start_timer(Time, wait_for_votes).
+
+
+safe_cancel_timer(undefined) ->
+    do_nothing;
+safe_cancel_timer(Ref) ->
+    gen_fsm:cancel_timer(Ref).
+
 
 log(Msg) ->
     io:format(Msg ++ "~n").
