@@ -11,9 +11,7 @@
 -define(CLUSTER, ['alpha@127.0.0.1',
                   'bravo@127.0.0.1',
                   'charlie@127.0.0.1',
-                  'delta@127.0.0.1',
-                  'echo@127.0.0.1']).
-
+                  'delta@127.0.0.1']).
 
 -record(state, {
           term = 0 :: integer(),
@@ -32,7 +30,7 @@ start() ->
     Self = node(),
     log("start"),
     Cluster = [{Node, net_adm:ping(Node)} || Node <- ?CLUSTER, Node /= Self],
-    log("cluster:~p", [Cluster]),
+    log("join to cluster:~p", [Cluster]),
     {ok, _Pid} = gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []),
     Cluster.
 

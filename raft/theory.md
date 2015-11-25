@@ -35,6 +35,16 @@ to manage leader election
 and store configuration information that must survive leader crashes.
 Examples: Chubby and ZooKeeper.
 
+https://zookeeper.apache.org/
+highly reliable distributed coordination
+centralized service for:
+- maintaining configuration information, -- это ясно
+- naming, -- это хз
+- providing distributed synchronization, -- это слишком абстрактно
+- and providing group services -- это хз
+Consensus, group management, and presence protocol
+
+
 безопасную и эффективную реализацию машины состояний поверх кластерной вычислительной системы.
 
 Raft строится поверх кластера, на каждой из нод которого работает некая машина состояний.
