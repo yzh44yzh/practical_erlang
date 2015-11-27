@@ -32,23 +32,29 @@ Error in process <0.37.0> on node 'delta@127.0.0.1' with exit value: {badarg,[{g
 и тут с другой ноды вызыван raft:event()
 Это можно просто игнорировать
 
-
-** отладить все это в кластере
-протестить сценарии:
-  - старт кластера, выбор мастера
-  - падение мастера, выбор нового мастера, возврат ноды в роли follower
-  - падение follower, возврат follower
+** DONE отладить все это в кластере
+- протестить сценарии:
+  + старт кластера, выбор мастера
+  + падение мастера, выбор нового мастера, возврат ноды в роли follower
+  + падение follower, возврат follower
 
 
 * подготовить презентацию
   - обзор
+  - дока, ссылка, авторы
   - фазы, кратко про каждую
   - интерактивная модель
   - фаза выбора мастера
     - в т.ч. схема конечного автомата
 
 
-* сделать несколько листингов кода, отражающих поэтапное развитие
-  первый этап -- все на псевдокоде
-  ну и потом псевдокод заменять на реализацию
-  в таком виде оно может пойти  в блог
+* план разработки
+  TODO more details
+  - Makefile, запуск raft.erl, сборка кластера
+  - fsm, init, state
+  - broadcast, send_event, receive and io:format event in all states
+  - follower, timeout, goto candidat
+  - candidat, ask for votes
+  - candidat, count votes
+  - leader, broadcast append_log
+  - process append_log and vote_request in candidat and leader states
