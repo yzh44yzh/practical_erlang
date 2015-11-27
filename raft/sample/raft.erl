@@ -17,7 +17,7 @@
           term = 0 :: integer(),
           log_id = 0 :: integer(),
           votes = 0 :: integer(),
-          voted = false :: boolean(),
+          current_leader :: node(),
           election_timeout :: reference(),
           wait_for_votes_timeout :: reference(),
           append_entries_timeout :: reference()
@@ -48,7 +48,7 @@ init([]) ->
 
 
 follower({request_vote, Candidat, CTerm}, #state{term = Term,
-                                                 voted = Voted,
+                                                 current_leader = CurrLeader,
                                                  election_timeout = Ref} = State) ->
     io:format("follower got request_vote from ~p with term ~p~n", [Candidat, CTerm]),
     State2 = if
@@ -56,30 +56,30 @@ follower({request_vote, Candidat, CTerm}, #state{term = Term,
                      io:format("obsolete term, ignore~n"),
                      State;
                  CTerm == Term ->
-                     case Voted of
-                         false ->
+                     case CurrLeader of
+                         undefined ->
                              io:format("same term, not voted, vote for ~p~n", [Candidat]),
                              rpc:cast(Candidat, ?MODULE, event, [vote]),
-                             State#state{voted = true};
-                         true ->
+                             State#state{current_leader = Candidat};
+                         _ ->
                              io:format("same term, but already voted~n"),
                              State
                      end;
                  CTerm > Term ->
                      io:format("new term, vote for ~p~n", [Candidat]),
                      rpc:cast(Candidat, ?MODULE, event, [vote]),
-                     State#state{voted = true, term = CTerm}
+                     State#state{current_leader = Candidat, term = CTerm}
              end,
     Ref2 = restart_election_timer(Ref),
     {next_state, follower, State2#state{election_timeout = Ref2}};
 
-follower({append_entries, CTerm, Data}, #state{term = Term, election_timeout = Ref} = State) ->
+follower({append_entries, CTerm, Data, Leader}, #state{term = Term, election_timeout = Ref} = State) ->
     if
         CTerm >= Term ->
             io:format("follower got append_entries with Term:~p and Data:~p~n", [CTerm, Data]),
             %% do something with Data
             Ref2 = restart_election_timer(Ref),
-            {next_state, follower, State#state{election_timeout = Ref2, term = CTerm, voted = false}};
+            {next_state, follower, State#state{election_timeout = Ref2, term = CTerm, current_leader = Leader}};
         true ->
             %% ingore data
             {next_state, follower, State}
@@ -100,7 +100,8 @@ candidat(start_election, #state{term = Term} = State) ->
     Term2 = Term + 1,
     broadcast({request_vote, node(), Term2}),
     Ref = set_wait_for_votes_timer(),
-    {next_state, candidat, State#state{term = Term2, votes = 1, voted = true,
+    {next_state, candidat, State#state{term = Term2, votes = 1,
+                                       current_leader = node(),
                                        wait_for_votes_timeout = Ref
                                       }};
 
@@ -130,17 +131,18 @@ candidat({request_vote, Candidat, CTerm}, #state{term = Term, wait_for_votes_tim
             io:format("Candidat with higher term, vote for ~p~n", [Candidat]),
             safe_cancel_timer(Ref),
             rpc:cast(Candidat, ?MODULE, event, [vote]),
-            {next_state, follower, State#state{voted = true, term = CTerm}};
+            {next_state, follower, State#state{term = CTerm, current_leader = Candidat}};
         true ->
             {next_state, candidat, State}
     end;
 
-candidat({append_entries, CTerm, _Data}, #state{term = Term, wait_for_votes_timeout = Ref} = State) ->
+candidat({append_entries, CTerm, _Data, Leader},
+         #state{term = Term, wait_for_votes_timeout = Ref} = State) ->
     if
         CTerm >= Term ->
             io:format("Leader with higher term~n"),
             safe_cancel_timer(Ref),
-            {next_state, follower, State#state{term = CTerm, voted = false}};
+            {next_state, follower, State#state{term = CTerm, current_leader = Leader}};
         true ->
             {next_state, candidat, State}
     end;
@@ -152,13 +154,13 @@ candidat(Event, State) ->
 
 leader(start_as_leader, #state{term = Term, log_id = LogID} = State) ->
     io:format("start as leader~n"),
-    broadcast({append_entries, Term, LogID + 1}),
+    broadcast({append_entries, Term, LogID + 1, node()}),
     Ref = gen_fsm:start_timer(?APPEND_ENTRIES_TIMEOUT, broadcast_append_entries),
     {next_state, leader, State#state{log_id = LogID + 1, append_entries_timeout = Ref}};
 
 leader({timeout, Ref, broadcast_append_entries},
        #state{term = Term, log_id = LogID, append_entries_timeout = Ref} = State) ->
-    broadcast({append_entries, Term, LogID + 1}),
+    broadcast({append_entries, Term, LogID + 1, node()}),
     Ref2 = gen_fsm:start_timer(?APPEND_ENTRIES_TIMEOUT, broadcast_append_entries),
     {next_state, leader, State#state{log_id = LogID + 1, append_entries_timeout = Ref2}};
 
@@ -168,17 +170,17 @@ leader({request_vote, Candidat, CTerm}, #state{term = Term, append_entries_timeo
             io:format("Candidat with higher term, vote for ~p~n", [Candidat]),
             safe_cancel_timer(Ref),
             rpc:cast(Candidat, ?MODULE, event, [vote]),
-            {next_state, follower, State#state{voted = true, term = CTerm}};
+            {next_state, follower, State#state{term = CTerm, current_leader = Candidat}};
         true ->
             {next_state, leader, State}
     end;
 
-leader({append_entries, CTerm, _Data}, #state{term = Term, append_entries_timeout = Ref} = State) ->
+leader({append_entries, CTerm, _Data, Leader}, #state{term = Term, append_entries_timeout = Ref} = State) ->
     if
         CTerm >= Term ->
             io:format("Leader with higher term~n"),
             safe_cancel_timer(Ref),
-            {next_state, follower, State#state{term = CTerm, voted = false}};
+            {next_state, follower, State#state{term = CTerm, current_leader = Leader}};
         true ->
             {next_state, leader, State}
     end;
