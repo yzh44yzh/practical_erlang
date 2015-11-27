@@ -10,53 +10,136 @@
 Algorithm.
 
 
-## Что это и зачем
+## Обзор Raft
 
-https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_Raft
+Raft — алгоритм для решения задач консенсуса в сети надёжных вычислений.
 
-Raft — алгоритм для решения задач консенсуса в сети надёжных вычислений
+Есть кластер, состоящий из нескольких узлов.
+Все узлы содержат копию одного и того же состояния (данные и бизнес-логика).
 
-Консе́нсус (лат. consensus — согласие) — общее согласие по спорному или
-обсуждаемому вопросу, достигнутое в результате дискуссии без процедуры
-голосования[1]. Результат разрешения конфликтов при принятии решений
-после устранения принципиальных возражений у всех заинтересованных
-участников, либо после исключения из участия в обсуждении немногих
-несогласных участников.
+Для любого кластера характерно:
+- часть узлов может падать (и возвращаться);
+- может теряться связь между узлами;
+- могут добавляться новые узлы в кластер.
 
-Consensus algorithms allow a collection of machines
-to work as a coherent group that can survive the fail-
-ures of some of its members.
+При всем этом нужно как-то гарантировать, что состояния на всех узлах идентичны.
+(Это и называется консенсус).
 
-play a key role in building reliable large-scale software systems.
+Raft предлагает способ, как этого можно добиться.
 
-For example, large-scale systems that
-have a single cluster leader, typically use a separate replicated state machine
-to manage leader election
-and store configuration information that must survive leader crashes.
-Examples: Chubby and ZooKeeper.
+Это алгоритм общего назначения,
+на основе которого можно построить разные прикладные системы.
 
-https://zookeeper.apache.org/
-highly reliable distributed coordination
-centralized service for:
-- maintaining configuration information, -- это ясно
-- naming, -- это хз
-- providing distributed synchronization, -- это слишком абстрактно
-- and providing group services -- это хз
-Consensus, group management, and presence protocol
+Raft описан в работе:
+"In Search of an Understandable Consensus Algorithm"
+Diego Ongaro and John Ousterhout
+Stanford University
+http://ramcloud.stanford.edu/raft.pdf
+
+https://raft.github.io/
+Интерактивная модель
+Ссылки на статьи по теме
+Ссылки на реализации
 
 
-безопасную и эффективную реализацию машины состояний поверх кластерной вычислительной системы.
+## Основы Raft
 
-Raft строится поверх кластера, на каждой из нод которого работает некая машина состояний.
-Raft обеспечивает надёжную доставку сигналов на все ноды в заданном порядке.
-Таким образом обеспечивается переход всех машин состояний по одним и тем же последовательностям состояний.
-Таким образом, каждая нода гарантированно приходит в согласие с другими нодами.
+При работе кластера в обычном режиме один узел выполняет роль Leader,
+все остальные узлы роль Follower.
 
-*Чёткое разделение фаз*
-декомпозицию задачи управления кластером на несколько, слабо связанных, подзадач:
+Leader принимает все запросы от клиентов, применяет их к своему состоянию,
+и рассылает эти запросы всем остальным узлам, чтобы они тоже применили их
+к своему состоянию.
+
+Follower-узлы не взаимодействуют с клиентами и друг с другом, а только
+получают запросы от Leader.
+
+img:cluster
+
+Leader может упасть или потерять связь с остальными узлами.
+Тогда оставшиеся узлы должны выбрать нового лидера и вернуться в штатный режим работы.
+
+Существуют промежутки времени, когда в кластере нет лидера. И в это время
+кластер не может обслуживать запросы клиента (или работает только на чтение).
+
+Период работы от одного выбора лидера до следующего выбора называется Term.
+Каждый Term имеет свой номер.
+
+img:term
+
+Каждый запрос от клиента в терминах Raft называется Log, и каждый Log тоже имеет свой id.
+Term и log_id важны для поддержания целостности.
+
+Алгоритм Raft делится на отдельные задачи:
+- Выбор лидера
+- Репликация логов
+- Изменение размеров кластера
 
 
-**выбор лидера (голосование)**
+## Выбор лидера
+
+В каждый момент времени узел может быть в одном из 3-х состояний:
+Leader, Follower или Candidate.
+
+Узел стартует в состоянии Follower и ждет запросы от лидера.
+Если в течение определенного времени узел не получает запросов,
+то он считает, что лидера нет, переходит в состояние Candidat,
+и начинает процедуру выбора лидера.
+
+Candidat увеличивает Term на единицу, голосует сам за себя,
+и рассылает все остальным узлам в кластере запрос Request Vote.
+
+Follower-узлы, получив такой запрос, голосуют за кандата.
+При этом они проверяют Term, и в каждом Term голосуют только один раз,
+за первого, от кого придет запрос.
+
+Candidat какое-то время ждет ответы на свои запросы.
+Тут могут случиться 3 варианта:
+- кандидат получит голоса от большинства узлов в кластере, и станет лидером;
+- другой узел станет лидером раньше, тогда кандидат перейдет в состояние Follower;
+- никто из кандидатов не получит большинства голосов, тогда выбор лидера запускается заново.
+
+Став лидером, узел сразу рассылает всем остальным узлам в кластере запрос Append Entries.
+Этот запрос выполняет 2 роли:
+- копирует лог от лидера на все остальные узлы;
+- сообщает всем узлам, кто стал лидером в результате голосования.
+
+img:states
+
+Все запросы содержат Term. Все узлы, получив запрос Request Vote или Append Entries
+сравнивают Term в запросе со своим собственным. Если Term в запросе меньше, значит
+отправитель не актуален, и запрос игнорируется. Если Term в запросе больше,
+значит данный узел не актуален. Он обновляет свой Term и переключается в состояние Follower.
+
+
+## Репликация логов
+
+TODO
+
+Лидер полностью отвечает за правильную репликацию протоколов.
+
+2 фазы: добавление в очередь и коммит
+
+лидер сохраняет лог в своей очереди
+рассылает его всем follower
+получает от них подтверждение, что они добавили лог в свои очереди
+коммитит лог
+со следующим append_log идет инфа, какой id закомичен
+followers тоже комитят лог
+
+Если внешний клиент подключается к кластеру через обычную ноду, то все его запросы перенаправляются лидеру
+
+
+## Изменение размеров кластера
+TODO
+Raft позволяет легко менять конфигурацию кластера, не останавливая работы: добавлять или удалять ноды.
+
+Тут не понятно, надо разобраться и объяснить
+
+
+==== END ====
+
+## Псевдокод
 
 Если обычная нода долго не получает сообщений от лидера, то она переходит в состояние «кандидат»
 и посылает другим нодам запрос на голосование.
@@ -73,118 +156,6 @@ Raft обеспечивает надёжную доставку сигналов
 Процедура голосования повторяется, пока не будет выбран лидер.
 
 
-**репликация протоколов**
-
-Лидер полностью отвечает за правильную репликацию протоколов.
-
-Он отправляет все нодам кластера запрос на добавление новой записи
-и считает транзакцию успешной только после того, как большинство нод подтвердило, что данные были применены и результат сохранён
-
-
-**Явно выделенный лидер**
-
-на кластере всегда существует явно выделенный лидер. Только этот лидер отправляет новые записи на другие ноды кластера.
-
-остальные ноды следуют за лидером и не взаимодействуют между собой (за исключением фазы голосования).
-
-Если внешний клиент подключается к кластеру через обычную ноду, то все его запросы перенаправляются лидеру
-
-
-**Записи добавляются строго последовательно, без пропусков**
-
-Raft строго нумерует все записи в протоколе работы. Записи должны идти строго последовательно.
-Эти номера играют важную роль в работе алгоритма. По ним определяется степень актуальности состояния ноды.
-
-Эти же номера используются для нумерации сессий голосования. На каждый запрос на голосование нода может проголосовать лишь единожды.
-
-
-**Изменение размера кластера**
-
-Raft позволяет легко менять конфигурацию кластера, не останавливая работы: добавлять или удалять ноды.
-
-Raft’s mechanism for
-changing the set of servers in the cluster uses a new
-joint consensus approach where the majorities of
-two different configurations overlap during transi-
-tions.
-непонятно
-
-**safety** (never returning an incorrect result) under all conditions, including
-network delays, partitions, and packet loss, duplication, and reordering.
-
-**available** as long as any majority of the servers are operational and can com-
-municate with each other and with clients.
-cluster of five servers can tolerate the failure of any two servers
-they may later recover and rejoin the cluster.
-
-
-## Интерактивная модель
-
-https://raft.github.io/
-
-продумать разные сценарии и показать их на этой модели:
-- падение реплики
-- падение мастера
-- net split
-- конфликт двух мастеров
-- старт ноды (и всего кластера)
-- что еще?
-
-## Реализация
-
-At any given time each server is in one of three states:
-**leader**, **follower**, or **candidate**.
-
-In normal operation there is exactly one leader and all of the other servers are followers.
-
-**Followers** are passive: they issue no requests on
-their own but simply respond to requests from leaders
-and candidates.
-
-The **leader** handles all client requests (if
-a client contacts a follower, the follower redirects it to the
-leader).
-
-The third state, **candidate**, is used to elect a new
-leader
-
-Raft divides time into **terms**
-Terms are numbered with consecutive integers.
-Each term begins with an election
-If a candidate wins the election, then it serves as leader for the rest of the term.
-
-In some situations
-an election will result in a split vote. In this case the term
-will end with no leader; a new term (with a new election)
-will begin shortly.
-
-Current terms are exchanged
-whenever servers communicate; if one server’s current
-term is smaller than the other’s, then it updates its current
-term to the larger value.
-If a candidate or leader discovers
-that its term is out of date, it immediately reverts to fol-
-lower state.
-If a server receives a request with a stale term
-number, it rejects the request.
-
-**схема конечного автомата для ноды**
-raft.pdf page 5
-нужно перерисовать более крупно для презентации
-и картика с term тоже нужна в презентации
-
-[Leader]
-- discover other leader with higher term -> [Candidat]
-
-[Candidat]
-- receive votes from majority of servers -> [Leader]
-- timeout, new election -> [Candidat]
-- discover current leader or new term -> [Follower]
-
-[Follower]
-- timeout, start election -> [Candidat]
-
-
 basic consensus algorithm requires only
 **two types of RPCs**:
 
@@ -194,9 +165,6 @@ Append-Entries - initiated by leaders to replicate log entries and to provide a 
 Additionally: third RPC for transferring snapshots between servers
 
 Servers retry RPCs if they do not receive a response in a timely manner
-
-
-### Leader election
 
 When servers start up, they begin as followers
 A server remains in follower state as long as it receives valid RPCs from a leader or candidate
@@ -262,8 +230,3 @@ chosen randomly from a fixed interval (e.g., 150–300ms)
 
 in most cases only a single server will time out
 it wins the election and sends heartbeats before any other servers time out
-
-
-### Log replication
-
-ну это не очень актуально, так что кратенько
