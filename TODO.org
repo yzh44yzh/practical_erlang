@@ -3,6 +3,7 @@
 В практике в описании функция chat_room_manager:send_message должна проверять наличие пользователя в комнате.
 Судя по Unit-тестам это не так ;)
 
+
 * TODO exercise 10. gen_server, продолжение
   Тот же чат, на настоящем gen_server
   API уменьшим, чтобы не сильно парится
@@ -92,3 +93,11 @@ https://github.com/Hexlet/docs/blob/master/create-lesson.md
 
 Dockerfile для установки Erlang, Rebar, Relx
 https://registry.hub.docker.com/u/correl/erlang/dockerfile/
+
+
+* урок по валидации входящих данных
+вложенные case
+исключения
+схемы
+erlmonads
+и то, как я сделал для отписок в NC
