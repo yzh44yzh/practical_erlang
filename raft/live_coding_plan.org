@@ -3,14 +3,16 @@
 
 Взять с собой ноут и переходник на HDMI
 
+На ноуте предварительно запустить:
+- презентацию
+- emacs
+- 4 терминала (разложить их на рабочем столе)
+- сайт raft с интерактивной схемой
 
-* TODO
-  - сделать презентацию по theory
-    - картинки снять принтскрином из raft.pdf, предварительно отмасштабировав его побольше
-  - пересмотреть #Псевдокод, почистить, переформулировать, разбросать по этапам.
-  - распечатать:
-    - план разработки
-    - raft.erl, пометить в нем все блоки кода, к какому этапу они относятся (можно разными цветами)
+
+* TODO распечатать:
+- план разработки
+- raft.erl, пометить в нем все блоки кода, к какому этапу они относятся (можно разными цветами)
 
 
 * план разработки
@@ -34,96 +36,3 @@
 ** follower: process append_log
 
 ** candidat and leader: process vote_request and append_log
-
-
-* Псевдокод
-
-Если обычная нода долго не получает сообщений от лидера, то она переходит в состояние «кандидат»
-и посылает другим нодам запрос на голосование.
-
-Другие ноды голосуют за того кандидата, от которого они получили первый запрос.
-
-Если кандидат получает сообщение от лидера, то он снимает свою кандидатуру и возвращается в обычное состояние.
-
-Если кандидат получает большинство голосов, то он становится лидером.
-
-Если же он не получил большинства (это случай, когда на кластере возникли сразу несколько кандидатов и голоса разделились),
-то кандидат ждёт случайное время и инициирует новую процедуру госования.
-
-Процедура голосования повторяется, пока не будет выбран лидер.
-
-
-basic consensus algorithm requires only
-**two types of RPCs**:
-
-RequestVote - initiated by candidates during elections
-Append-Entries - initiated by leaders to replicate log entries and to provide a form of heartbeat
-
-Additionally: third RPC for transferring snapshots between servers
-
-Servers retry RPCs if they do not receive a response in a timely manner
-
-When servers start up, they begin as followers
-A server remains in follower state as long as it receives valid RPCs from a leader or candidate
-
-Leaders send periodic heartbeats to all followers
-(AppendEntries RPCs that carry no log entries)
-
-If a follower receives no communication over a period of time
-called the **election timeout**, then it assumes there is no viable leader
-and begins an election to choose a new leader.
-
-To begin an election, a follower increments its current term
-and transitions to candidate state.
-
-It then votes for itself
-and issues RequestVote RPCs in parallel to each of the other servers in the cluster.
-
-A candidate continues in this state until one of three things happens:
-- it wins the election,
-- another server establishes itself as leader
-- a period of time goes by with no winner.
-
-
-**wins the election**
-
-it receives votes from a majority of the servers in the full cluster for the same term.
-
-Each server will vote for at most one candidate in a given term,
-on a first-come-first-served basis
-
-Once a candidate wins an election, it becomes leader.
-It then sends heartbeat messages to all of the other servers
-to establish its authority and prevent new elections.
-
-
-**another server establishes itself as leader**
-
-While waiting for votes, a candidate may receive an AppendEntries RPC
-from another server claiming to be leader.
-
-If the leader’s term >= candidate’s current term,
-candidate recognizes the leader
-and returns to follower state.
-
-If the term in the RPC < candidate’s current term,
-then the candidate rejects the RPC and continues in candidate state.
-
-
-**a period of time goes by with no winner**
-
-if many followers become candidates at the same time,
-votes could be split so that no candidate obtains a majority.
-
-each candidate will time out
-and start a new election by incrementing its term
-and initiating another round of Request-Vote RPCs.
-
-Raft uses randomized election timeouts to ensure that
-split votes are rare and that they are resolved quickly.
-
-election timeouts are
-chosen randomly from a fixed interval (e.g., 150–300ms)
-
-in most cases only a single server will time out
-it wins the election and sends heartbeats before any other servers time out
