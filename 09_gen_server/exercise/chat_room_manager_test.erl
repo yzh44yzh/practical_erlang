@@ -113,12 +113,20 @@ message_test() ->
     ?assertEqual({ok, []}, chat_room_manager:get_messages_history(Server, Room2)),
     ?assertEqual({error, room_not_found}, chat_room_manager:get_messages_history(Server, make_ref())),
 
+    ?assertEqual({error, user_not_in_room}, chat_room_manager:send_message(Server, Room1, <<"Bob">>, <<"Hello!">>)),
+    ok = chat_room_manager:add_user(Server, Room1, <<"Bob">>),
     ok = chat_room_manager:send_message(Server, Room1, <<"Bob">>, <<"Hello!">>),
+
+    ?assertEqual({error, user_not_in_room}, chat_room_manager:send_message(Server, Room1, <<"Bill">>, <<"Hi there!">>)),
+    ok = chat_room_manager:add_user(Server, Room1, <<"Bill">>),
     ok = chat_room_manager:send_message(Server, Room1, <<"Bill">>, <<"Hi there!">>),
+
     ?assertEqual({ok, [{<<"Bill">>, <<"Hi there!">>}, {<<"Bob">>, <<"Hello!">>}]},
                  chat_room_manager:get_messages_history(Server, Room1)),
     ?assertEqual({ok, []}, chat_room_manager:get_messages_history(Server, Room2)),
 
+    ok = chat_room_manager:add_user(Server, Room2, <<"Helen">>),
+    ok = chat_room_manager:add_user(Server, Room2, <<"Kate">>),
     ok = chat_room_manager:send_message(Server, Room2, <<"Helen">>, <<"Hi!">>),
     ?assertEqual({ok, [{<<"Helen">>, <<"Hi!">>}]},
                  chat_room_manager:get_messages_history(Server, Room2)),
