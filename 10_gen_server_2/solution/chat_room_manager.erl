@@ -3,7 +3,7 @@
 
 -export([start_link/0,
          create_room/1, get_rooms/0,
-         add_user/2, remove_user/2, get_users/1,
+         add_user/3, remove_user/2, get_users/1,
          send_message/3,  get_history/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
@@ -36,12 +36,12 @@ get_rooms() ->
     gen_server:call(?MODULE, get_rooms).
 
 
--spec add_user(pid(), user()) -> ok | {error, room_not_found}.
-add_user(RoomPid, User) ->
-    gen_server:call(?MODULE, {add_user, {RoomPid, User}}).
+-spec add_user(pid(), name(), pid()) -> ok | {error, room_not_found}.
+add_user(RoomPid, UserName, UserPid) ->
+    gen_server:call(?MODULE, {add_user, {RoomPid, UserName, UserPid}}).
 
 
--spec remove_user(pid(), user()) -> ok | {error, room_not_found} | {error, user_not_found}.
+-spec remove_user(pid(), pid()) -> ok | {error, room_not_found} | {error, user_not_found}.
 remove_user(RoomPid, UserPid) ->
     gen_server:call(?MODULE, {remove_user, RoomPid, UserPid}).
 
@@ -67,40 +67,50 @@ init([]) ->
     {ok, #state{rooms = maps:new()}}.
 
 
-handle_call(get_room, _From, State) ->
-    %% TODO [room()]
-    Reply = [],
+handle_call(get_rooms, _From, #state{rooms = Rooms} = State) ->
+    Reply = maps:values(Rooms),
     {reply, Reply, State};
 
-handle_call({add_user, {RoomPid, User}}, _From, State) ->
-    %% TODO ok | {error, room_not_found}
-    Reply = ok,
+handle_call({add_user, {RoomPid, UserName, UserPid}}, _From, #state{rooms = Rooms} = State) ->
+    Reply = case maps:find(RoomPid, Rooms) of
+                {ok, _Room} -> chat_room:add_user(RoomPid, UserName, UserPid), ok;
+                error -> {error, room_not_found}
+            end,
     {reply, Reply, State};
 
-handle_call({remove_user, {RoomPid, UserPid}}, _From, State) ->
-    %% TODO ok | {error, room_not_found} | {error, user_not_found}
-    Reply = ok,
+handle_call({remove_user, {RoomPid, UserPid}}, _From, #state{rooms = Rooms} = State) ->
+    Reply = case maps:find(RoomPid, Rooms) of
+                {ok, _Room} -> chat_room:remove_user(RoomPid, UserPid);
+                error -> {error, room_not_found}
+            end,
     {reply, Reply, State};
 
-handle_call({get_users, RoomPid}, _From, State) ->
-    %% TODO {ok, [user()]} | {error, room_not_found}
-    Reply = ok,
+handle_call({get_users, RoomPid}, _From, #state{rooms = Rooms} = State) ->
+    Reply = case maps:find(RoomPid, Rooms) of
+                {ok, _Room} -> chat_room:get_users(RoomPid);
+                error -> {error, room_not_found}
+            end,
     {reply, Reply, State};
 
-handle_call({send_message, {RoomPid, UserName, Message}}, _From, State) ->
-    %% TODO ok | {error, room_not_found}
-    Reply = ok,
+handle_call({send_message, {RoomPid, UserName, Message}}, _From, #state{rooms = Rooms} = State) ->
+    Reply = case maps:find(RoomPid, Rooms) of
+                {ok, _Room} -> chat_room:send_message(RoomPid, UserName, Message);
+                error -> {error, room_not_found}
+            end,
     {reply, Reply, State};
 
-handle_call({get_history, RoomPid}, _From, State) ->
-    %% TODO {ok, [message()]} | {error, room_not_found}
-    Reply = ok,
+handle_call({get_history, RoomPid}, _From, #state{rooms = Rooms} = State) ->
+    Reply = case maps:find(RoomPid, Rooms) of
+                {ok, _Room} -> chat_room:get_history(RoomPid);
+                error -> {error, room_not_found}
+            end,
     {reply, Reply, State}.
 
 
-handle_cast({add_room, {RoomName, RoomPid}}, State) ->
-    %% TODO
-    {noreply, State}.
+handle_cast({add_room, Room}, #state{rooms = Rooms} = State) ->
+    {_, RoomPid} = Room,
+    Rooms2 = maps:put(RoomPid, Room, Rooms),
+    {noreply, State#state{rooms = Rooms2}}.
 
 
 handle_info(_Request, State) ->

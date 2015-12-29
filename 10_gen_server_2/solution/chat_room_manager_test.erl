@@ -33,7 +33,7 @@ chat_room_test() ->
     chat_room:add_user(RoomPid, <<"Bob">>, UserPid1),
     ?assertEqual([{<<"Bob">>, UserPid1}], chat_room:get_users(RoomPid)),
     chat_room:add_user(RoomPid, <<"Bill">>, UserPid2),
-    ?assertEqual([{<<"Bill">>, UserPid2}, {<<"Bob">>, UserPid1}], chat_room:get_users(RoomPid)),
+    ?assertEqual([{<<"Bill">>, UserPid2}, {<<"Bob">>, UserPid1}], lists:sort(chat_room:get_users(RoomPid))),
 
     chat_room:add_message(RoomPid, <<"Bob">>, <<"Hello">>),
     chat_room:add_message(RoomPid, <<"Bill">>, <<"Hi">>),
@@ -42,4 +42,10 @@ chat_room_test() ->
     ?assertEqual(Messages, chat_room:get_history(RoomPid)),
     ?assertEqual(Messages, chat_user:get_messages(UserPid1)),
     ?assertEqual(Messages, chat_user:get_messages(UserPid2)),
+
+    ?assertEqual(ok, chat_room:remove_user(RoomPid, UserPid1)),
+    ?assertEqual({error, user_not_found}, chat_room:remove_user(RoomPid, UserPid1)),
+    ?assertEqual(ok, chat_room:remove_user(RoomPid, UserPid2)),
+    ?assertEqual({error, user_not_found}, chat_room:remove_user(RoomPid, UserPid2)),
+
     ok.
