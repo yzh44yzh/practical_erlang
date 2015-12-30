@@ -1,6 +1,4 @@
 * TODO exercise 10. gen_server, продолжение
-- README
-- copy solution to exercise
 - проект на bitbucket, запушить
 - вытянуть на hexlet, собрать
 - добавить к уроку, отписать коммент
