@@ -1,13 +1,6 @@
 * TODO exercise 10. gen_server, продолжение
-- реализация
-  + chat_user
-  + chat_room
-  - chat_room_manager
-    + implementation
-    - tests
-- dialyzer
 - README
-- exercise
+- copy solution to exercise
 - проект на bitbucket, запушить
 - вытянуть на hexlet, собрать
 - добавить к уроку, отписать коммент

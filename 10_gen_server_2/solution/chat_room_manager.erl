@@ -53,7 +53,7 @@ get_users(RoomPid) ->
 
 -spec send_message(pid(), name(), binary()) -> ok | {error, room_not_found}.
 send_message(RoomPid, UserName, Message) ->
-    gen_server:call(?MODULE, {add_message, {RoomPid, UserName, Message}}), ok.
+    gen_server:call(?MODULE, {send_message, {RoomPid, UserName, Message}}).
 
 
 -spec get_history(pid()) -> {ok, [message()]} | {error, room_not_found}.
@@ -78,7 +78,7 @@ handle_call({add_user, {RoomPid, UserName, UserPid}}, _From, #state{rooms = Room
             end,
     {reply, Reply, State};
 
-handle_call({remove_user, {RoomPid, UserPid}}, _From, #state{rooms = Rooms} = State) ->
+handle_call({remove_user, RoomPid, UserPid}, _From, #state{rooms = Rooms} = State) ->
     Reply = case maps:find(RoomPid, Rooms) of
                 {ok, _Room} -> chat_room:remove_user(RoomPid, UserPid);
                 error -> {error, room_not_found}
@@ -87,21 +87,21 @@ handle_call({remove_user, {RoomPid, UserPid}}, _From, #state{rooms = Rooms} = St
 
 handle_call({get_users, RoomPid}, _From, #state{rooms = Rooms} = State) ->
     Reply = case maps:find(RoomPid, Rooms) of
-                {ok, _Room} -> chat_room:get_users(RoomPid);
+                {ok, _Room} -> {ok, chat_room:get_users(RoomPid)};
                 error -> {error, room_not_found}
             end,
     {reply, Reply, State};
 
 handle_call({send_message, {RoomPid, UserName, Message}}, _From, #state{rooms = Rooms} = State) ->
     Reply = case maps:find(RoomPid, Rooms) of
-                {ok, _Room} -> chat_room:send_message(RoomPid, UserName, Message);
+                {ok, _Room} -> chat_room:add_message(RoomPid, UserName, Message);
                 error -> {error, room_not_found}
             end,
     {reply, Reply, State};
 
 handle_call({get_history, RoomPid}, _From, #state{rooms = Rooms} = State) ->
     Reply = case maps:find(RoomPid, Rooms) of
-                {ok, _Room} -> chat_room:get_history(RoomPid);
+                {ok, _Room} -> {ok, chat_room:get_history(RoomPid)};
                 error -> {error, room_not_found}
             end,
     {reply, Reply, State}.
