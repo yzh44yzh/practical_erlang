@@ -1,9 +1,9 @@
 -module(main).
 
--export([start/1]).
+-export([parse/1]).
 
 
-start(Files) ->
+parse(Files) ->
     Workers = lists:map(
                 fun(File) ->
                         Pid = spawn(worker, parse, [File, self()]),
