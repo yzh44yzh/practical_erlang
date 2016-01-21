@@ -1,5 +1,5 @@
-#test: build
-#	erl -s test run
+test: build
+	erl -s test run
 
 build: clean
 	erlc *.erl
