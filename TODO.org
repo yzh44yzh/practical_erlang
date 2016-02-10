@@ -120,4 +120,37 @@ https://registry.hub.docker.com/u/correl/erlang/dockerfile/
 erlmonads
 и то, как я сделал для отписок в NC
 
+
 * урок по raft
+
+* Designing for <anything> with Erlang
+https://medium.com/@dmitriid/designing-for-anything-with-erlang-cfadb6833bc0#.ctwsdsq0g
+
+пост о том, чего не хватает в книгах по эрлангу
+
+it would be really nice to read up on at least some of these things:
+    setting up multiple nodes
+    testing a distributed app
+    deploying a distributed app
+    handling failover
+    handling load balancing
+    handling netsplits (and not only in Mnesia. If we can add a process on node B to a gen_supervisor on node A, how do we handle netsplits, timeouts, restarts etc.?)
+    discovery of nodes
+    tracing
+    profiling
+    various VM options and their impact
+    securing connection between nodes
+    logging
+    debugging
+    crash dumps
+    remote inspection
+    mitigating overflowing mailboxes
+    SSL
+    sockets
+    working from behind firewalls
+    flood protection
+    slow requests
+    timeouts
+    sessions
+    latency
+    <add your own>
