@@ -12,13 +12,6 @@ ex 11.
 
 
 * TODO exercise 12. supervisor
-- README
-  - какое должно быть дерево
-  - как должен вести себя воркер (ping)
-  - sup2 зарегистрировать
-  - sup2:add_worker, remove_worker
-
-- exersise
 
 - bitbucket
 - hexlet
