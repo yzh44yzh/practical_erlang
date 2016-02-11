@@ -30,6 +30,6 @@ spec(WorkerId) ->
       start => {worker, start_link, [WorkerId]},
       restart => permanent,
       shutdown => 2000,
-      type => supervisor,
+      type => worker,
       modules => [worker]
      }.

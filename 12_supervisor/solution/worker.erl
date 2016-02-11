@@ -6,10 +6,10 @@
 
 
 start_link(WorkerId) ->
-    gen_server:start_link({local, WorkerId}, ?MODULE, [WorkerId], []).
+    gen_server:start_link(?MODULE, [WorkerId], []).
 
-ping(WorkerId) ->
-    gen_server:call(WorkerId, ping).
+ping(Pid) ->
+    gen_server:call(Pid, ping).
 
 
 init([WorkerId]) ->
