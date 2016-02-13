@@ -1,5 +1,7 @@
 * TODO exercise 13. application
-
+- test
+- README
+- bitbucket, hexlet
 
 
 * TODO exercise 14. OTP фреймворк
@@ -12,7 +14,6 @@ app-sup-worker и т.д.
 к ноде можно подключиться, выполнить which_applications
 и worker отвечает на пинг инфой
 еще можно проверить дерево супервизоров
-
 
 
 
