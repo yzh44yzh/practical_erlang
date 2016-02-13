@@ -33,7 +33,7 @@ main_test() ->
                  main:parse(["data_1.csv", "data_2.csv"])),
 
     ?assertMatch({#{},
-                  #{"data_3.csv" := {badarg, _}}},
+                  #{"data_3.csv" := _}},
                  main:parse(["data_3.csv"])),
 
     ?assertMatch({#{},
@@ -48,7 +48,7 @@ main_test() ->
                     <<"potato">> := 94,
                     <<"tangerin">> := 312,
                     <<"tomatos">> := 20},
-                  #{"data_3.csv" := {badarg, _}}},
+                  #{"data_3.csv" := _}},
                  main:parse(["data_1.csv", "data_2.csv", "data_3.csv"])),
 
     ?assertMatch({#{<<"ananas">> := 14,
@@ -59,7 +59,7 @@ main_test() ->
                     <<"potato">> := 94,
                     <<"tangerin">> := 312,
                     <<"tomatos">> := 20},
-                  #{"data_3.csv" := {badarg, _},
+                  #{"data_3.csv" := _,
                     "data_4.csv" := {{badmatch,{error,enoent}}, _}}},
                  main:parse(["data_1.csv", "data_2.csv", "data_3.csv", "data_4.csv"])),
     ok.
