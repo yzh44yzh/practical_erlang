@@ -1,8 +1,3 @@
-* TODO exercise 13. application
-- test
-- README
-- bitbucket, hexlet
-
 
 * TODO exercise 14. OTP фреймворк
 создать базовый проект из одного приложения, как у меня erl_proj_tpl
