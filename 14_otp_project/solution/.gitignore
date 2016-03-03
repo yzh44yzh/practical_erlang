@@ -5,3 +5,5 @@ logs
 ebin
 TAGS
 .rebar
+.idea
+*.iml
