@@ -37,7 +37,7 @@ OTP включает:
 
 ```
 ├─ ebin
-│  ├── my_app.src
+│  ├── my_app.app
 │  └── my_app.beam
 └─ src
    └── my_app.erl
@@ -52,7 +52,7 @@ OTP включает:
 
 ```
 ├─ ebin
-│  ├── my_app.src
+│  ├── my_app.app
 │  └── my_app.beam
 ├─ include
 │  └── my_app.hrl
