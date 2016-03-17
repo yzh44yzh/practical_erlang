@@ -68,7 +68,7 @@
 
 и в OCaml есть тип **Result**:
 
-    Result Ok x | Error y
+    Result = Ok x | Error y
 
 Пример:
 
