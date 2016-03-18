@@ -1,11 +1,8 @@
-#test: build
-#	erl -pa ebin -s test run
+test: build
+	erl -pa ebin -s test run
 
 build:
-	erlc -o ebin src/*.erl # test/*.erl
+	erlc -o ebin src/*.erl test/*.erl
 
 clean:
 	-rm ebin/*.beam
-
-run:
-	erl +pc unicode -pa ebin

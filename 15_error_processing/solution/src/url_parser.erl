@@ -1,35 +1,22 @@
 -module(url_parser).
 
--export([test/0, parse/1]).
-
-test() ->
-    URLs = [
-        <<"https://www.youtube.com/user/ErlangSolutions/playlists">>,
-        <<"https://www.youtube.com/playlist?list=PLWbHc_FXPo2jN8cLhwLg7frCx6fJ-GPwM">>,
-        <<"http://mostlyerlang.com/2015/05/12/067-rebar-3/">>,
-        <<"http://mostlyerlang.com/2015/05/12/067-rebar-3?get">>,
-        <<"http://mostlyerlang.com/2015/05/12/067-rebar-3?get?a=b?c=d">>,
-        <<"http://mostlyerlang.com/2015/05/12/067-rebar-3/?get">>,
-        <<"http://mostlyerlang.com/2015/05/12/067-rebar-3/get?a=b?d=c">>,
-        <<"http://mostlyerlang.com/">>,
-        <<"http://mostlyerlang.com">>,
-        <<"http.mostlyerlang.com">>,
-        <<"http://">>
-    ],
-    lists:map(fun parse/1, URLs).
+-export([parse/1]).
 
 
--spec parse(binary()) -> map().
+-spec parse(binary()) -> {ok, map()} | {error, term()}.
 parse(URL) ->
-    {URL, element(2,
-        pipeline(URL, #{},
+    Res = pipeline(URL, #{},
             [
                 fun get_protocol/2,
                 fun get_domain/2,
                 fun get_query/2,
                 fun get_path/2,
                 fun get_date/2
-            ]))}.
+            ]),
+    case Res of
+        {error, Reason} -> {error, Reason};
+        {_, Data} -> {ok, Data}
+    end.
 
 
 pipeline(Data, State, Funs) ->
@@ -77,9 +64,15 @@ get_path(Data, State) ->
 get_date(Data, #{path := Path} = State) ->
     Date = case Path of
                [Y, M, D | _] ->
-                   Res = pipeline([Y, M, D], [], [fun get_int/2, fun get_int/2, fun get_int/2]),
+                   Res = pipeline([Y, M, D], [],
+                                  [
+                                   fun get_int/2,
+                                   fun get_int/2,
+                                   fun get_int/2,
+                                   fun validate_date/2
+                                  ]),
                    case Res of
-                       {[], [D2, M2, Y2]} -> {Y2, M2, D2};
+                       {[], Dt} -> Dt;
                        {error, _} -> undefined
                    end;
                _ -> undefined
@@ -92,3 +85,7 @@ get_int([Data | Rest], State) ->
         {Int, []} -> {ok, Rest, [Int | State]};
         _ -> {error, not_int}
     end.
+
+
+validate_date(_, [D, M, Y]) when D >= 1, D =< 31, M >= 1, M =< 12 -> {ok, [], {Y, M, D}};
+validate_date(_, _) -> {error, invalid_date}.
