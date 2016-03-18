@@ -1,14 +1,27 @@
 * TODO exercise 15. Обработка ошибок на разных уровнях
-  хорошо бы, чтобы в задании было 2 варинта обработки ошибок:
-  let it crash и try..catch
 
-  Для try..catch можно дать задание по валидации входящих данных
-  куча условий по валидации, при нарушении любого бросаем исключение
-  так избегаем глубокой вложенности
-  (без ковбоя и без реального хттп запроса)
+<<"https://erlangcentral.org/books/">>
+<<"https://www.youtube.com/user/ErlangSolutions/playlists">>
+<<"https://www.youtube.com/playlist?list=PLWbHc_FXPo2jN8cLhwLg7frCx6fJ-GPwM">>
+http://mostlyerlang.com/2015/05/12/067-rebar-3/
+http://mostlyerlang.com/2015/05/21/interview-with-joe-armstrong/
+http://mostlyerlang.com/2015/05/07/interview-with-guido-van-rossum/
+http://dieswaytoofast.blogspot.com.by/2012/12/erlang-binaries-and-garbage-collection.html
+http://www.erlangpatterns.org/patterns.html
 
-  Однако, именно это описано в теории урока.
-  Так что для практики надо бы что-то другое.
+- разобрать на части, вернуть мапу
+  {protocol => "https", domain => [com, youtube, www], path = [user, ErlangSolutions, playlists], get_params = #{<<"list">> => <<"PL">>}}
+- выделить домен, проверить, что он входит в список доверенных доменов
+- из path выделить год-месяц-день, преобразовать в int, вернуть дату
+
+для каждой ссылки вернуть: разобранный урл, доверенный или нет домен, дата если есть
+
+- тесты
+- README
+- exersice
+- bitbucket, hexlet
+
+
 
 * TODO exercise 16. TCP и UDP сокеты
   telnet-клиент
