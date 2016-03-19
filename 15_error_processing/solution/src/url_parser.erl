@@ -42,7 +42,7 @@ get_protocol(Data, State) ->
 
 get_domain(Data, State) ->
     case binary:split(Data, <<"/">>) of
-        [<<>>] -> {error, invalid_domains};
+        [<<>>] -> {error, invalid_domain};
         [Domain] -> {ok, <<>>, State#{domain => Domain}};
         [Domain, Rest] -> {ok, Rest, State#{domain => Domain}}
     end.
