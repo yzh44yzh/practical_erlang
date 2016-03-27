@@ -23,6 +23,13 @@ init(_Args) ->
            shutdown => 2000, % milliseconds | brutal_kill | infinity
            type => worker, % worker | supervisor
            modules => [mcache]
+          },
+         #{id => mcache_server,
+           start => {mcache_server, start_link, []},
+           restart => permanent,
+           shutdown => 2000,
+           type => worker,
+           modules => [mcache_server]
           }
         ],
     {ok, {SupervisorSpecification, ChildSpecifications}}.

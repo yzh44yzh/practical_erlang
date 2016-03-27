@@ -7,5 +7,8 @@
   {registered, []},
   {applications, [kernel, stdlib]},
   {mod, {mcache_app, []}},
-  {env, []}
+  {env, [
+         {port, 1234},
+         {accept_pool_size, 10}
+        ]}
  ]}.

@@ -1,11 +1,5 @@
 * TODO exercise 16. TCP и UDP сокеты
-- полноценный апп
-- echo
-- set
-- get
-- gets
-- delete
-- add,replace,append,prepend
+- api
 - README
 
 - exercise
