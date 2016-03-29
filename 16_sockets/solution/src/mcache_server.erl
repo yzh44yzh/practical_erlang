@@ -1,31 +1,57 @@
 -module(mcache_server).
+-behavior(gen_server).
 
 -export([start_link/0, accept/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+
 
 start_link() ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+
+init([]) ->
     {ok, Port} = application:get_env(mcache, port),
     {ok, PoolSize} = application:get_env(mcache, accept_pool_size),
     io:format("start mcache_server at port ~p with pool ~p~n", [Port, PoolSize]),
-    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}, {packet, line}]),
+    {ok, ListenSocket} = gen_tcp:listen(Port, [binary, {active, false}, {packet, line}, {reuseaddr, true}]),
     [spawn(?MODULE, accept, [Id, ListenSocket]) || Id <- lists:seq(1, PoolSize)],
-    timer:sleep(infinity),
+    {ok, ListenSocket}.
+
+
+handle_call(_Any, _From, State) ->
+    {noreply, State}.
+
+handle_cast(_Any, State) ->
+    {noreply, State}.
+
+handle_info(_Request, State) ->
+    {noreply, State}.
+
+terminate(_Reason, _State) ->
     ok.
+
+code_change(_OldVersion, State, _Extra) ->
+    {ok, State}.
+
 
 accept(Id, ListenSocket) ->
     io:format("Socket #~p wait for client~n", [Id]),
-    {ok, Socket} = gen_tcp:accept(ListenSocket),
-    io:format("Socket #~p, session started~n", [Id]),
-    handle_connection(Id, ListenSocket, Socket).
+    case gen_tcp:accept(ListenSocket) of
+        {ok, Socket} ->
+            io:format("Socket #~p session started~n", [Id]),
+            handle_connection(Id, ListenSocket, Socket);
+        E -> io:format("Socket #~p can't accept client ~p~n", [Id, E])
+    end.
 
 handle_connection(Id, ListenSocket, Socket) ->
     case gen_tcp:recv(Socket, 0) of
-        {ok, Msg0} -> io:format("Socket #~p got message: ~p~n", [Id, Msg0]),
-                      Msg = binary:part(Msg0, 0, byte_size(Msg0) - 2),
-                      Reply = handle(parse_protocol(Msg)),
-                      gen_tcp:send(Socket, <<Reply/binary, "\r\n">>),
-                      handle_connection(Id, ListenSocket, Socket);
+        {ok, Msg0} ->
+            Msg = binary:part(Msg0, 0, byte_size(Msg0) - 2),
+            Reply = handle(parse_protocol(Msg)),
+            gen_tcp:send(Socket, <<Reply/binary, "\r\n">>),
+            handle_connection(Id, ListenSocket, Socket);
         {error, closed} ->
-            io:format("Socket #~p, session closed ~n", [Id]),
+            io:format("Socket #~p session closed ~n", [Id]),
             accept(Id, ListenSocket)
     end.
 
@@ -106,4 +132,4 @@ handle({delete, Key}) ->
     end;
 
 handle(unknown) ->
-    <<"UKNOWN REQUEST">>.
+    <<"UNKNOWN REQUEST">>.
