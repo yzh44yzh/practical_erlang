@@ -1,10 +1,3 @@
-* TODO exercise 16. TCP и UDP сокеты
-- README
-  {reuseaddr, true}
-- exercise
-- bitbucket/hexlet
-
-
 * TODO курсовая работа
   консольная 2048 http://habrahabr.ru/post/261801/
   telnet-client, TCP-socket, ranch
