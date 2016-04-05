@@ -1,7 +1,28 @@
 * TODO курсовая работа
-  - ff_game
-  - telnet-client, TCP-socket
-  - test
+- ff_game
+  - move (unit tests for each step)
+    + find player on field (x,y)
+    - find new cell
+    - check is it stable
+    - move player to new cell
+    - build and return new field (zippers?)
+  - unit tests for move
+    - fall prev cell
+    - fall neighbour cells recursivelly
+  - more unit tests for move
+
+- telnet-client, TCP-socket
+- game protocol
+
+- login, join game
+
+- game for each pair of players
+  - game field for each game
+  - step by step moves
+  - game over
+
+- functional tests
+  tcp-client and game protocol
 
 
 * TODO video

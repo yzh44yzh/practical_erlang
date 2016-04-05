@@ -1,16 +1,25 @@
 -module(ff_game).
 
 -export([test/0]).
--export([initial_field/0, initial_field/2, draw_field/1]).
+-export([initial_field/0
+        ,initial_field/2
+        ,move/3
+        ,find_player/2
+        ,draw_field/1]).
 
+-type(player() :: player_a | player_b).
+-type(move() :: left | rigth | up | down).
 -type(cell() :: stable | fallen | player_a | player_b).
 -type(row() :: [cell()]).
 -type(field() :: [row()]).
 -type(size() :: 5..500).
+-type(position() :: {pos_integer(), pos_integer()}).
 
 
 test() ->
-    B = draw_field(initial_field()),
+    F = initial_field(),
+    {ok, F2} = move(player_a, left, F),
+    B = draw_field(F2),
     io:format("~s", [B]),
     ok.
 
@@ -27,6 +36,24 @@ initial_field(W, H) when W >= 5 andalso H >= 5 ->
     [first_row(W) |
      [row(W) || _ <- lists:seq(1, H - 2)]
      ++ [last_row(W)]].
+
+
+-spec move(player(), move(), field()) -> {ok, field()} | {error, invalid_move}.
+move(Player, Move, Field) ->
+    Position = find_player(Player, Field),
+    {ok, Field}.
+
+
+-spec find_player(player(), field()) -> position().
+find_player(Player, Field) ->
+    lists:foldl(fun(_, {X,Y}) -> {X,Y};
+                   (Row, RowNum) ->
+                        case find_player_in_row(Player, Row) of
+                            not_found -> RowNum + 1;
+                            ColumnNum -> {RowNum, ColumnNum}
+                        end
+                end,
+                1, Field).
 
 
 -spec draw_field(field()) -> binary().
@@ -53,6 +80,15 @@ last_row(Size) ->
 -spec row(size()) -> row().
 row(Size) ->
     [stable || _ <- lists:seq(1, Size)].
+
+
+-spec find_player_in_row(player(), row()) -> pos_integer() | not_found.
+find_player_in_row(Player, Row) ->
+    NoPlayer = lists:takewhile(fun(Cell) -> Cell =/= Player end, Row),
+    case NoPlayer of
+        Row -> not_found;
+        _ -> length(NoPlayer) + 1
+    end.
 
 
 -spec draw_row(row()) -> iolist().
