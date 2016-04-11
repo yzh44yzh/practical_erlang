@@ -9,7 +9,6 @@
         ]).
 
 -type matrix() :: [[any()]].
--type zrow() :: {pos_integer(), list_zipper:lz()}.
 -type mz() :: list_zipper:lz().
 -export_type([matrix/0, mz/0]).
 
@@ -18,70 +17,62 @@
 
 -spec from_matrix(matrix()) -> mz().
 from_matrix(Matrix) ->
-    ZRows = lists:map(fun list_to_zrow/1, Matrix),
-    list_zipper:from_list(ZRows).
+    Rows = lists:map(fun list_zipper:from_list/1, Matrix),
+    list_zipper:from_list(Rows).
 
 
 -spec to_matrix(mz()) -> matrix().
 to_matrix(Zipper) ->
-    ZRows = list_zipper:to_list(Zipper),
-    lists:map(fun zrow_to_list/1, ZRows).
+    Rows = list_zipper:to_list(Zipper),
+    lists:map(fun list_zipper:to_list/1, Rows).
 
 
 -spec get(mz()) -> any().
 get(Zipper) ->
-    {_Pos, RowZipper} = list_zipper:get(Zipper),
-    list_zipper:get(RowZipper).
+    CurrRow = list_zipper:get(Zipper),
+    list_zipper:get(CurrRow).
 
 
 -spec set(mz(), any()) -> mz().
 set(Zipper, Value) ->
-    {Pos, RowZipper} = list_zipper:get(Zipper),
-    RowZipper2 = list_zipper:set(RowZipper, Value),
-    list_zipper:set(Zipper, {Pos, RowZipper2}).
+    CurrRow = list_zipper:get(Zipper),
+    CurrRow2 = list_zipper:set(CurrRow, Value),
+    list_zipper:set(Zipper, CurrRow2).
 
 
 left(Zipper) ->
-    move_curr_row(Zipper, left).
+    move_in_curr_row(Zipper, left).
 
 
 right(Zipper) ->
-    move_curr_row(Zipper, right).
+    move_in_curr_row(Zipper, right).
 
 
 up(Zipper) ->
-    {Pos, _} = list_zipper:get(Zipper),
-    Zipper2 = list_zipper:left(Zipper),
-    set_curr_row_pos(Zipper2, Pos).
+    change_row(Zipper, left).
 
 
 down(Zipper) ->
-    {Pos, _} = list_zipper:get(Zipper),
-    Zipper2 = list_zipper:right(Zipper),
-    set_curr_row_pos(Zipper2, Pos).
+    change_row(Zipper, right).
 
 
 %%% Inner Functions
 
-move_curr_row(Zipper, Direction) ->
-    {Pos, CurrRow} = list_zipper:get(Zipper),
+move_in_curr_row(Zipper, Direction) ->
+    CurrRow = list_zipper:get(Zipper),
     CurrRow2 = list_zipper:Direction(CurrRow),
-    list_zipper:set(Zipper, {Pos, CurrRow2}).
+    list_zipper:set(Zipper, CurrRow2).
 
 
-set_curr_row_pos(Zipper, NewPos) ->
-    {OldPos, CurrRow} = list_zipper:get(Zipper),
-    CurrRow2 = if
-                     NewPos == OldPos -> CurrRow;
-                     NewPos > OldPos -> list_zipper:right(CurrRow, NewPos - OldPos);
-                     NewPos < OldPos -> list_zipper:left(CurrRow, OldPos - NewPos)
-                 end,
-    list_zipper:set(Zipper, {NewPos, CurrRow2}).
-
-
--spec list_to_zrow(list()) -> zrow().
-list_to_zrow(Row) -> {0, list_zipper:from_list(Row)}.
-
-
--spec zrow_to_list(zrow()) -> list().
-zrow_to_list({_, Zipper}) -> list_zipper:to_list(Zipper).
+change_row(Zipper, Direction) ->
+    OldRow = list_zipper:get(Zipper),
+    OldRowPos = list_zipper:position(OldRow),
+    Zipper2 = list_zipper:Direction(Zipper),
+    NewRow = list_zipper:get(Zipper2),
+    NewRowPos = list_zipper:position(NewRow),
+    list_zipper:set(Zipper2,
+                    if
+                        NewRowPos == OldRowPos -> NewRow;
+                        NewRowPos > OldRowPos -> list_zipper:left(NewRow, NewRowPos - OldRowPos);
+                        NewRowPos < OldRowPos -> list_zipper:right(NewRow, OldRowPos - NewRowPos)
+                    end).

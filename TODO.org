@@ -1,10 +1,8 @@
 * TODO курсовая работа
 - zipper
-  + list_zipper from_list, to_list, move_left, move_right, get, set
-  - matrix_zipper from_matrix, to_matrix, move-up-down-left-right, get, set
-    внутри вместо rows хранит list_zipper для каждого row
-  - tests for list_zipper?
-  - tests for matrix_zipper
+  - matrix_zipper: left/2, right/2, up/2, down/2, position/1->{Col,Row}
+  - more tests for matrix zipper
+  - dialyzer
 
 - ff_game
   - move (unit tests for each step)
