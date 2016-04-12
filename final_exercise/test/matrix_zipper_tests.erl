@@ -68,8 +68,33 @@ set_test() ->
     ok.
 
 
+position_test() ->
+    Z = matrix_zipper:from_matrix(
+           [[ 1, 2, 3, 4],
+            [ 5, 6, 7, 8],
+            [ 9,10,11,12],
+            [13,14,15,16]]
+           ),
+    Actions = [
+               {get, 1}, {pos, {1,1}},
+               {right, 2}, {get, 3}, {pos, {3, 1}},
+               {right, 2}, {get, 4}, {pos, {4, 1}},
+               {down, 2}, {get, 12}, {pos, {4, 3}},
+               down, {get, 16}, {pos, {4, 4}},
+               {down, 10}, {get, 16}, {pos, {4, 4}},
+               {left, 1}, {get, 15}, {pos, {3, 4}},
+               {up, 2}, {get, 7}, {pos, {3, 2}},
+               {left, 10}, {get, 5}, {pos, {1, 2}}
+              ],
+    lists:foldl(fun check/2, Z, Actions),
+    ok.
+
+
 check({get, Res}, Z) ->
     ?assertEqual(Res, matrix_zipper:get(Z)),
+    Z;
+check({pos, Res}, Z) ->
+    ?assertEqual(Res, matrix_zipper:position(Z)),
     Z;
 check({Action, Arg}, Z) ->
     matrix_zipper:Action(Z, Arg);

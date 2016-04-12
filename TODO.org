@@ -1,9 +1,4 @@
 * TODO курсовая работа
-- zipper
-  - matrix_zipper: left/2, right/2, up/2, down/2, position/1->{Col,Row}
-  - more tests for matrix zipper
-  - dialyzer
-
 - ff_game
   - move (unit tests for each step)
     + find player on field (x,y)

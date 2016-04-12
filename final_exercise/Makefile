@@ -10,5 +10,8 @@ run:
 clean:
 	-rm ebin/*.beam
 
+d:
+	dialyzer --src src
+
 telnet:
 	telnet localhost 1234
