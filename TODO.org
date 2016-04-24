@@ -1,3 +1,4 @@
+* TODO поправить упражнение
 1) в условии get_rooms должна вернуть Rooms, а в тестах ожидается {ok, Rooms}
 2) в условии get_messages должна вернуть Messages, а в тестах ожидается {ok, Messages}
 3) в условии get_users должна вернуть Users, а в тестах ожидается {ok, Users}
@@ -6,16 +7,15 @@
 
 * TODO курсовая работа
 - ff_game
+  - list_zipper:find + tests
+    - вероятно понадобится возвращать ошибку, когда дошел до края
+  - matrix_zipper:find + tests
   - move (unit tests for each step)
     + find player on field (x,y)
-    - find new cell
-    - check is it stable
-    - move player to new cell
-    - build and return new field (zippers?)
-  - unit tests for move
-    - fall prev cell
-    - fall neighbour cells recursivelly
-  - more unit tests for move
+    - move player to direction
+    - fall previous cell
+    - check is new cell stable, don't allow move if not
+  - fall neighbour cells recursivelly
 
 - telnet-client, TCP-socket
 - game protocol

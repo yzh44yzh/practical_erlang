@@ -6,7 +6,8 @@
          up/1, up/2,
          down/1, down/2,
          get/1, set/2,
-         position/1
+         position/1,
+         find/2
         ]).
 
 -type matrix() :: [[any()]].
@@ -85,6 +86,12 @@ down(Zipper, Steps) ->
 position(Zipper) ->
     CurrRow = list_zipper:get(Zipper),
     {list_zipper:position(CurrRow), list_zipper:position(Zipper)}.
+
+
+-spec find(mz(), term()) -> {ok, mz()} | {error, not_found}.
+find(Zipper, _Value) ->
+    %% TODO need list_zipper:find
+    {ok, Zipper}.
 
 
 %%% Inner Functions

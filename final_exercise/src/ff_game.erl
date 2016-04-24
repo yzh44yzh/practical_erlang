@@ -40,8 +40,9 @@ initial_field(W, H) when W >= 5 andalso H >= 5 ->
 
 -spec move(player(), move(), field()) -> {ok, field()} | {error, invalid_move}.
 move(Player, Move, Field) ->
-    Position = find_player(Player, Field),
-    {ok, Field}.
+    {ok, MZ} = matrix_zipper:find(matrix_zipper:from_matrix(Field), Player),
+    io:format("move ~p ~p, player in position:~p", [Player, Move, matrix_zipper:position(MZ)]),
+    {ok, matrix_zipper:to_matrix(MZ)}.
 
 
 -spec find_player(player(), field()) -> position().
