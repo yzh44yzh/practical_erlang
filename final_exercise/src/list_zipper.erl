@@ -3,7 +3,8 @@
 -export([from_list/1, to_list/1,
          left/1, left/2,
          right/1, right/2,
-         get/1, set/2, position/1
+         get/1, set/2, position/1,
+         find/2, find_left/2, find_right/2
         ]).
 
 -type lz() :: {[any()], any(), [any()], pos_integer()}.
@@ -61,3 +62,34 @@ set({Left, _, Right, Position}, Value) ->
 
 -spec position(lz()) -> pos_integer().
 position({_, _, _, Position}) -> Position.
+
+
+-spec find(lz(), any()) -> {ok, lz()} | {error, not_found}.
+find(Zipper, Value) ->
+    Begin = from_list(to_list(Zipper)),
+    case list_zipper:get(Begin) of
+        Value -> {ok, Begin};
+        _ -> find_right(Begin, Value)
+    end.
+
+
+-spec find_right(lz(), any()) -> {ok, lz()} | {error, not_found}.
+find_right(Zipper, Value) ->
+    find_direction(Zipper, Value, right).
+
+
+-spec find_left(lz(), any()) -> {ok, lz()} | {error, not_found}.
+find_left(Zipper, Value) ->
+    find_direction(Zipper, Value, left).
+
+
+-spec find_direction(lz(), any(), left | right) -> {ok, lz()} | {error, not_found}.
+find_direction(Zipper, Value, Direction) ->
+    case list_zipper:Direction(Zipper) of
+        {ok, Zipper2} ->
+            case list_zipper:get(Zipper2) of
+                Value -> {ok, Zipper2};
+                _ -> find_direction(Zipper2, Value, Direction)
+            end;
+        {error, no_move} -> {error, not_found}
+    end.

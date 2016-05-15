@@ -61,6 +61,20 @@ position_test() ->
     ok.
 
 
+find_test() ->
+    Z = list_zipper:from_list([1,2,3,4,5,4,3,2,1]),
+    {error, not_found} = list_zipper:find(Z, 10),
+    {ok, Z2} = list_zipper:find(Z, 3),
+    ?assertEqual(3, list_zipper:get(Z2)),
+    {ok, Z3} = list_zipper:find_right(Z2, 3),
+    ?assertEqual(3, list_zipper:get(Z3)),
+    ?assertNotEqual(Z2, Z3),
+    {error, not_found} = list_zipper:find_right(Z3, 3),
+    {ok, Z4} = list_zipper:find_left(Z3, 3),
+    ?assertEqual(Z2, Z4),
+    ok.
+
+
 check({get, Res}, Z) ->
     ?assertEqual(Res, list_zipper:get(Z)),
     Z;
