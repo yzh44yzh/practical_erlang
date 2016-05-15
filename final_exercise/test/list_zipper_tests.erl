@@ -51,10 +51,11 @@ position_test() ->
                left, {pos, 1},
                left, {pos, 1},
                {right, 2}, {pos, 3},
-               {right, 10}, {pos, 5},
+               {right, 10}, {pos, 3},
+               {right, 2}, {pos, 5},
                {left, 4}, {pos, 1},
                {right, 2}, {pos, 3},
-               {left, 10}, {pos, 1}
+               {left, 10}, {pos, 3}
               ],
     lists:foldl(fun check/2, Z, Actions),
     ok.
@@ -63,10 +64,18 @@ position_test() ->
 check({get, Res}, Z) ->
     ?assertEqual(Res, list_zipper:get(Z)),
     Z;
+check({set, Val}, Z) ->
+    list_zipper:set(Z, Val);
 check({pos, Res}, Z) ->
     ?assertEqual(Res, list_zipper:position(Z)),
     Z;
 check({Action, Arg}, Z) ->
-    list_zipper:Action(Z, Arg);
+    case list_zipper:Action(Z, Arg) of
+        {ok, Z2} -> Z2;
+        {error, _} -> Z
+    end;
 check(Action, Z) ->
-    list_zipper:Action(Z).
+    case list_zipper:Action(Z) of
+        {ok, Z2} -> Z2;
+        {error, _} -> Z
+    end.

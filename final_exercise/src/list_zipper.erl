@@ -20,28 +20,34 @@ to_list({Left, Current, Right, _}) ->
     lists:reverse(Left) ++ [Current | Right].
 
 
--spec left(lz()) -> lz().
-left({[], _, _, _} = Zipper) -> Zipper;
+-spec left(lz()) -> {ok, lz()} | {error, no_move}.
+left({[], _, _, _}) -> {error, no_move};
 left({[H | Left], Current, Right, Position}) ->
-    {Left, H, [Current | Right], Position - 1}.
+    {ok, {Left, H, [Current | Right], Position - 1}}.
 
 
--spec left(lz(), pos_integer()) -> lz().
-left(Zipper, 0) -> Zipper;
+-spec left(lz(), pos_integer()) -> {ok, lz()} | {error, no_move}.
+left(Zipper, 0) -> {ok, Zipper};
 left(Zipper, Steps) when Steps > 0 ->
-    left(left(Zipper), Steps - 1).
+    case left(Zipper) of
+        {ok, Zipper2} -> left(Zipper2, Steps - 1);
+        Error -> Error
+    end.
 
 
--spec right(lz()) -> lz().
-right({_, _, [], _} = Zipper) -> Zipper;
+-spec right(lz()) -> {ok, lz()} | {error, no_move}.
+right({_, _, [], _}) -> {error, no_move};
 right({Left, Current, [H | Right], Position}) ->
-    {[Current | Left], H, Right, Position + 1}.
+    {ok, {[Current | Left], H, Right, Position + 1}}.
 
 
--spec right(lz(), pos_integer()) -> lz().
-right(Zipper, 0) -> Zipper;
+-spec right(lz(), pos_integer()) -> {ok, lz()} | {error, no_move}.
+right(Zipper, 0) -> {ok, Zipper};
 right(Zipper, Steps) when Steps > 0 ->
-    right(right(Zipper), Steps - 1).
+    case right(Zipper) of
+        {ok, Zipper2} -> right(Zipper2, Steps - 1);
+        Error -> Error
+    end.
 
 
 -spec get(lz()) -> any().

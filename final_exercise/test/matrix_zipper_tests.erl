@@ -78,13 +78,16 @@ position_test() ->
     Actions = [
                {get, 1}, {pos, {1,1}},
                {right, 2}, {get, 3}, {pos, {3, 1}},
-               {right, 2}, {get, 4}, {pos, {4, 1}},
+               {right, 2}, {get, 3}, {pos, {3, 1}}, % invalid move
+               {right, 1}, {get, 4}, {pos, {4, 1}},
                {down, 2}, {get, 12}, {pos, {4, 3}},
                down, {get, 16}, {pos, {4, 4}},
                {down, 10}, {get, 16}, {pos, {4, 4}},
                {left, 1}, {get, 15}, {pos, {3, 4}},
                {up, 2}, {get, 7}, {pos, {3, 2}},
-               {left, 10}, {get, 5}, {pos, {1, 2}}
+               {left, 10}, {get, 5}, {pos, {1, 2}}, % invalid move
+               {up, 10}, {get, 5}, {pos, {1, 2}}, % invalid move
+               {up, 1}, {get, 1}, {pos, {1, 1}}
               ],
     lists:foldl(fun check/2, Z, Actions),
     ok.
@@ -93,10 +96,18 @@ position_test() ->
 check({get, Res}, Z) ->
     ?assertEqual(Res, matrix_zipper:get(Z)),
     Z;
+check({set, Val}, Z) ->
+    matrix_zipper:set(Z, Val);
 check({pos, Res}, Z) ->
     ?assertEqual(Res, matrix_zipper:position(Z)),
     Z;
 check({Action, Arg}, Z) ->
-    matrix_zipper:Action(Z, Arg);
+    case matrix_zipper:Action(Z, Arg) of
+        {ok, Z2} -> Z2;
+        {error, _} -> Z
+    end;
 check(Action, Z) ->
-    matrix_zipper:Action(Z).
+    case matrix_zipper:Action(Z) of
+        {ok, Z2} -> Z2;
+        {error, _} -> Z
+    end.
