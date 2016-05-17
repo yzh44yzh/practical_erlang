@@ -11,6 +11,8 @@
 -export_type([lz/0]).
 
 
+%%% Module API
+
 -spec from_list(list()) -> lz().
 from_list([H | T]) ->
     {[], H, T, 1}.
@@ -66,7 +68,7 @@ position({_, _, _, Position}) -> Position.
 
 -spec find(lz(), any()) -> {ok, lz()} | {error, not_found}.
 find(Zipper, Value) ->
-    Begin = from_list(to_list(Zipper)),
+    {ok, Begin} = left(Zipper, position(Zipper) - 1),
     case list_zipper:get(Begin) of
         Value -> {ok, Begin};
         _ -> find_right(Begin, Value)
@@ -82,6 +84,8 @@ find_right(Zipper, Value) ->
 find_left(Zipper, Value) ->
     find_direction(Zipper, Value, left).
 
+
+%%% Inner Functions
 
 -spec find_direction(lz(), any(), left | right) -> {ok, lz()} | {error, not_found}.
 find_direction(Zipper, Value, Direction) ->

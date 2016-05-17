@@ -7,7 +7,7 @@
          down/1, down/2,
          get/1, set/2,
          position/1,
-         find/2
+         find/2, find_left/2, find_right/2, find_up/2, find_down/2
         ]).
 
 -type matrix() :: [[any()]].
@@ -89,9 +89,32 @@ position(Zipper) ->
 
 
 -spec find(mz(), term()) -> {ok, mz()} | {error, not_found}.
-find(Zipper, _Value) ->
-    %% TODO need list_zipper:find
-    {ok, Zipper}.
+find(Zipper, Value) ->
+    {ok, Begin} = up(Zipper, list_zipper:position(Zipper) - 1),
+    case find_curr_row(Begin, Value, find) of
+        {ok, Zipper2} -> {ok, Zipper2};
+        {error, not_found} -> find_next_row(Begin, Value)
+    end.
+
+
+-spec find_left(mz(), term()) -> {ok, mz()} | {error, not_found}.
+find_left(Zipper, Value) ->
+    find_curr_row(Zipper, Value, find_left).
+
+
+-spec find_right(mz(), term()) -> {ok, mz()} | {error, not_found}.
+find_right(Zipper, Value) ->
+    find_curr_row(Zipper, Value, find_right).
+
+
+-spec find_up(mz(), term()) -> {ok, mz()} | {error, not_found}.
+find_up(Zipper, Value) ->
+    find_direction(Zipper, Value, up, find_up).
+
+
+-spec find_down(mz(), term()) -> {ok, mz()} | {error, not_found}.
+find_down(Zipper, Value) ->
+    find_direction(Zipper, Value, down, find_down).
 
 
 %%% Inner Functions
@@ -123,4 +146,34 @@ change_row(Zipper, Direction, Steps) ->
                             end),
             {ok, Zipper3};
         Error -> Error
+    end.
+
+
+find_curr_row(Zipper, Value, Fun) ->
+    CurrRow = list_zipper:get(Zipper),
+    case list_zipper:Fun(CurrRow, Value) of
+        {ok, CurrRow2} -> {ok, list_zipper:set(Zipper, CurrRow2)};
+        Error -> Error
+    end.
+
+
+find_next_row(Zipper, Value) ->
+    case down(Zipper) of
+        {ok, Zipper2} ->
+            case find_curr_row(Zipper2, Value, find) of
+                {ok, Zipper3} -> {ok, Zipper3};
+                {error, not_found} -> find_next_row(Zipper2, Value)
+            end;
+        {error, no_move} -> {error, not_found}
+    end.
+
+
+find_direction(Zipper, Value, MoveDirection, FindDirection) ->
+    CurrRow = list_zipper:get(Zipper),
+    case list_zipper:get(CurrRow) of
+        Value -> {ok, Zipper};
+        _ -> case ?MODULE:MoveDirection(Zipper) of
+                 {ok, Zipper2} -> ?MODULE:FindDirection(Zipper2, Value);
+                 {error, no_move} -> {error, not_found}
+             end
     end.
