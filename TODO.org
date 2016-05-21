@@ -8,8 +8,7 @@
 * TODO курсовая работа
 - ff_game
   + list_zipper:find + tests
-  + matrix_zipper:find
-    - tests for 5 find functions
+  + matrix_zipper:find + tests
   - move (unit tests for each step)
     + find player on field (x,y)
     - move player to direction
