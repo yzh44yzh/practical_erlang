@@ -52,5 +52,12 @@ no_params_in_data_test() ->
     Out = <<"quick brown  jump over lazy ">>,
     Data = #{<<"param1">> => <<"value1">>, <<"param2">> => <<"value1">>},
     ?assertEqual(Out, template:parse(In, Data)),
+    ok.
 
+
+unicode_data_in_test() ->
+    In = <<"Привет {{имя}}!"/utf8>>,
+    Out = <<"Привет Петя!"/utf8>>,
+    Data = #{<<"имя"/utf8>> => <<"Петя"/utf8>>},
+    ?assertEqual(Out, template:parse(In, Data)),
     ok.
