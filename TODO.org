@@ -26,7 +26,6 @@ md не нужен, только презентация
 ПЗ. что-то не то с очередностью данных то ли в dropwhile, то ли еще где-то
 
 
-
 * pattern matching
 добавить объяснение про синтаксис:
 в конце строки может быть запятая, точка с запятой, точка, ничего
@@ -68,28 +67,29 @@ map перенести в предудыщую тему, kv структуры
 подготовить к практике MapReduce, показать, как можно наладить общение между потоками
 
 
-* gen_server_1
+* TODO gen_server_1
 этапы по-другому
-- loop, echo messages
-- state and handle messages: add, remove, show, stop
-- hot code upgrate
-- public api, reply to client (duplicated code)
-- timeout
-- refactor call
-- refactor loop, вынести handle_call
++ loop, echo messages
++ state and handle messages: add, remove, show, stop
+  log error for unknown msg
++ hot code upgrate
++ public api
++ reply to client (duplicated code)
++ timeout
++ refactor call
++ refactor loop, вынести handle_call
 - ref
-- monitor? -- это можно и не делать
+- monitor
+  показать краш на handle_call, и как он ловится монитором
 
-схема из 4х квадратов, как в gen_server_2 только для нашей кастомной реализации
+- написать и протестить все этапы
+- поправить lesson.md
+- схема из 4х квадратов, как в gen_server_2 только для нашей кастомной реализации
 
 
 * gen_server_2
 схема deadlock
 прямой и через цепочку вызовов
-
-
-* link
-косяк вышел, нормальное завершение потока не убивает связаные потоки
 
 
 * supervisor
@@ -106,6 +106,7 @@ simple_one_for_one, можно ли остановить/удалить child?
 - cowboy, cowlib, ranch -- пример OTP приложений
 - схема -- проблема с транзитивными либами
 
+
 * обработка ошибок
 - рассказать про pipeline
 - показать, как это выглядит на OCaml (Haskell)
@@ -117,7 +118,6 @@ simple_one_for_one, можно ли остановить/удалить child?
   возможно есть смысл разбивать один урок на несколько презентаций.
   Например, тему 01 можно разбрить.
 - все картинки вставить туда
-можно и с компа показывать, можно и самому смотреть на планшете
 
 
 * Факультативные минитемы
@@ -125,10 +125,7 @@ simple_one_for_one, можно ли остановить/удалить child?
 - bit syntax
 
 
-
-
-
-* TODO курсовая работа
+* курсовая работа
 - ff_game
   + list_zipper:find + tests
   + matrix_zipper:find + tests
@@ -170,9 +167,6 @@ https://github.com/Hexlet/docs/blob/master/create-lesson.md
 
 Dockerfile для установки Erlang, Rebar, Relx
 https://registry.hub.docker.com/u/correl/erlang/dockerfile/
-
-
-* урок по raft
 
 
 * Designing for <anything> with Erlang
