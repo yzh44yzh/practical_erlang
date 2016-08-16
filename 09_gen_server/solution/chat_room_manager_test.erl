@@ -93,6 +93,8 @@ user_test() ->
     ?assertEqual({ok, [<<"Helen">>, <<"Bob">>]}, chat_room_manager:get_users_list(Server, Room1)),
     ?assertEqual({ok, [<<"Kate">>, <<"Bill">>]}, chat_room_manager:get_users_list(Server, Room2)),
 
+    {error, user_is_in_room} = chat_room_manager:add_user(Server, Room1, <<"Helen">>),
+
     {error, room_not_found} = chat_room_manager:remove_user(Server, make_ref(), <<"Bob">>),
     {error, user_not_in_room} = chat_room_manager:remove_user(Server, Room2, <<"Bob">>),
     ok = chat_room_manager:remove_user(Server, Room1, <<"Bob">>),
