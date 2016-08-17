@@ -119,9 +119,13 @@ handle_call(get_rooms, #state{rooms = Rooms} = State) ->
 handle_call({add_user, RoomId, UserName}, #state{rooms = Rooms} = State) ->
     case maps:find(RoomId, Rooms) of
         {ok, #room{users = Users} = Room} ->
-            Room2 = Room#room{users = [UserName | Users]},
-            Rooms2 = maps:put(RoomId, Room2, Rooms),
-            {ok, State#state{rooms = Rooms2}};
+            case lists:member(UserName, Users) of
+                false ->
+                    Room2 = Room#room{users = [UserName | Users]},
+                    Rooms2 = maps:put(RoomId, Room2, Rooms),
+                    {ok, State#state{rooms = Rooms2}};
+                true -> {{error, user_is_in_room}, State}
+            end;
         error -> {{error, room_not_found}, State}
     end;
 
