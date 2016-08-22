@@ -4,10 +4,24 @@
 данных.  И в эрланг они есть. И поскольку они очень востребованы в
 любом проекте, рассмотрим их подробнее.
 
-Тема большая, поэтому я разделил ее на два урока. На этом уроке мы
-рассмотрим **proplists**, **dict**, **orddirt** и **gb_trees**.
-А на следующем **maps** и **ets таблицы**.
+TODO: сформулировать материал по конспекту:
 
+```
+    Нативные: **maps**
+    Построенные на базе списков и кортежей: **proplists**, **dict**, **orddirt** и **gb_trees**.
+
+    maps появились с 17й версии
+    dict, orddict, gb_trees после этого стали легаси.
+    Использовать их не нужно, но знать нужно, потому что они встречаются в старых проектах и в библиотеках.
+    proplists, однако, остаются популярными
+
+    CRUD api + map/filter/fold + свои фишки
+    неконсистентность CRUD в разных модулях
+
+    2 варианта функций:
+    - бросающие исключение
+    - возвращающие специальные значения {ok, Value} | error
+```
 
 ## proplists
 
@@ -103,292 +117,192 @@ none
 берем proplists.  Ибо в этой ситуации его эффективность не важна.
 
 
-## dict
+## dict, orddict, gb_trees
 
-Модуль [dict](http://www.erlang.org/doc/man/dict.html) мощнее и эффективнее.
+[dict](http://www.erlang.org/doc/man/dict.html)
+[orddict](http://www.erlang.org/doc/man/orddict.html)
+[gb_trees](http://www.erlang.org/doc/man/gb_trees.html)
 
-Он уже предлагает полный CRUD API (Create, Read, Update, Delete)
-и некоторые функции сверх того.
+|| свойства || proplists                  || dict, orddict          || gb\_trees                     ||
+| new       |                             | new()                   | empty()                         |
+| create    | [{k,v} | PL]                | store(K, V, D)          | insert(K, V, T), enter(K, V, T) |
+| read      | proplists:get\_value(K, PL) | fetch(K, D), find(K, V) | get(K, T), lookup(K, T)         |
+| update    | [{k,v} | PL]                | store(K, V, D)          | update(K, V, T), enter(K, V, T) |
+| delete    | proplists:delete(K, PL)     | erase(K, D)             | delete(K, T), delete_any(K, T)  |
+| map       | lists:map(F, PL)            | map(F, D)               | map(F, T)                       |
+| filter    | lists:filter(F, PL)         | filter(F, D)            | -                               |
+| fold      | lists:foldl(F, A, PL)       | fold(F, A, D)           | -                               |
+| other     |                             | to\_list, from\_list    | iterator, next                  |
 
-Для начала словарь нужно создать:
+
+## maps
+
+Все, описанные выше структуры данных: **proplists**, **dict**, **orddict**,
+**gb_trees**, реализованы поверх списков и кортежей, то есть, средствами
+самого языка эрланг.  Понятно, что эти реализации будут уступать по
+эффективности аналогичным структурам в императивных языках.
+
+В отличие от них, модуль [maps](http://www.erlang.org/doc/man/maps.html) реализован внутри виртуальной
+машины, средствами языка С. Так что от него вполне можно ожидать
+большей эффективности.
+
+Модуль появился недавно, в 17-й версии эрланг. И пока что не считается
+стабильным. Работа по нему еще идет, и в новых версиях **maps** будут
+улучшаться.
+
+Помимо функций модуля, есть еще синтаксический сахар, похожий на сахар
+для **records**. Это похожесть вносит некоторую путаницу. Разработчики думают,
+что **maps** являются улучшенной версией **records** и должны
+их заменить. Это не так, **maps** являются улучшенной версией
+**dict**, и должны заменить **dict** и **proplists**. А **records** вообще не являются
+key-value структурой, и имеют совсем другое применение.
+
+Из-за их новизны, maps не описаны в книгах. Только у Фреда Хеберта
+есть [отдельная глава](http://learnyousomeerlang.com/maps), добавленная позже в онлайн версию книги.
+Но она отсутствует в бумажной версии.
+
+Давайте попробуем CRUD API.
+
+Создание новой карты **maps:new/0**:
 
 ```erlang
-1> Dict = dict:new().
-{dict,0,16,16,8,80,48,
-      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
-      {{[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]}}}
+1> M = maps:new().
+ #{}
+```
+тоже самое с синтаксическим сахаром:
+
+```erlang
+3> M = #{key1 => "value 1", key2 => "value 2"}.
+ #{key1 => "value 1",key2 => "value 2"}
 ```
 
-Затем можно добавлять новые значения функцией **store/3**.
+Добавление новых и изменение существующих элементов **maps:put/3**:
 
 ```erlang
-2> Dict2 = dict:store(key1, "val 1", Dict).
-{dict,1,16,16,8,80,48,
-      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
-      {{[],
-        [[key1,118,97,108,32,49]],
-        [],[],[],[],[],[],[],[],[],[],[],[],[],[]}}}
-3> Dict3 = dict:store(key2, "val 2", Dict2).
-{dict,2,16,16,8,80,48,
-      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
-      {{[],
-        [[key1,118,97,108,32,49]],
-        [[key2,118,97,108,32,50]],
-        [],[],[],[],[],[],[],[],[],[],[],[],[]}}}
+2> M2 = maps:put(key1, "value 1", M).
+ #{key1 => "value 1"}
+3> M3 = maps:put(key2, "value 2", M2).
+ #{key1 => "value 1",key2 => "value 2"}
+5> M4 = maps:put(key2, "new value", M3).
+ #{key1 => "value 1",key2 => "new value"}
 ```
 
-Как мы видим внутреннее представление это структуры
-довольно сложное, читать его в консоли и в логах неудобно.
-Тут на помощью придет функция **to\_list/1**
+тоже самое с синтаксическим сахаром:
 
 ```erlang
-4> dict:to_list(Dict2).
-[{key1,"val 1"}]
-5> dict:to_list(Dict3).
-[{key1,"val 1"},{key2,"val 2"}]
+1> M = #{key1 => "value 1", key2 => "value 2"}.
+ #{key1 => "value 1",key2 => "value 2"}
+2> M2 = M#{key3 => "value 3"}.
+ #{key1 => "value 1",key2 => "value 2",key3 => "value 3"}
+3> M3 = M2#{key3 => "new value"}.
+ #{key1 => "value 1",key2 => "value 2",key3 => "new value"}
 ```
 
-Она просто превращает dict в proplists, и в таком виде данные читаются
-гораздо лучше.
-
-Обратная функция **from\_list/1** тоже есть:
+Изменение существующих элементов **maps:update/3**:
 
 ```erlang
-6> dict:from_list([{key1, "val 1"}, {key2, "val 2"}]).
-{dict,2,16,16,8,80,48,
-      {[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]},
-      {{[],
-        [[key1,118,97,108,32,49]],
-        [[key2,118,97,108,32,50]],
-        [],[],[],[],[],[],[],[],[],[],[],[],[]}}}
-```
-
-Для изменения значения в словаре тоже используем функцию **store/3**
-
-```erlang
-7> Dict4 = dict:store(key1, "new val", Dict3).
-8> dict:to_list(Dict4).
-[{key1,"new val"},{key2,"val 2"}]
-```
-
-Далее, у нас есть две функции для чтения значения по ключу:
-
-```erlang
-9> dict:fetch(key1, Dict4).
-"new val"
-10> dict:fetch(key777, Dict4).
+6> M5 = maps:update(key1, "new value", M4).
+ #{key1 => "new value",key2 => "value 2"}
+7> M6 = maps:update(key777, "new value", M5).
 ** exception error: bad argument
-11> dict:find(key1, Dict4).
-{ok,"new val"}
-12> dict:find(key777, Dict4).
+     in function  maps:update/3
+        called as maps:update(key777,"new value",#{key1 => "new value",key2 => "value 2"})
+```
+
+тоже самое с синтаксическим сахаром:
+
+```erlang
+1> M = #{key1 => "value 1", key2 => "value 2"}.
+ #{key1 => "value 1",key2 => "value 2"}
+2> M2 = M#{key1 := "new value"}.
+ #{key1 => "new value",key2 => "value 2"}
+3> M3 = M#{key77 := "new value"}.
+** exception error: bad argument
+     in function  maps:update/3
+        called as maps:update(key77,"new value",#{key1 => "value 1",key2 => "value 2"})
+     in call from erl_eval:'-expr/5-fun-0-'/2 (erl_eval.erl, line 255)
+     in call from lists:foldl/3 (lists.erl, line 1261)
+```
+
+**put** и **update** можно делать одновременно:
+
+```erlang
+21> M4 = M#{key1 := "new value", key3 => "value 3"}.
+ #{key1 => "new value",key2 => "value 2",key3 => "value 3"}
+```
+
+Как видим, изменять элемент можно и функцией **put** и функцией **update**.
+Но в случае, если ключ отсутствует, то **put** добавляет новый элемент,
+а **update** бросает исключение.
+
+Получение элемента по ключу **maps:find/2**, **maps:get/2**:
+
+```erlang
+8> maps:get(key1, M5).
+"new value"
+9> maps:get(key777, M5).
+** exception error: bad_key
+     in function  maps:get/2
+        called as maps:get(key777,#{key1 => "new value",key2 => "value 2"})
+10> maps:get(key777, M5, "default value").
+"default value"
+11> maps:find(key1, M5).
+{ok,"new value"}
+12> maps:find(key777, M5).
 error
 ```
 
-Функция **fetch/2** возвращает значение, если ключ найден. Или бросает
-исключение, если такого ключа нет.  Функция **find/2** возвращает
-кортеж **{ok, Val}**, если ключ найден, или атом **error**, если ключа нет.
+Опять две функции с разным поведением в случае отсутствия ключа.
 
-Как видим, у нас есть два разных подхода к ситуации, когда ключ не
-найден.  Почему так, и какой подход в какой ситуации нужно
-использовать, мы выясним на одном из последующих уроков, когда будем
-изучать обработку ошибок.
-
-Ну и для удаления ключа из словаря используем функцию **erase/2**:
+Сахар работает частично.  Обращение по ключу не работает, но
+извлечение значений с помощью сопоставления с образцом работает:
 
 ```erlang
-13> Dict5 = dict:erase(key1, Dict4).
-14> dict:to_list(Dict5).
-[{key2,"val 2"}]
+1> M = #{key1 => "value 1", key2 => "value 2"}.
+ #{key1 => "value 1",key2 => "value 2"}
+2> M#{key1}.
+* 3: syntax error before: '}'
+3> #{key1 := Val} = M.
+ #{key1 => "value 1",key2 => "value 2"}
+4> Val.
+"value 1"
 ```
 
-Это полный CRUD API, но кроме него в модуле dict есть и другие интересные функции.
-
-Есть возможность для одного ключа хранить несколько значений.  Для
-этого значения добавляются функцией **append/3** или **append_list/3**:
+Удаление элемента по ключу **maps:remove/2**:
 
 ```erlang
-1> D = dict:new().
-2> D2 = dict:append(key1, "value 1", D).
-3> D3 = dict:append(key1, "value 2", D2).
-4> dict:to_list(D3).
-[{key1,["value 1","value 2"]}]
-5> D4 = dict:append_list(key1, ["value 3", "value 4"], D3).
-6> dict:to_list(D4).
-[{key1,["value 1","value 2","value 3","value 4"]}]
+12> maps:remove(key1, M5).
+ #{key2 => "value 2"}
+13> maps:remove(key777, M5).
+ #{key1 => "new value",key2 => "value 2"}
 ```
 
-Еще есть функции высшего порядка **map/2**, **filter/2**, **fold/3**.
-Они аналогичны функциям модуля **lists**, но принимают на вход словарь,
-и на выходе отдают словарь.
+А здесь только одна функция. Ну модуль будет дорабатываться, возможно еще добавят :)
+
+Помимо CRUD API еще есть функции высшего порядка **maps:map/2** и **maps:fold/3**.
+Функции **filter** нету.
 
 ```erlang
-1> D = dict:new().
-2> D2 = dict:store(1, "Bob", D).
-3> D3 = dict:store(2, "Bill", D2).
-4> D4 = dict:store(3, "Helen", D3).
-5> dict:to_list(D4).
-[{3,"Helen"},{2,"Bill"},{1,"Bob"}]
+1> M = #{key1 => "Bob", key2 => "Bill", key3 => "Helen"}.
+ #{key1 => "Bob",key2 => "Bill",key3 => "Helen"}
+2> maps:map(fun(K, V) -> string:to_upper(V) end, M).
+ #{key1 => "BOB",key2 => "BILL",key3 => "HELEN"}
+3> maps:fold(fun(K, V, Acc) -> [V | Acc] end, [], M).
+["Helen","Bill","Bob"]
 ```
+
+Еще есть полезная функция **maps:merge/2**, которая сливает две карты в одну:
 
 ```erlang
-6> D5 = dict:map(fun(Key, Val) -> string:to_upper(Val) end, D4).
-8> dict:to_list(D5).
-[{3,"HELEN"},{2,"BILL"},{1,"BOB"}]
+1> M1 = #{key1 => "Val 1", key2 => "Val 2"}.
+ #{key1 => "Val 1",key2 => "Val 2"}
+2> M2 = #{key2 => "Val 222", key3 => "Val 3"}.
+ #{key2 => "Val 222",key3 => "Val 3"}
+3> maps:merge(M1, M2).
+ #{key1 => "Val 1",key2 => "Val 222",key3 => "Val 3"}
+4> maps:merge(M2, M1).
+ #{key1 => "Val 1",key2 => "Val 2",key3 => "Val 3"}
 ```
 
-```erlang
-9> D6 = dict:filter(fun(Key, Val) -> length(Val) > 3 end, D4).
-10> dict:to_list(D6).
-[{3,"Helen"},{2,"Bill"}]
-```
-
-```erlang
-11> dict:fold(fun(Key, Val, {KeySum, AllVals}) -> {KeySum + Key, [Val | AllVals]} end, {0, []}, D4).
-{6,["Helen","Bill","Bob"]}
-```
-
-Обратите внимание, не foldl, не foldr, а просто fold. Поскольку ключи
-в словаре не подразумевают определенной последовательности, то и
-направление свертки не имеет смысла.
-
-
-## orddict
-
-Модуль [orddict](http://www.erlang.org/doc/man/orddict.html)
-аналогичен модулю dict, и предоставляет точно такие же функции. Но
-хранит ключи в сортированом виде.  Это позволяет чуть быстрее
-извлекать значения по ключу, но чуть медленее добавлять значения.
-
-Фред Хеберт в своей книге [пишет](http://learnyousomeerlang.com/a-short-visit-to-common-data-structures#key-value-stores)
-что orddict эффективен для небольших структур, порядка 75 элементов.
-Если так, то смысла использовать orddict нет, для такого набора данных
-и proplists вполне годится.
-
-Однако, выбирая структуру данных для своего проекта, в тех случаях,
-когда важна производительность, вы должны сами пробовать разные
-структуры, и сами проводить бенчмарки на своих данных.
-
-
-## gb_trees
-
-Модуль [gb_trees](http://www.erlang.org/doc/man/gb_trees.html) предлагает еще одну key-value структуру данных.
-
-gb_trees означает General Balanced Trees, то есть сбалансированное
-дерево общего назначения.  Если вы изучали алгоритмы, то знаете, что
-деревья -- эффективные структуры данных, которые обеспечивают доступ к
-своим элементам за логарифмическое время.  Но для этого нужно, чтобы
-глубина всех веток дерева была примерно одинаковая.  Значит деревья
-должны уметь перемещать свои узлы из одной ветки в другую, то есть,
-балансироваться.
-
-Понятно, что балансировка сама по себе требует какого-то времени.
-В **gb\_trees** она выполняется после каждого добавления нового элемента.
-Но не выполняется при модификации и удалении элемента.
-
-Модуль **gb\_trees** тоже предоставляет CRUD API и некоторые функции сверх того.
-
-Создадим дерево:
-
-```erlang
-1> T = gb_trees:empty().
-{0,nil}
-```
-
-Добавим в него значения:
-
-```erlang
-2> T2 = gb_trees:insert(key1, "value 1", T).
-{1,{key1,"value 1",nil,nil}}
-3> T3 = gb_trees:insert(key2, "value 2", T2).
-{2,{key1,"value 1",nil,{key2,"value 2",nil,nil}}}
-4> T4 = gb_trees:insert(key2, "value 2", T3).
-** exception error: {key_exists,key2}
-```
-
-Как видим, функция **insert/3** не позволяет добавлять один и тот же
-ключ дважды, бросает исключение в этой ситуации.
-
-Модифицируем значения:
-
-```erlang
-5> T4 = gb_trees:update(key1, "new value", T3).
-{2,{key1,"new value",nil,{key2,"value 2",nil,nil}}}
-6> T5 = gb_trees:update(key777, "new value", T4).
-** exception error: no function clause matching gb_trees:update_1(key777,"new value",nil) (gb_trees.erl, line 258)
-```
-
-Функция **update/3** бросает исключение, если ключа в дереве нет.
-
-```erlang
-7> T5 = gb_trees:enter(key777, "new value", T4).
-{3,
- {key1,"new value",nil,
-       {key2,"value 2",nil,{key777,"new value",nil,nil}}}}
-8> T6 = gb_trees:enter(key2, "new value", T5).
-{3,
- {key1,"new value",nil,
-       {key2,"new value",nil,{key777,"new value",nil,nil}}}}
-```
-
-А функция **enter/3** исключений не бросает. Если ключа нет, она его
-добавляет, а если ключ есть, то изменяет значение.
-
-Теперь попробуем получить значения по ключу:
-
-```erlang
-12> gb_trees:get(key1, T6).
-"new value"
-13> gb_trees:get(some_key, T6).
-** exception error: no function clause matching gb_trees:get_1(some_key,nil) (gb_trees.erl, line 239)
-14> gb_trees:lookup(key1, T6).
-{value,"new value"}
-15> gb_trees:lookup(some_key, T6).
-none
-```
-
-Здесь у нас две функции. **get/2** бросает исключение, если ключа в
-дереве нет, а **lookup/2** возвращает либо кортеж **{value, Value}**, либо
-атом **none**.
-
-Ну и попробуем удалить ключ:
-
-```erlang
-16> gb_trees:delete(key1, T6).
-{2,{key2,"new value",nil,{key777,"new value",nil,nil}}}
-17> gb_trees:delete(some_key, T6).
-** exception error: no function clause matching gb_trees:delete_1(some_key,nil) (gb_trees.erl, line 403)
-19> gb_trees:delete_any(key1, T6).
-{2,{key2,"new value",nil,{key777,"new value",nil,nil}}}
-20> gb_trees:delete_any(some_key, T6).
-{3,
- {key1,"new value",nil,
-       {key2,"new value",nil,{key777,"new value",nil,nil}}
-```
-
-И опять у нас две функции, которые по-разному реагируют на отсутствие
-ключа.  **delete/2** бросает исключение, а **delete_any/2** просто
-возвращает дерево без изменений.
-
-Мы уже видели это в модуле **dict**, и договорились, что разберем
-необходимость таких вариантов поведения на одном из последующих
-уроков, когда будем изучать обработку ошибок.
-
-По CRUD API все, теперь дополнительные функции:
-
-В **gb_trees** есть **map/2**, но нету **filter** и **fold**.
-
-```erlang
-22> gb_trees:map(fun(Key, Value) -> string:to_upper(Value) end, T6).
-{3,
- {key1,"NEW VALUE",nil,
-       {key2,"NEW VALUE",nil,{key777,"NEW VALUE",nil,nil}}}}
-```
-
-Есть функции **iterator/1** и **next/1**, которые позволяют организовать
-обход дерева. В качестве альтернативы можно преобразовать дерево в
-proplists с помощью **to\_list/1**, и делать обход списка.
-
-Первый вариант немного медленнее, но экономит память. Второй вариант
-быстрее, но требует выделения лишней памяти.
-
-Кстати, функции **from_list/1** нету, есть только **from_orddict/1**.
+В случае, если обе карты имеют одинаковый ключ, то значение берется из
+карты, идущей вторым аргументом.
