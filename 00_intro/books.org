@@ -1,0 +1,42 @@
+* Книги по Erlang
+
+
+** 1й уровень, классика
+
+Programming Erlang: Software for a Concurrent World
+Joe Armstrong
+2-е издание, 2013.
+https://www.amazon.co.uk/Programming-Erlang-Concurrent-Pragmatic-Programmers/dp/193778553X/
+[./img/01_programming_erlang_armstrong.jpg]
+
+
+Erlang Programming
+Francesco Cesarini, Simon Thompson
+https://www.amazon.co.uk/Erlang-Programming-Francesco-Cesarini/dp/0596518188/
+http://oz.by/books/more10251599.html?sbtoken=7588e6c4c76cac09778e59994923cd75
+[./img/02_erlang_programming_cesarini.jpg]
+
+
+** 1й уровень, новые книги
+
+Learn You Some Erlang for Great Good!
+Fred Hebert
+https://www.amazon.co.uk/Learn-Some-Erlang-Great-Good/dp/1593274351/
+http://learnyousomeerlang.com/
+http://oz.by/books/more10383255.html?sbtoken=7588e6c4c76cac09778e59994923cd75
+[./img/03_lyse_hebert.jpg]
+
+
+
+** 2й уровень
+
+Stuff Goes Bad: Erlang in Anger
+Fred Hebert
+https://www.erlang-in-anger.com/
+[./img/04_erlang_in_anger_hebert.png]
+
+
+Designing for Scalability with Erlang/OTP
+Francesco Cesarini, Steve Vinoski
+https://www.amazon.co.uk/Designing-Scalability-Erlang-OTP-Fault-Tolerant/dp/1449320732/
+[./img/05_designing_for_scalability_cesarini.jpg]
