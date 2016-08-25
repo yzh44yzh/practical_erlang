@@ -1,0 +1,89 @@
+В перспективе этот курс нужно будет переделать на Elixir.
+(Или сделать отдельный аналогичный на Elixir).
+Но пока у меня самого нет опыта с ним.
+Выкачу пару проектов на Elixir в прод, тогда можно будет подумать и про курс.
+
+
+* Август 2016
+
+Читал 2 раза для групп по 10 человек. 4 занятия по 4 часа -- 16 часов.
+
+1-я группа
+1-е занятие: 1-3 темы
+2-е занятие: 4-6 темы
+3-е занятие: 7-9 темы
+4-е занятие: 10-15 темы (только теория)
+16-ю тему не успел.
+
+2-я группа
+1-е занятие: 0-2 темы
+2-е занятие: 3-5 темы
+3-е занятие: 6-8 темы
+4-е занятие:
+
+
+16 часов мало, нужно 20.
+Оптимально: 5 занятий по 4 часа.
+Можно 4 занятия по 5 часов.
+Эсктремально: 3 занятия по 6 часов (это если проводить с выездом в другой город).
+
+У 2й группы были трудности с практикой. Функциональная парадигма для многих оказалась неизвестной.
+Возможно есть смысл в отдельном курсе "Основы функционального программирования". Можно на базе Elixir :)
+
+
+* Hexlet
+
+https://github.com/yzh44yzh/practical_erlang/
+
+https://ru.hexlet.io/courses/erlang_101
+
+Дока:
+https://github.com/Hexlet/docs/blob/master/create-lesson.md
+
+Dockerfile для установки Erlang, Rebar, Relx
+https://registry.hub.docker.com/u/correl/erlang/dockerfile/
+
+
+* Designing for <anything> with Erlang
+https://medium.com/@dmitriid/designing-for-anything-with-erlang-cfadb6833bc0#.ctwsdsq0g
+
+пост о том, чего не хватает в книгах по эрлангу
+
+it would be really nice to read up on at least some of these things:
+    setting up multiple nodes
+    testing a distributed app
+    deploying a distributed app
+    handling failover
+    handling load balancing
+    handling netsplits (and not only in Mnesia. If we can add a process on node B to a gen_supervisor on node A, how do we handle netsplits, timeouts, restarts etc.?)
+    discovery of nodes
+    tracing
+    profiling
+    various VM options and their impact
+    securing connection between nodes
+    logging
+    debugging
+    crash dumps
+    remote inspection
+    mitigating overflowing mailboxes
+    SSL
+    sockets
+    working from behind firewalls
+    flood protection
+    slow requests
+    timeouts
+    sessions
+    latency
+    <add your own>
+
+
+
+После этого появились книги:
+
+Stuff Goes Bad: Erlang in Anger. Fred Hebert
+https://www.erlang-in-anger.com/
+
+Designing for Scalability with Erlang/OTP. Francesco Cesarini, Steve Vinoski
+https://www.amazon.co.uk/Designing-Scalability-Erlang-OTP-Fault-Tolerant/dp/1449320732/
+
+Закрывают часть этих вопросов.

@@ -49,26 +49,16 @@ md не нужен, только презентация
 - FIFO
 - receive, patterns, after
 
-подготовить к практике MapReduce, показать, как можно наладить общение между потоками
+добавить про exit(Pid, shutdown)
+
+Подготовить к практике MapReduce, показать, как можно наладить общение между потоками
+
+В практике заменить:
+lists:foldl на maps:fold
+reduce_loop на [wait_data() || _ <- lists:seq(1, NumFiles)]
 
 
 * 09. gen_server_1
-этапы по-другому
-+ loop, echo messages
-+ state and handle messages: add, remove, show, stop
-  log error for unknown msg
-+ hot code upgrate
-+ public api
-+ reply to client (duplicated code)
-+ timeout
-+ refactor call
-+ refactor loop, вынести handle_call
-- ref
-- monitor
-  показать краш на handle_call, и как он ловится монитором
-
-- написать и протестить все этапы
-- поправить lesson.md
 - схема из 4х квадратов, как в gen_server_2 только для нашей кастомной реализации
 
 
@@ -105,11 +95,6 @@ simple_one_for_one, можно ли остановить/удалить child?
 - все картинки вставить туда
 
 
-* Факультативные минитемы
-- память потока и сборщик мусора
-- bit syntax
-
-
 * курсовая работа
 - ff_game
   + list_zipper:find + tests
@@ -135,47 +120,6 @@ simple_one_for_one, можно ли остановить/удалить child?
   tcp-client and game protocol
 
 
-* Инфа
-
-https://github.com/yzh44yzh/practical_erlang/
-
-https://ru.hexlet.io/courses/erlang_101
-
-Дока:
-https://github.com/Hexlet/docs/blob/master/create-lesson.md
-
-Dockerfile для установки Erlang, Rebar, Relx
-https://registry.hub.docker.com/u/correl/erlang/dockerfile/
-
-
-* Designing for <anything> with Erlang
-https://medium.com/@dmitriid/designing-for-anything-with-erlang-cfadb6833bc0#.ctwsdsq0g
-
-пост о том, чего не хватает в книгах по эрлангу
-
-it would be really nice to read up on at least some of these things:
-    setting up multiple nodes
-    testing a distributed app
-    deploying a distributed app
-    handling failover
-    handling load balancing
-    handling netsplits (and not only in Mnesia. If we can add a process on node B to a gen_supervisor on node A, how do we handle netsplits, timeouts, restarts etc.?)
-    discovery of nodes
-    tracing
-    profiling
-    various VM options and their impact
-    securing connection between nodes
-    logging
-    debugging
-    crash dumps
-    remote inspection
-    mitigating overflowing mailboxes
-    SSL
-    sockets
-    working from behind firewalls
-    flood protection
-    slow requests
-    timeouts
-    sessions
-    latency
-    <add your own>
+* Факультативные минитемы
+- память потока и сборщик мусора
+- bit syntax
