@@ -15,27 +15,33 @@ start(Files) ->
     end.
 
 
+%% Reduce thread
+
 reduce(Num, From) ->
-    Data = reduce_loop(Num, maps:new()),
+    DataParts = [wait_data() || _ <- lists:seq(1, Num)],
+    Data = lists:foldl(fun add_part/2, #{}, DataParts),
     From ! {ok, Data},
     ok.
 
-reduce_loop(0, Acc) -> Acc;
-reduce_loop(Num, Acc) ->
+wait_data() ->
     receive
-        {ok, Data} -> reduce_loop(Num - 1, merge(Data, Acc));
-        invalid_file -> reduce_loop(Num - 1, Acc)
+        {ok, Data} -> Data;
+        invalid_file -> #{}
+    after
+        2000 -> #{}
     end.
 
-merge(Data, Acc0) ->
-    lists:foldl(fun({Word, Num}, Acc) ->
-                        case maps:find(Word, Acc) of
-                            {ok, OldNum} -> maps:put(Word, Num + OldNum, Acc);
-                            error -> maps:put(Word, Num, Acc)
-                        end
-                end,
-                Acc0, maps:to_list(Data)).
+add_part(DataPart, Acc0) ->
+    maps:fold(
+      fun(Word, Num, Acc) ->
+              case maps:find(Word, Acc) of
+                  {ok, OldNum} -> Acc#{Word => Num + OldNum};
+                  error -> Acc#{Word => Num}
+              end
+      end, Acc0, DataPart).
 
+
+%% Map thread
 
 map(File, Reduce) ->
     Data = case file:read_file(File) of
@@ -46,11 +52,12 @@ map(File, Reduce) ->
     ok.
 
 parse(Bin) ->
-    Words = lists:map(fun unicode:characters_to_list/1,
-                      binary:split(Bin, [<<" ">>, <<"\n">>, <<"\r">>], [global, trim])),
-    lists:foldl(fun(Word, Map) ->
-                        case maps:find(Word, Map) of
-                            {ok, Num} -> maps:put(Word, Num + 1, Map);
-                            error -> maps:put(Word, 1, Map)
-                        end
-                end, maps:new(), Words).
+    BinWords = binary:split(Bin, [<<" ">>, <<"\n">>, <<"\r">>], [global, trim]),
+    Words = lists:map(fun unicode:characters_to_list/1, BinWords),
+    lists:foldl(
+      fun(Word, Acc) ->
+              case maps:find(Word, Acc) of
+                  {ok, Num} -> Acc#{Word => Num + 1};
+                  error -> Acc#{Word => 1}
+              end
+      end, #{}, Words).
