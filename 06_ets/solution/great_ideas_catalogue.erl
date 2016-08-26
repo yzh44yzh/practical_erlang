@@ -68,12 +68,12 @@ get_authors() ->
     MS = ets:fun2ms(fun(#idea{author = Author}) -> Author end),
     Authors = ets:select(great_ideas_table, MS),
     Authors2 = lists:foldl(fun(Author, Acc) ->
-                                   case proplists:get_value(Author, Acc) of
-                                       undefined -> [{Author, 1} | Acc];
-                                       Num -> lists:keyreplace(Author, 1, Acc, {Author, Num + 1})
+                                   case maps:find(Author, Acc) of
+                                       {ok, Num} -> Acc#{Author => Num + 1};
+                                       error -> Acc#{Author => 1}
                                    end
                            end,
-                           [], Authors),
+                           #{}, Authors),
     lists:sort(fun({N1, I}, {N2, I}) -> N1 < N2;
                   ({_, I1}, {_, I2}) -> I1 > I2
-               end, Authors2).
+               end, maps:to_list(Authors2)).
