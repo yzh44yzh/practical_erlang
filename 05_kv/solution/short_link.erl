@@ -4,27 +4,29 @@
 
 %%% module API
 
+-define(SERVER, "http://hexlet.io/").
+
 init() ->
     %% init randomizer
     <<A:32, B:32, C:32>> = crypto:rand_bytes(12),
     random:seed({A,B,C}),
-    {dict:new(), dict:new()}.
+    {#{}, #{}}.
 
 
 create_short(LongLink, State) ->
-    {LongDict, ShortDict} = State,
-    case dict:find(LongLink, LongDict) of
+    {LongM, ShortM} = State,
+    case maps:find(LongLink, LongM) of
         {ok, ShortLink} -> {ShortLink, State};
-        error -> ShortLink = "http://hexlet.io/" ++ rand_str(8),
-                 LongDict2 = dict:store(LongLink, ShortLink, LongDict),
-                 ShortDict2 = dict:store(ShortLink, LongLink, ShortDict),
-                 {ShortLink, {LongDict2, ShortDict2}}
+        error -> ShortLink = ?SERVER ++ rand_str(8),
+                 LongM2 = LongM#{LongLink => ShortLink},
+                 ShortM2 = ShortM#{ShortLink => LongLink},
+                 {ShortLink, {LongM2, ShortM2}}
     end.
 
 
 get_long(ShortLink, State) ->
     {_, ShortDict} = State,
-    case dict:find(ShortLink, ShortDict) of
+    case maps:find(ShortLink, ShortDict) of
         {ok, LongLink} -> {ok, LongLink};
         error -> {error, not_found}
     end.
