@@ -36,4 +36,6 @@ takewhile_test() ->
     ?assertEqual([32], takewhile(F, [32,3,4])),
     ?assertEqual([32,32], takewhile(F, [32,32,3,4])),
     ?assertEqual([32,32,32,32,32,32], takewhile(F, [32,32,32,32,32,32,3,32,4,32])),
+    F2 = fun(Val) -> Val < 5 end,
+    ?assertEqual([1,2,3,4], takewhile(F2, [1,2,3,4,5,6,7,8])),
     ok.

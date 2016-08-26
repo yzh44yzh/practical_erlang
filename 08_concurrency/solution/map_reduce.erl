@@ -15,7 +15,7 @@ start(Files) ->
     end.
 
 
-%% Reduce thread
+%% Reduce process
 
 reduce(Num, From) ->
     DataParts = [wait_data() || _ <- lists:seq(1, Num)],
@@ -41,7 +41,7 @@ add_part(DataPart, Acc0) ->
       end, Acc0, DataPart).
 
 
-%% Map thread
+%% Map process
 
 map(File, Reduce) ->
     Data = case file:read_file(File) of
@@ -52,8 +52,7 @@ map(File, Reduce) ->
     ok.
 
 parse(Bin) ->
-    BinWords = binary:split(Bin, [<<" ">>, <<"\n">>, <<"\r">>], [global, trim]),
-    Words = lists:map(fun unicode:characters_to_list/1, BinWords),
+    Words = binary:split(Bin, [<<" ">>, <<"\n">>, <<"\r">>], [global, trim]),
     lists:foldl(
       fun(Word, Acc) ->
               case maps:find(Word, Acc) of

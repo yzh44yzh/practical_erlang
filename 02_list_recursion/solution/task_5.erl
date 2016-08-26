@@ -41,4 +41,6 @@ zipwith_test() ->
     ?assertEqual([4], zipwith(F, [1], [3])),
     ?assertEqual([4,6], zipwith(F, [1,2], [3,4])),
     ?assertEqual([2,4,6,8,10], zipwith(F, [1,2,3,4,5], [1,2,3,4,5])),
+    ?assertEqual([2,4,6,8], zipwith(F, [1,2,3,4], [1,2,3,4,5,6])),
+    ?assertEqual([2,4,6,8], zipwith(F, [1,2,3,4,5,6], [1,2,3,4])),
     ok.

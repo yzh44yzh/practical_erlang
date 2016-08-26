@@ -63,6 +63,9 @@ Instante messaging.
 
 concurrency, fault tolerance, distribution, hot code upgrade -- вот это вот все
 
+SMP
+
+soft real time
 
 ## известные проекты
 
