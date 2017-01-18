@@ -47,6 +47,9 @@ https://registry.hub.docker.com/u/correl/erlang/dockerfile/
 * Designing for <anything> with Erlang
 https://medium.com/@dmitriid/designing-for-anything-with-erlang-cfadb6833bc0#.ctwsdsq0g
 
+На сколько новая книжка Чезарини покрывает эти темы?
+Designing for Scalability with Erlang/OTP
+
 пост о том, чего не хватает в книгах по эрлангу
 
 it would be really nice to read up on at least some of these things:
