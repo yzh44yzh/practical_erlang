@@ -1,4 +1,4 @@
-Functional Programming in Erlang
+# Functional Programming in Erlang
 https://www.futurelearn.com/courses/functional-programming-erlang/
 
 They were wanting to build
@@ -152,3 +152,120 @@ your systems behave in a predictable way under extreme heavy load,
 extreme heavy load under an extended period, or under extremely high
 peak load as well. You won't get any degradation of throughput in your
 system.
+
+
+# Concurrent Programming in Erlang
+https://www.futurelearn.com/courses/concurrent-programming-erlang/
+
+
+actor model
+Carl Hewitt
+- everything is an actor
+- actors communicate by messages
+- actors can create other actors
+- change behaviour according to messages
+
+================
+
+
+отправить сообщение по несуществующему pid -- это ок
+отправить сообщение по несуществующему имени -- это ошибка
+
+```
+2> pid(0,200,0) ! hello.
+hello
+3> some ! hello.
+** exception error: bad argument
+     in operator  !/2
+        called as some ! hello
+```
+
+================
+
+rpc(Pid, Request) ->
+    Ref = make_ref(),
+    Pid ! {self(), Ref, Request},
+    receive
+        {Ref, Response} -> Response
+    end.
+
+можно разбить на две части:
+
+promise(Pid, Request) ->
+    Ref = make_ref(),
+    Pid ! {self(), Ref, Request},
+    Ref.
+
+yield(Ref) ->
+    receive
+        {Ref, Response} -> Response
+    end.
+
+это похоже на Feature в других языках.
+
+================
+
+Parallel map
+
+pmap(ListOfFuns) ->
+    Pids = [do(self, Fun) || Fun <- ListOfFuns],
+    [receive {Pid, Val} -> Val end || Pid <- Pids].
+
+do(Parent, Fun) ->
+    spawn(fun() ->
+        Parent ! {self(), Fun()}
+    end).
+
+
+================
+
+We make sure that a second computer observes the first computer, and if the first computer crashes, it's detected by the second computer, and we must arrange that the second computer can take over whatever the first computer was going to do. Of course, we can we can do it in a more symmetric sort of way, that we can have pairs of computers that observe each other. So if the first computer crashes, the second computer will observe that error and take corrective action, and if the second computer crashes, then the first computer will take over.
+
+Это объясняет, почему 2х сторонний link, а не односторонний monitor.
+
+link можно сделать между процессами на разных нодах.
+
+
+================
+
+Супервизор использует link, а не монитор.
+Для того чтобы, если супервизор упадет, то упадут все его воркеры. А не останутся бесхозными зомби )
+
+Mike came up with the idea of links, yes. And it was-- actually, it
+was to solve a different problem. That was the problem of zombie
+processes when things go wrong.
+
+There are two mechanisms-- links and monitors. And they're actually used for different purposes.
+
+Monitors should be used for an asymmetric.
+You don't want to crash the server because it will affect all the clients.
+But if the server crashes, of course all the clients you do want to crash.
+
+But if you've got three or four processes linked together without a client,
+you know, in a peer to peer system, then you may want to crash that little graph of processes.
+
+================
+
+Work Stealing
+
+Каждое ядро имеет свой планировщик и run queue.
+Если очередь пуста, планировщик может забрать поток у другого планировщика (ядра).
+
+For a long-lived process, it can move between cores a number of times, and we've observed that in the Percept2 tool.
+We can see that longer processes will move perhaps 20 times during our execution.
+That will typically be in a rather underloaded system where there's quite a lot of work stealing going on.
+
+================
+
+A node started with the short name *ant* on a host *baz*
+will be identified by the atom 'ant@baz'
+
+Short names communicate on the local network.
+Long named communicate globally, and it's possible to use DNS to resolve names.
+But in a single system we can either use all short names or all long names, we can't mix the naming conventions up.
+
+And so, for example, we could have a three node system here, ant and
+bee are two nodes that live on the host baz, and we also have a node
+called ant that lives on a different host. That's perfectly OK because
+one will be ant@baz and one will be ant@bar, but you can't use the
+same name more than once on a single host.
