@@ -37,7 +37,7 @@
 
 ### get_rooms(Server)
 
-Принимает pid сервера, возвращает список комнат в виде кортежей _[{RooId, RoomName}]_.
+Принимает pid сервера, возвращает список комнат в виде кортежей _[{RoomId, RoomName}]_.
 
 
 ### add_user(Server, RoomId, UserName)
