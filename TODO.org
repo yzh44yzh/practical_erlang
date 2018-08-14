@@ -1,31 +1,25 @@
 * Проверить весь код на 20-м эрланге
 
-- не работают тесты для 14, 15 уроков и final_exercise
-  там не хватает ebin/*.app с метаинфой и настройками.
+- 01
+- 02
+- 03
+- 04
+- 05
+  - https://github.com/yzh44yzh/practical_erlang/issues/6
+- 06
+- 07
+- 08
+- 09
+- 10
+- 11
+- 12
+- 13
+- 14 не работают тесты
+- 15 не работают тесты
+- 16
+- final_exercise
+  не хватает ebin/*.app с метаинфой и настройками.
   видимо, просто не запушил в репозиторий
-
-- https://github.com/yzh44yzh/practical_erlang/issues/6
-
-
-
-* 00. Intro
-
-- подготовить черновик
-- подготовить презентацию
-
-Новые книги:
-
-Stuff Goes Bad: Erlang in Anger. Fred Hebert
-https://www.erlang-in-anger.com/
-
-Designing for Scalability with Erlang/OTP. Francesco Cesarini, Steve Vinoski
-https://www.amazon.co.uk/Designing-Scalability-Erlang-OTP-Fault-Tolerant/dp/1449320732/
-
-и еще более новая книга Фреда про proptest
-
-http://learnyousomeerlang.com/relups
-тут клевая катринка, надо брать в доклад
-
 
 
 * 01. типы данных

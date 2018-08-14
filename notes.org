@@ -37,6 +37,9 @@ it would be really nice to read up on at least some of these things:
   сделал в отдельном репозитории
   https://github.com/yzh44yzh/erl_fun_composition
 
+- инроспекция, трассировка, профилирование
+  вот это важная тема, хорошо бы сделать
+
 - bit syntax
 
 - память потока и сборщик мусора
