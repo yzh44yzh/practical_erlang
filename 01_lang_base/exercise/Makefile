@@ -21,3 +21,7 @@ test_4:
 test_5:
 	erlc test.erl task_5.erl
 	erl -s test run task_5 test
+
+
+clean:
+	-rm *.beam
