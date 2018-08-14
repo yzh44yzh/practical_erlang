@@ -1,8 +1,4 @@
-
-- bit syntax -- отдельная тема, и упражнения по ней
-
-- pipeline: формулировка задачи, решение на исключениях,
-  решение на pipeline, как это выглядил на Haskell или OCaml
+* Проверить весь код на 20-м эрланге
 
 - не работают тесты для 14, 15 уроков и final_exercise
   там не хватает ebin/*.app с метаинфой и настройками.
@@ -10,36 +6,25 @@
 
 - https://github.com/yzh44yzh/practical_erlang/issues/6
 
-- raft
-  - разбить на этапы
-    для каждого этапа свой код, и описание, какое должно наблюдаться поведение системы на 4х нодах
-  - презентация
 
 
-* 00. Intro.
+* 00. Intro
+
 - подготовить черновик
 - подготовить презентацию
 
+Новые книги:
+
+Stuff Goes Bad: Erlang in Anger. Fred Hebert
+https://www.erlang-in-anger.com/
+
+Designing for Scalability with Erlang/OTP. Francesco Cesarini, Steve Vinoski
+https://www.amazon.co.uk/Designing-Scalability-Erlang-OTP-Fault-Tolerant/dp/1449320732/
+
+и еще более новая книга Фреда про proptest
+
 http://learnyousomeerlang.com/relups
 тут клевая катринка, надо брать в доклад
-
-
-* pipeline урок по валидации входящих данных
-вложенные case
-исключения
-схемы
-erlmonads
-и то, как я сделал для отписок в NC
-
-
-* модель акторов
-добавить в урок про многопотоность
-Модель акторов в других языках (akka)
-
-
-* урок по raft
-глубже изучить теорию
-хорошо подготовить практику
 
 
 
@@ -198,8 +183,3 @@ simple_one_for_one, можно ли остановить/удалить child?
 
 - functional tests
   tcp-client and game protocol
-
-
-* Факультативные минитемы
-- память потока и сборщик мусора
-- bit syntax
