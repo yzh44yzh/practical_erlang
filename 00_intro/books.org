@@ -1,42 +1,81 @@
 * Книги по Erlang
 
 
-** 1й уровень, классика
+** 1й уровень
 
-Programming Erlang: Software for a Concurrent World
-Joe Armstrong
-2-е издание, 2013.
-https://www.amazon.co.uk/Programming-Erlang-Concurrent-Pragmatic-Programmers/dp/193778553X/
-[./img/01_programming_erlang_armstrong.jpg]
-
-
-Erlang Programming
-Francesco Cesarini, Simon Thompson
-https://www.amazon.co.uk/Erlang-Programming-Francesco-Cesarini/dp/0596518188/
-http://oz.by/books/more10251599.html?sbtoken=7588e6c4c76cac09778e59994923cd75
-[./img/02_erlang_programming_cesarini.jpg]
-
-
-** 1й уровень, новые книги
-
-Learn You Some Erlang for Great Good!
+*** Learn You Some Erlang for Great Good! A Beginner's Guide
 Fred Hebert
-https://www.amazon.co.uk/Learn-Some-Erlang-Great-Good/dp/1593274351/
-http://learnyousomeerlang.com/
-http://oz.by/books/more10383255.html?sbtoken=7588e6c4c76cac09778e59994923cd75
 [./img/03_lyse_hebert.jpg]
 
+В оригинале:
+https://www.amazon.co.uk/Learn-Some-Erlang-Great-Good/dp/1593274351/
+
+Бесплатная html версия:
+http://learnyousomeerlang.com/
+
+Переведенная на русский язык:
+http://oz.by/books/more10383255.html?sbtoken=7588e6c4c76cac09778e59994923cd75
+
+Пожалуй, лучшая книга по эрланг. Фред сделал просто эпичный труд, спасибо ему за это.
+Написано легко, весело, понятно, и про все, про что только можно было написать.
+(Из-за этого книга получилась очень большая, и читать ее придется долго :)
+
+
+*** Programming Erlang: Software for a Concurrent World
+Joe Armstrong
+2-е издание, 2013.
+[./img/01_programming_erlang_armstrong.jpg]
+
+В оригинале:
+https://www.amazon.co.uk/Programming-Erlang-Concurrent-Pragmatic-Programmers/dp/193778553X/
+
+Автор -- один из создателей языка эрланг. Написано не так сухо, как у Чезарини, более живо, литературно.
+Немного страдает последовательность изложения, начальные темы идут в довольно странном порядке.
+Но все равно все мы любим Джо Армстронга :)
+
+
+*** Erlang Programming
+Francesco Cesarini, Simon Thompson
+[./img/02_erlang_programming_cesarini.jpg]
+
+В оригинале:
+https://www.amazon.co.uk/Erlang-Programming-Francesco-Cesarini/dp/0596518188/
+
+Переведенная на русский язык:
+http://oz.by/books/more10251599.html?sbtoken=7588e6c4c76cac09778e59994923cd75
+
+Четкое, последовательное, понятное изложение. Хороший учебник.
+Несколько сухая, академичная, без шуточек, как у Фреда.
+
+
+*** Erlang and OTP in Action
+Martin Logan, Eric Merritt, Richard Carlsson
+
+В оригинале:
+http://www.amazon.com/Erlang-OTP-Action-Martin-Logan/dp/1933988789/
+
+Тоже неплохой способ изучить эрланг. Тут основы языка даются довольно кратко, а предлагается
+наблюдать за разработкой проекта, от начальной идеи, через несколько инкрементальных улучшений,
+до построения довольно сложной системы.
 
 
 ** 2й уровень
 
-Stuff Goes Bad: Erlang in Anger
+*** Stuff Goes Bad: Erlang in Anger
 Fred Hebert
-https://www.erlang-in-anger.com/
 [./img/04_erlang_in_anger_hebert.png]
+https://www.erlang-in-anger.com/
 
 
-Designing for Scalability with Erlang/OTP
+*** Designing for Scalability with Erlang/OTP
 Francesco Cesarini, Steve Vinoski
-https://www.amazon.co.uk/Designing-Scalability-Erlang-OTP-Fault-Tolerant/dp/1449320732/
 [./img/05_designing_for_scalability_cesarini.jpg]
+https://www.amazon.co.uk/Designing-Scalability-Erlang-OTP-Fault-Tolerant/dp/1449320732/
+
+
+** 3й уровень
+
+*** Property-Based Testing with PropEr, Erlang, and Elixir
+Find Bugs Before Your Users Do
+Fred Hebert
+https://pragprog.com/book/fhproper/property-based-testing-with-proper-erlang-and-elixir
