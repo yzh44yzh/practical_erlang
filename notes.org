@@ -37,6 +37,9 @@ it would be really nice to read up on at least some of these things:
   сделал в отдельном репозитории
   https://github.com/yzh44yzh/erl_fun_composition
 
+- невозможность циклических структур
+  но можно сделать граф, сохраняя инфу о вершинах и ребрах в map или в ets
+
 - инроспекция, трассировка, профилирование
   вот это важная тема, хорошо бы сделать
 

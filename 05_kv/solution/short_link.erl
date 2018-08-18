@@ -8,8 +8,8 @@
 
 init() ->
     %% init randomizer
-    <<A:32, B:32, C:32>> = crypto:rand_bytes(12),
-    random:seed({A,B,C}),
+    <<A:32, B:32, C:32>> = crypto:strong_rand_bytes(12),
+    rand:seed(exsp, {A,B,C}),
     {#{}, #{}}.
 
 
@@ -38,4 +38,4 @@ rand_str(Length) ->
                  (Char) when Char > 57 -> Char + 7;
                  (Char) -> Char
               end,
-              [crypto:rand_uniform(48, 110) || _ <- lists:seq(1, Length)]).
+              [rand:uniform(110 - 48) + 47 || _ <- lists:seq(1, Length)]).
