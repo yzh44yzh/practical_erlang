@@ -46,7 +46,8 @@ hash(Data) ->
 -spec init(gs_args()) -> gs_init_reply().
 init([]) ->
     {ok, HashSeed} = application:get_env(my_crypt, hash_seed),
-    random:seed(HashSeed), %% seed it with constant to always get the same hash table
+    <<A:32, B:32, C:32>> = HashSeed,
+    rand:seed(exsp, {A,B,C}), %% seed it with constant to always get the same hash table
     HashTable = generate_hash_table(),
     {ok, Key} = application:get_env(my_crypt, crypt_key),
     {ok, #state{encrypt_key = Key, hash_table = HashTable}}.
@@ -112,7 +113,7 @@ generate_hash_table() ->
 -spec shuffle([byte()], [byte()]) -> [byte()].
 shuffle([], Res) -> Res;
 shuffle(List, Res) ->
-    Index = random:uniform(length(List)),
+    Index = rand:uniform(length(List)),
     Byte = lists:nth(Index, List),
     shuffle(lists:delete(Byte, List), [Byte | Res]).
 
