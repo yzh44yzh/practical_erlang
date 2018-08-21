@@ -20,7 +20,7 @@ https://hexlet.io/tracks/fundamental/lesson_sets/sicp и генерирует д
 ссылки всегда должна отдаваться одна и та же короткая
 ссылка. Например:
 
-```erlang
+```
 3> {HexletLink, State2} = short_link:create_short("http://hexlet.io", State1).
 {"http://hexlet.io/EUjk9J7J", ...}
 4> {HexletLink, State3} = short_link:create_short("http://hexlet.io", State2).
@@ -31,7 +31,7 @@ https://hexlet.io/tracks/fundamental/lesson_sets/sicp и генерирует д
 отдает либо кортеж {ok, LongLink}, если ссылка найдена в State, либо
 {error, not_found}, если ссылка не найдена. Например:
 
-```erlang
+```
 7> short_link:get_long("http://hexlet.io/EUjk9J7J", State4).
 {ok,"http://hexlet.io"}
 8> short_link:get_long("bla-bla-bla", State4).
@@ -41,7 +41,7 @@ https://hexlet.io/tracks/fundamental/lesson_sets/sicp и генерирует д
 В целом работа пользователя с модулем **short_link** должна выглядеть
 примерно так:
 
-```erlang
+```
 2> State1 = short_link:init().
 3> {HexletLink, State2} = short_link:create_short("http://hexlet.io", State1).
 {"http://hexlet.io/EUjk9J7J", ...}
@@ -61,7 +61,7 @@ https://hexlet.io/tracks/fundamental/lesson_sets/sicp и генерирует д
 строк заданной длинны.  Она уже реализована в модуле, и ей можно
 пользоваться:
 
-```erlang
+```
 3> short_link:rand_str(8).
 "NpGJukjT"
 4> short_link:rand_str(8).
