@@ -19,7 +19,7 @@
 
 ### Присвоение значений переменным
 
-```erlang
+```
 1> A = 123.
 123
 ```
@@ -34,12 +34,12 @@
 может его изменить.
 
 В данном коде несвязанная переменная **А**, с помощью сопоставления с
-образцом получает значение *123*, и становится связанной.
+образцом получает значение **123**, и становится связанной.
 
 
 ### Извлечение значений из сложных структур данных
 
-```erlang
+```
 2> User = {user, "Bob", 25}.
 {user,"Bob",25}
 3> {user, Name, Age} = User.
@@ -63,7 +63,7 @@
 может не пройти, и тогда генерируется исключение -- ошибка времени
 выполнения.
 
-```erlang
+```
 6> {cat, Name, TailLength} = User.
 ** exception error: no match of right hand side value {user,"Bob",25}
 ```
@@ -71,7 +71,7 @@
 Шаблон может также содержать анонимные переменные (обозначаются
 символом подчеркивания), которые совпадают с любым значением.
 
-```erlang
+```
 8> {_, Name, _} = User.
 {user,"Bob",25}
 9> Name.
@@ -81,7 +81,7 @@
 Но их нужно отличать от именованных переменных, чьи имена начинаются
 с символа подчеркивания:
 
-```erlang
+```
 10> {_Some, Name, _Some} = User.
 ** exception error: no match of right hand side value {user,"Bob",25}
 ```
@@ -92,7 +92,7 @@
 
 ### Условные переходы
 
-```erlang
+```
 6> case User of
 6> {user, _, _} -> "this is user";
 6> {cat, _, _} -> "this is cat"
@@ -110,7 +110,7 @@
 позволяет определить, является ли данный игрок владельцем данной
 комнаты:
 
-```erlang
+```
 is_user_owner_of_room(UserId, RoomId) ->
     case rooms:find_room(RoomId) of
         {ok, #room{owner = UserId}} -> true;
@@ -143,7 +143,7 @@ is_user_owner_of_room(UserId, RoomId) ->
 Примеры мы видели, когда писали рекурсивные функции с аккумуляторами.
 Вообще клозов у функции может быть много:
 
-```erlang
+```
 area({rect, Width, Height}) -> Width * Height;
 area({square, Size}) -> Size * Size;
 area({circle, Radius}) -> math:pi() * Radius * Radius.
@@ -157,7 +157,7 @@ area({circle, Radius}) -> math:pi() * Radius * Radius.
 
 Вот неправильная последовательность шаблонов:
 
-```erlang
+```
 case List of
     [] -> empty_list;
     [Head | _] -> process(Head);
@@ -170,7 +170,7 @@ end.
 
 Вот правильная последовательность шаблонов:
 
-```erlang
+```
 case List of
     [] -> empty_list;
     [{X, Y} | _] -> process(X, Y);
@@ -180,8 +180,7 @@ end.
 
 ## guards
 
-Вообще **guard** переводится как "охранник". Но в литературе его не
-переводят, а используют англицизм **гард**.
+**guard** переводится как "охранное выражение".
 
 Гарды используются там, где сопоставление с образцом применяется для
 условных переходов: то есть, в клозах функций, в case, try и receive
@@ -191,7 +190,7 @@ end.
 Гадром является последовательность выражений, разделенных запятой,
 каждое из которых вычисляется в булевое значение.
 
-```erlang
+```
 check_user({user, _, Gender, Age}) when Gender =:= female, Age < 14 -> girl;
 check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 14, Age < 21 -> teenage_girl;
 check_user({user, _, Gender, Age}) when Gender =:= female, Age >= 21 -> woman;
@@ -205,7 +204,7 @@ check_user({user, _, Gender, Age}) when Gender =:= male, Age >= 21 -> man.
 
 Гарды могут объединяться в последовательности, разделенные точкой с запятой:
 
-```erlang
+```
 check_user({user, _, Gender, Age})
   when Gender =:= female, Age < 14;
        Gender =:= male, Age < 14
@@ -222,7 +221,7 @@ check_user({user, _, Gender, Age})
 То есть, запятая работает как **andalso**, а точка с запятой работает
 как **orelse**, и код выше эквивалентен коду:
 
-```erlang
+```
 check_user({user, _, Gender, Age})
   when (Gender =:= female andalso Age < 14) orelse
        (Gender =:= male andalso Age < 14)
@@ -247,7 +246,7 @@ check_user({user, _, Gender, Age})
 оно не распространяется дальше, а просто гард не срабатывает
 (данная ветка кода не выполняется).
 
-```erlang
+```
 1> F = fun(X) when 5/X > 1 -> "clause 1";
 1> (X) -> "clause 2"
 1> end.
@@ -260,13 +259,13 @@ check_user({user, _, Gender, Age})
 
 Поэтому можно не писать так:
 
-```erlang
+```
 1> F = fun(X) when is_tuple(X), tuple_size(X) == 2 -> X end.
 ```
 
 а писать сразу так:
 
-```erlang
+```
 2> F = fun(X) when tuple_size(X) == 2 -> X end.
 ```
 
@@ -275,7 +274,7 @@ check_user({user, _, Gender, Age})
 Конструкция **case** аналогична клозам функции, но может
 использоваться в любом месте в коде.
 
-```erlang
+```
 case Expr of
     Pattern1 [when GuardSeq1] ->
         Body1;
@@ -295,7 +294,7 @@ case могут быть вложенными друг в друга. 2 уров
 
 Вот пример на 2 уровня вложенности:
 
-```erlang
+```
 close_room(UserId, RoomId) ->
     case rooms:find_room(RoomId) of
         {ok, #room{owner = UserId}} ->
@@ -326,7 +325,7 @@ close_room(UserId, RoomId) ->
 Конструкция **if** представляет собой упрощенный **case** без выражения и
 без шаблонов, а ветки представлены только гардами.
 
-```erlang
+```
 if
     GuardSeq1 ->
         Body1;
@@ -340,7 +339,7 @@ end
 исключение.  Довольно часто бывает, что последним гардом ставят true,
 и он срабатывает всегда.
 
-```erlang
+```
 valid_char(Char) ->
     IsDigit = is_digit(Char),
     IsAlpha = is_alpha(Char),
