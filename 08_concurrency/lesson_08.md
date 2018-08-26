@@ -60,7 +60,7 @@
 
 Давайте попробуем запустить несколько потоков:
 
-```erlang
+```
 4> G = fun(X) -> timer:sleep(10), io:format("~p~n", [X]) end.
  #Fun<erl_eval.6.13229925>
 5> [spawn(fun() -> G(X) end) || X <- lists:seq(1,10)].
@@ -107,7 +107,7 @@ Pid должен быть идентификатором процесса, а Me
 
 Поток может отправить сообщение самому себе.
 
-```erlang
+```
 10> self() ! hello.
 hello
 11> flush().
@@ -124,7 +124,7 @@ ok
 Чтобы прочитать сообщения в почтовом ящике, нужно использовать
 конструкцию **receive**.
 
-```erlang
+```
 receive
     Pattern1 [when Guard1] ->
         Expressions1;
@@ -139,7 +139,7 @@ end
 В этом примере поток отправляет сообщение самому себе, и получает его
 с помощью receive:
 
-```erlang
+```
 12> self() ! "hello again".
 "hello again"
 13> receive
