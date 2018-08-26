@@ -246,15 +246,19 @@ error
 
 А здесь только одна функция.
 
-Помимо CRUD API еще есть функции высшего порядка **maps:map/2** и **maps:fold/3**.
-Функции **filter** нету.
+Помимо CRUD API еще есть функции высшего порядка **maps:map/2**, **maps:filter/2** и **maps:fold/3**.
 
 ```
 1> M = #{key1 => "Bob", key2 => "Bill", key3 => "Helen"}.
- #{key1 => "Bob",key2 => "Bill",key3 => "Helen"}
+#{key1 => "Bob",key2 => "Bill",key3 => "Helen"}
+
 2> maps:map(fun(K, V) -> string:to_upper(V) end, M).
- #{key1 => "BOB",key2 => "BILL",key3 => "HELEN"}
-3> maps:fold(fun(K, V, Acc) -> [V | Acc] end, [], M).
+#{key1 => "BOB",key2 => "BILL",key3 => "HELEN"}
+
+3> maps:filter(fun(K, V) -> K /= key1 andalso K /= key2 end, M).
+#{key3 => "Helen"}
+
+4> maps:fold(fun(K, V, Acc) -> [V | Acc] end, [], M).
 ["Helen","Bill","Bob"]
 ```
 
