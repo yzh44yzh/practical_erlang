@@ -4,19 +4,19 @@
 поддержки циклов и условных переходов, а только подстановка значений.
 
 Он принимает на вход шаблон:
-```erlang
+```
 2> In = <<"User {{name}} won {{wins}} games and got {{points}} points">>.
 ```
 
 и карту с параметрами:
-```erlang
+```
 3> Data = #{<<"name">> => "Kate",
 3>          <<"wins">> => 55,
 3>          <<"points">> => 777}.
 ```
 
 и на выходе выдает строку, где параметры подставлены в шаблон:
-```erlang
+```
 4> template:parse(In, Data).
 <<"User Kate won 55 games and got 777 points">>
 ```

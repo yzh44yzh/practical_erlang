@@ -31,18 +31,18 @@
 На самом деле эрланг не видит разницы между строкой и списком чисел.
 
 Вы можете написать в коде так:
-```erlang
+```
 "hello"
 ```
 или так:
-```erlang
+```
 <<"hello">>
 ```
 но это просто способ отображения значения в консоли.
 
 Некоторые списки консоль показывает как строки, а другие как числа:
 
-```erlang
+```
 2> L = [104,101,108,108,111].
 "hello"
 3> L2 = [1,2,3,4,5].
@@ -58,7 +58,7 @@
 строку. А если в списке будут числа, отличающиеся от кодов символов,
 то он отобразится как список чисел:
 
-```erlang
+```
 7> [104,101,108,108,111].
 "hello"
 8> [104,101,108,108,111,0].
@@ -69,7 +69,7 @@
 хотим, чтобы эвристика работала для unicode, то нужно запустить эрланг
 с ключом **+pc unicode**.
 
-```erlang
+```
 $ erl +pc unicode
 Erlang/OTP 17 [erts-6.2] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
 Eshell V6.2  (abort with ^G)
@@ -80,14 +80,14 @@ Eshell V6.2  (abort with ^G)
 Ну и не трудно определить, какие коды символов соответствуют буквам
 английского алфавита:
 
-```erlang
+```
 2> io:format("~w", ["09AZaz"]).
 [48,57,65,90,97,122]ok
 ```
 
 И какие соответствуют буквам русского алфавита:
 
-```erlang
+```
 3> io:format("~w", ["АЯаяёЁ"]).
 [1040,1071,1072,1103,1105,1025]ok
 ```
@@ -101,14 +101,14 @@ Eshell V6.2  (abort with ^G)
 
 **string:tokens/2** -- разбивает сроку на подстроки по разделителю.
 
-```erlang
+```
 1> string:tokens("http://google.com/?q=hello", "/").
 ["http:","google.com","?q=hello"]
 ```
 
 Но тут есть один нюанс. Второй аргумент -- это список разделителей, а не подстрока.
 
-```erlang
+```
 2> string:tokens("aa+bb-cc+-+dd", "+-").
 ["aa","bb","cc","dd"]
 ```
@@ -118,7 +118,7 @@ Eshell V6.2  (abort with ^G)
 
 **string:join/2** объединяет список строк в одну с заданным разделителем.
 
-```erlang
+```
 3> string:join(["item1", "item2", "item3"], ", ").
 "item1, item2, item3"
 ```
@@ -129,7 +129,7 @@ Eshell V6.2  (abort with ^G)
 **string:strip/1**, **string:strip/2** -- удаляют пробелы (или другие символы) в
  начале и/или конце строки.
 
-```erlang
+```
 8> S2 = "    bla bla bla   ".
 "    bla bla bla   "
 9> string:strip(S2).
@@ -146,7 +146,7 @@ Eshell V6.2  (abort with ^G)
 
 **string:to_upper/1**, **string:to_lower/1** -- преобразуют строку в верхний (нижний) регистр.
 
-```erlang
+```
 19> string:to_upper("Hello").
 "HELLO"
 20> string:to_lower("Hello").
@@ -162,7 +162,7 @@ Eshell V6.2  (abort with ^G)
 
 Ну и сравним **string:to_integer/1** и **erlang:list_to_integer/1**:
 
-```erlang
+```
 1> string:to_integer("123").
 {123,[]}
 2> string:to_integer("123abc").
@@ -171,7 +171,7 @@ Eshell V6.2  (abort with ^G)
 {error,no_integer}
 ```
 
-```erlang
+```
 4> list_to_integer("123").
 123
 5> list_to_integer("123abc").
@@ -198,19 +198,19 @@ Eshell V6.2  (abort with ^G)
 видимости, так что их можно вызывать без указания имени модуля.
 
 **erlang:byte_size/1**
-```erlang
+```
 1> byte_size(<<"some long string">>).
 16
 ```
 
 **erlang:split_binary/2**
-```erlang
+```
 2> split_binary(<<"some long string">>, 4).
 {<<"some">>,<<" long string">>}
 ```
 
 **erlang:binary_part/3**
-```erlang
+```
 3> binary_part(<<"some long string">>, 5, 4).
 <<"long">>
 ```
@@ -222,7 +222,7 @@ Eshell V6.2  (abort with ^G)
 И рассмотрим некоторые функции модуля [binary](http://www.erlang.org/doc/man/binary.html).
 
 **binary:split/2**
-```erlang
+```
 1> Str = <<"Привет мир!"/utf8>>.
 <<"Привет мир!"/utf8>>
 2> binary:split(Str, [<<" ">>]).
@@ -238,7 +238,7 @@ Eshell V6.2  (abort with ^G)
 кодировку.
 
 **binary:match/2**, **binary:matches/3**
-```erlang
+```
 5> binary:match(<<"abc abc abc">>, <<"ab">>).
 {0,2}
 6> binary:matches(<<"abc abc abc">>, <<"ab">>).
@@ -247,7 +247,7 @@ Eshell V6.2  (abort with ^G)
 ```
 
 **binary:replace/3**
-```erlang
+```
 7> binary:replace(<<"a-b-c-a-b-c">>, <<"a">>, <<"A">>).
 <<"A-b-c-a-b-c">>
 8> binary:replace(<<"a-b-c-a-b-c">>, <<"a">>, <<"A">>, [global]).
@@ -263,7 +263,7 @@ Eshell V6.2  (abort with ^G)
 В большинстве языков программирования есть операция конкатенации
 строк. Есть она и в эрланг:
 
-```erlang
+```
 1> Str1 = "hello".
 "hello"
 2> Str2 = "world".
@@ -276,7 +276,7 @@ Eshell V6.2  (abort with ^G)
 И тем более не хочется повторять ее несколько раз.
 
 Ну есть еще такой вариант:
-```erlang
+```
 4> Str4 = io_lib:format("~s ~s!", [Str1, Str2]).
 ["hello",32,"world",33]
 ```
@@ -287,7 +287,7 @@ Eshell V6.2  (abort with ^G)
 составления строк из нескольких частей. Как видно, эти части не
 склеиваются, а просто складываются в список. Можно это делать
 напрямую, без использования **io_lib:format/2**:
-```erlang
+```
 5> Str5 = [Str1, " ", Str2, "!"].
 ["hello"," ","world","!"]
 ```
@@ -298,7 +298,7 @@ Eshell V6.2  (abort with ^G)
 - другие iolist.
 
 Глубина вложенности может быть любая:
-```erlang
+```
 6> Header = "<html><head><title>Hello</title></head>".
 "<html><head><title>Hello</title></head>"
 7> Footer = "</html>".
@@ -314,7 +314,7 @@ Eshell V6.2  (abort with ^G)
 ```
 
 iolist легко преобразуется в string и binary:
-```erlang
+```
 11> lists:flatten(Page).
 "<html><head><title>Hello</title></head><body>Hello, Bob</body></html>"
 12> iolist_to_binary(Page).
@@ -327,7 +327,7 @@ iolist легко преобразуется в string и binary:
 выражениях и т.д.
 
 Однако iolist не может содержать чисел больше 255.
-```erlang
+```
 13> iolist_to_binary([32,32,1040]).
 ** exception error: bad argument
      in function  iolist_to_binary/1
@@ -338,7 +338,7 @@ iolist легко преобразуется в string и binary:
 на помощь приходит **unicode:chardata()**. Этот тип данных определен в
 модуле [unicode](http://www.erlang.org/doc/man/unicode.html).
 И по сути этот тот же iolist, но в нем разрешены любые коды символов:
-```erlang
+```
 15> UserName2 = "Вася".
 [1042,1072,1089,1103]
 16> Greeting2 = ["Привет ", UserName2].
@@ -351,7 +351,7 @@ iolist легко преобразуется в string и binary:
 
 unicode:chardata напрямую нельзя использовать там, где разрешены iolist.
 Например, его нельзя записать в сокет. Но он легко преобразуется в binary:
-```erlang
+```
 19> Bin = unicode:characters_to_binary(Page2, utf8).
 <<"<html><head><title>Hello</title></head>"...>>
 20> io:format("~ts", [Bin]).
@@ -370,7 +370,7 @@ unicode:chardata напрямую нельзя использовать там, 
 Обе принимают unicode:chardata(), но первая возвращает string(), а вторая binary().
 А поскольку string() и binary() сами по себе являются unicode:chardata(), то эти
 функции суть способ преобразовать string() в binary() и наоборот.
-```erlang
+```
 21> unicode:characters_to_binary("привет").
 <<208,191,209,128,208,184,208,178,208,181,209,130>>
 22> unicode:characters_to_list(<<"привет"/utf8>>).
@@ -379,7 +379,7 @@ unicode:chardata напрямую нельзя использовать там, 
 Причем, это единственный правильный способ такого преобразования.
 Не делаейте этого с помощью **list_to_binary/1** и **binary_to_list/1**.
 Это будет работать только с латинскими символами:
-```erlang
+```
 23> binary_to_list(<<"Hello">>).
 "Hello"
 24> unicode:characters_to_list(<<"Hello">>).
@@ -390,7 +390,7 @@ unicode:chardata напрямую нельзя использовать там, 
 <<"hello">>
 ```
 А unicode данные преобразуются неправильно:
-```erlang
+```
 27> binary_to_list(<<"Привет"/utf8>>).
 [208,159,209,128,208,184,208,178,208,181,209,130]
 28> unicode:characters_to_list(<<"Привет"/utf8>>).
@@ -405,7 +405,7 @@ unicode:chardata напрямую нельзя использовать там, 
 
 По умолчанию **characters_to_list/1** и **characters_to_binary/1**
 работают с utf8. Но можно указать другую кодировку, входящую и исходящую:
-```erlang
+```
 1> unicode:characters_to_binary("привет", utf8, utf8).
 <<208,191,209,128,208,184,208,178,208,181,209,130>>
 2> unicode:characters_to_binary("привет", utf8, utf16).
