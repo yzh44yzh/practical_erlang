@@ -51,7 +51,7 @@ PostgreSQL [epgsql](https://github.com/epgsql/epgsql) и другие.
 
 Внутри он содержит кортеж из трех элементов:
 
-```erlang
+```
 {application, ApplicationName, Properties}.
 ```
 
@@ -74,7 +74,7 @@ PostgreSQL [epgsql](https://github.com/epgsql/epgsql) и другие.
 
 Пример ресурс файла, взят из cowboy 1.0.1:
 
-```erlang
+```
 {application, cowboy, [
 	{description, "Small, fast, modular HTTP server."},
 	{vsn, "1.0.1"},
@@ -116,7 +116,7 @@ Cowboy зависит от пяти других приложений. kernel, s
 
 В эрланговской ноде всегда стартуют минимум 2 приложения: kernel и stdlib.
 
-```erlang
+```
 $ erl
 Erlang/OTP 17 [erts-6.3] [source] [64-bit] [smp:4:4] [async-threads:10] [hipe] [kernel-poll:false]
 Eshell V6.3  (abort with ^G)
@@ -157,20 +157,20 @@ Eshell V6.3  (abort with ^G)
 вызовом application:start/1. При этом нужно заботиться о том, чтобы
 запускать их в правильном порядке, иначе start вернет:
 
-```erlang
+```
 {error, {not_started, SomeOtherApp}}.
 ```
 
 Запуск упрощается вызовом:
 
-```erlang
+```
 application:ensure_all_started(my_cool_app).
 ```
 
 Этот вызов сперва проверяет, что все зависимые приложения запущены.
 Если не запущены, запускает их, и затем запускает my\_cool\_app.
 
-```erlang
+```
 1> application:start(ssl).
 {error,{not_started,crypto}}
 2> application:ensure_all_started(ssl).
@@ -195,7 +195,7 @@ asn1.  Вызов ensure\_all\_started запустил ssl и все эти з�
 
 Узел **env** в таком файле хранит настройки в виде proplist.
 
-```erlang
+```
 {application, my_cool_app,
  [
   {description, "The best app ever"},
@@ -221,7 +221,7 @@ asn1.  Вызов ensure\_all\_started запустил ssl и все эти з�
 AppName -- атом, имя приложения, а AppSettings -- proplist, такой же,
 как в файле ресурсов.
 
-```erlang
+```
 %% file my_project.config
 [
  %% some app settings
@@ -243,13 +243,13 @@ AppName -- атом, имя приложения, а AppSettings -- proplist, т
 
 При запуске ноды нужно указать опцию **-config my_project**.
 
-```erlang
+```
 erl -config my_project ... other options
 ```
 
 Для чтения настроек используются функции **applications:get_env**:
 
-```erlang
+```
 3> application:get_env(param1).
 undefined
 4> application:get_env(my_cool_app, param1).
