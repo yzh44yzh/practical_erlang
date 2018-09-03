@@ -244,13 +244,13 @@ rebar.config -- это файл в корне проекта с настройк
 
 Зависимости указываются кортежем вида:
 
-```erlang
+```
 {deps, [Dependency1, Dependency2, Dependency3]}
 ```
 
 где Dependency -- это тоже кортеж вида:
 
-```erlang
+```
 {ApplicationName, Version, Source}
 ```
 
@@ -258,7 +258,7 @@ ApplicationName -- атом, имя приложения.
 Version -- строка, версия приложения.
 Source -- кортеж вида:
 
-```erlang
+```
 {VCS, Url, Revision}
 ```
 
@@ -268,7 +268,7 @@ Revision -- тэг, ветка или коммит, которые нужно с
 
 Пример:
 
-```erlang
+```
 {deps, [
         {pooler, ".*", {git, "git://github.com/seth/pooler.git", "b6c522a67a1d067122705ef725535a8664dd8514"}},
         {epgsql, ".*", {git, "git://github.com/epgsql/epgsql.git", {tag, "3.1.0"}}}
@@ -285,7 +285,7 @@ Revision -- тэг, ветка или коммит, которые нужно с
 
 Кроме зависимостей, еще часто указывают опции для компилятора.
 
-```erlang
+```
 {erl_opts, [debug_info,
             warn_missing_spec,
             warning_as_errors
