@@ -48,7 +48,7 @@ callback. С другой стороны **init** должен вернуть д
 
 Начинаем с функции **start\_link/0**:
 
-```erlang
+```
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 ```
@@ -75,7 +75,7 @@ start_link() ->
 ## Настройка супервизора
 
 Разберем подробнее:
-```erlang
+```
 {ok, {SupervisorSpecification, ChildSpecifications}}
 ```
 
@@ -83,7 +83,7 @@ start_link() ->
 процессов, за которыми он будет наблюдать.
 
 Спецификация супервизора -- это кортеж из трех значений:
-```erlang
+```
 {RestartStrategy, Intensity, Period}
 ```
 
@@ -116,15 +116,17 @@ RestartStrategy описывает политику перезапуска до�
 родитель -- супервизор уровнем выше.
 
 В 18-й версии эрланг вместо кортежа:
-```erlang
+```
 {RestartStrategy, Intensity, Period}
 ```
 используется map:
 
-```erlang
- #{strategy => one_for_one,
-   intensity => 10,
-   period => 1000
+```
+#{
+    strategy => one_for_one,
+    intensity => 10,
+    period => 1000
+}
 ```
 
 Но и кортеж поддерживается для обратной совместимости.
@@ -135,7 +137,7 @@ RestartStrategy описывает политику перезапуска до�
 Теперь разберем, как описываются дочерние потоки.
 Каждый из них описывается кортежем из 6-ти элементов:
 
-```erlang
+```
 {ChildID, Start, Restart, Shutdown, Type, Modules}.
 ```
 
@@ -176,7 +178,7 @@ Shutdown может быть указан как время в миллисек�
 и он совпадает с указанным в кортеже Start.
 
 Пример child specitication:
-```erlang
+```
 {some_worker,
  {some_worker, start_link, []},
  permanent,
@@ -186,19 +188,20 @@ Shutdown может быть указан как время в миллисек�
 ```
 
 В 18-й версии эрланг используется map:
-```erlang
- #{id => some_worker,
-   start => {some_worker, start_link, []},
-   restart => permanent,
-   shutdown => 2000,
-   type => worker,
-   modules => [some_worker]
-  }
+```
+#{
+    id => some_worker,
+    start => {some_worker, start_link, []},
+    restart => permanent,
+    shutdown => 2000,
+    type => worker,
+    modules => [some_worker]
+}
 ```
 
 Пример функции init:
 
-```erlang
+```
 init(_Args) ->
     RestartStrategy = one_for_one, % one_for_one | one_for_all | rest_for_one
     Intensity = 10, %% max restarts
@@ -228,7 +231,7 @@ init(_Args) ->
 
 То же самое для 18-й версии эрланг:
 
-```erlang
+```
 init(_Args) ->
     SupervisorSpecification = #{
         strategy => one_for_one,
@@ -274,7 +277,7 @@ init(_Args) ->
 Функция позволяет добавить новый дочерний поток, не описанный в **init**.
 Она принимает 2 аргумента: имя/pid супервизора, и спецификацию дочернего потока.
 
-```erlang
+```
 supervisor:start_child(
     MySupervisor,
     {some_worker,
@@ -290,7 +293,7 @@ supervisor:start_child(
 Функция позволяет остановить работающий дочерний поток.
 Она принимает 2 аргумента: имя/pid супервизора, и Id дочернего потока.
 
-```erlang
+```
 supervisor:terminate_child(MySupervisor, some_worker)
 ```
 
@@ -307,7 +310,7 @@ supervisor:terminate_child(MySupervisor, some_worker)
 только одного типа. И, соответственно, должен указать только одну
 child specitication.
 
-```erlang
+```
 init(_Args) ->
     SupervisorSpecification = {simple_one_for_one, 10, 60},
     ChildSpecifications =
@@ -326,14 +329,14 @@ init(_Args) ->
 Причем, тут меняется роль второго аргумента. Это теперь не child
 specification, а дополнительные аргументы дочернему потоку.
 
-```erlang
+```
 supervisor:start_child(MySupervisor, [D, E, F]).
 ```
 
 И дочерний поток в своей функции start\_link получит аргументы и из
 child specification, и из start\_child.
 
-```erlang
+```
 -module(some_worker).
 
 start_link(A, B, C, D, E, F) ->

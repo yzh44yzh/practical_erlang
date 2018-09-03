@@ -58,7 +58,7 @@ Apple Push Notification Service.
 
 Все начинается с функции **start\_link/0**:
 
-```erlang
+```
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 ```
@@ -67,7 +67,7 @@ start_link() ->
 
 Макрос **?MODULE** разворачивается в имя текущего модуля.
 Можно было написать:
-```erlang
+```
 gen_server:start_link({local, wg_push_sender}, wg_push_sender, [], []).
 ```
 получится тоже самое.
@@ -91,7 +91,7 @@ gen_server:start_link({local, wg_push_sender}, wg_push_sender, [], []).
 которой создается серверный поток. Этому потоку нужно получить свое
 начальное состояние.  Для этого вызывается первый callback **init/1**.
 
-```erlang
+```
 init([]) ->
     {ok, #state{
             apns_host = application:get_env(wg_push, apns_host, "gateway.sandbox.push.apple.com"),
@@ -105,7 +105,7 @@ gen\_server:start\_link.  Здесь нужно создать структур�
 
 Часто для этого описывают record с именем **state**.
 
-```erlang
+```
 -record(state, {
         apns_host :: string(),
         apns_port :: integer(),
@@ -121,7 +121,7 @@ gen\_server:start\_link.  Здесь нужно создать структур�
 Теперь посмотрим, как делается запрос от клиента к серверу, на примере
 API-функции send_messages.
 
-```erlang
+```
 send_messages(Messages, SSL_Options) ->
     gen_server:call(?MODULE, {send_messages, Messages, SSL_Options}).
 ```
@@ -135,7 +135,7 @@ callback-функция handle_call. Ей передаются три аргум
 от клиента, кортеж {pid клиента, reference} и состояние сервера.
 Второй аргумент обычно не используется.
 
-```erlang
+```
 handle_call({send_messages, Messages, SSL_Options}, _From, State) ->
     {Reply, State3} = send_messages(Messages, SSL_Options, State),
     {reply, Reply, State3};
@@ -151,7 +151,7 @@ handle_call должен обработать сообщение, сформир
 каждому сообщению отдельная ветка handle\_call. Если АПИ большое, то и
 веток handle\_call много.
 
-```erlang
+```
 my_api_1(A) ->
     gen_server:call(?MODULE, {msg1, A}).
 my_api_2(A, B) ->
@@ -179,7 +179,7 @@ handle_call({msg3, A, B, C}, _From, State) ->
 
 Для этого вызывается callback-функция handle_cast:
 
-```erlang
+```
 do_something(A, B) ->
     gen_server:cast(?MODULE, {do_something, A, B}),
     ok.
@@ -201,7 +201,7 @@ handle_cast должен вернуть измененное состояние.
 Если сообщения в функции loop сервера приходят не из gen\_server:call/cast,
 то они обрабатываются в callback-функции handle\_info.
 
-```erlang
+```
 handle_info({some_message, A, B}, State) ->
     NewState = ...
     {noreply, NewState};
@@ -258,7 +258,7 @@ init всех gen_server модулей не отработают.  Поэтом
 Здесь в init частично инициализируется State, и
 поток отправляет сообщение самому себе.
 
-```erlang
+```
 init(Args) ->
     State = some_light_state,
     self() ! heavy_init,
@@ -268,7 +268,7 @@ init(Args) ->
 Это сообщение первым ляжет в почтовый ящик, и первым будет обработано
 в handle_info.
 
-```erlang
+```
 handle_info(heavy_init, State) ->
     NewState = heavy_state,
     {noreply, NewState};
@@ -294,14 +294,14 @@ handle_info(heavy_init, State) ->
 "одиночка" (singleton). Он такой один, и к нему можно обращаться по
 имени:
 
-```erlang
+```
 gen_server:call(some_name, some_message)
 ```
 
 Если поток не регистрируется, то таких объектов может быть много, и нужно
 обращаться к ним по Pid:
 
-```erlang
+```
 gen_server:call(Pid1, some_message).
 gen_server:call(Pid2, some_message).
 ```
