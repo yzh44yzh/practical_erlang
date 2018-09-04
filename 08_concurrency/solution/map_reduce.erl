@@ -1,62 +1,92 @@
 -module(map_reduce).
 
--export([start/1]).
--export([reduce/2, map/2]).
+-export([
+    start/1, reducer/2, mapper/2,
+    analyze_file/1, aggregate/1, aggregate/2
+]).
 
 
 start(Files) ->
-    Num = length(Files),
-    Reduce = spawn(?MODULE, reduce, [Num, self()]),
-    [spawn(?MODULE, map, [File, Reduce]) || File <- Files],
+    RootPid = self(),
+    NumWorkers = length(Files),
+    ReducerPid = spawn(?MODULE, reducer, [RootPid, NumWorkers]),
+    [spawn(?MODULE, mapper, [File, ReducerPid]) || File <- Files],
     receive
-        {ok, Data} -> Data
+        {result, Result} -> Result
     after
-        2000 -> timeout
+        2000 -> {error, no_reply}
     end.
 
 
 %% Reduce process
 
-reduce(Num, From) ->
-    DataParts = [wait_data() || _ <- lists:seq(1, Num)],
-    Data = lists:foldl(fun add_part/2, #{}, DataParts),
-    From ! {ok, Data},
+reducer(RootPid, NumWorkers) ->
+    io:format("reducer started~n"),
+    DataList = [wait_for_data() || _ <- lists:seq(1, NumWorkers)],
+    Result = aggregate(DataList),
+    RootPid ! {result, Result},
     ok.
 
-wait_data() ->
-    receive
-        {ok, Data} -> Data;
-        invalid_file -> #{}
-    after
-        2000 -> #{}
-    end.
 
-add_part(DataPart, Acc0) ->
-    maps:fold(
-      fun(Word, Num, Acc) ->
-              case maps:find(Word, Acc) of
-                  {ok, OldNum} -> Acc#{Word => Num + OldNum};
-                  error -> Acc#{Word => Num}
-              end
-      end, Acc0, DataPart).
+wait_for_data() ->
+    receive
+        {mapper, Pid, File, Data} ->
+            io:format("reducer got result from ~p, ~p~n", [Pid, File]),
+            Data
+    after
+        1000 ->
+            io:format("no data from mapper~n"),
+            #{}
+    end.
 
 
 %% Map process
 
-map(File, Reduce) ->
-    Data = case file:read_file(File) of
-               {ok, Bin} -> {ok, parse(Bin)};
-               {error, _} -> invalid_file
-           end,
-    Reduce ! Data,
+mapper(File, ReducerPid) ->
+    io:format("mapper for file ~p started~n", [File]),
+    Data = analyze_file(File),
+    ReducerPid ! {mapper, self(), File, Data},
     ok.
 
-parse(Bin) ->
-    Words = binary:split(Bin, [<<" ">>, <<"\n">>, <<"\r">>], [global, trim]),
+
+%% Utils
+
+analyze_file(File) ->
+    case file:read_file(File) of
+        {ok, Data} -> analyze_data(Data);
+        {error, _} -> #{}
+    end.
+
+
+analyze_data(Data) ->
+    Words = binary:split(Data, [<<" ">>, <<"\n">>], [global]),
     lists:foldl(
-      fun(Word, Acc) ->
+      fun
+          (<<>>, Acc) -> Acc;
+          (Word, Acc) ->
               case maps:find(Word, Acc) of
-                  {ok, Num} -> Acc#{Word => Num + 1};
+                  {ok, Counter} -> Acc#{Word => Counter + 1};
                   error -> Acc#{Word => 1}
               end
-      end, #{}, Words).
+      end,
+      #{},
+      Words).
+
+
+aggregate(DataList) ->
+    lists:foldl(
+      fun(Data, Acc) -> aggregate(Data, Acc) end,
+      #{},
+      DataList).
+
+
+aggregate(Data1, Data2) ->
+    maps:fold(
+      fun(Word, Counter, Acc) ->
+              case maps:find(Word, Data2) of
+                  {ok, Counter2} -> Acc#{Word => Counter + Counter2};
+                  error -> Acc#{Word => Counter}
+              end
+      end,
+      Data2,
+      Data1).
