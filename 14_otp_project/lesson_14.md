@@ -68,9 +68,9 @@ OTP включает:
 (файлы с данными, ssl-сертификаты, схемы валидации и т.д.).
 
 
-## Информация ниже устарела
+# Информация ниже устарела
 
-вместо нее рекомендуется использовать [rebar3 Getting Started](https://www.rebar3.org/docs/getting-started)
+**вместо нее рекомендуется использовать [rebar3 Getting Started](https://www.rebar3.org/docs/getting-started)**
 
 
 ### Проект с использованием rebar
