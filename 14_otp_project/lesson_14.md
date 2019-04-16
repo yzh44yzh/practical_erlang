@@ -70,7 +70,7 @@ OTP включает:
 
 # rebar3
 
-[Getting Started](https://www.rebar3.org/docs/getting-started)**
+[Getting Started](https://www.rebar3.org/docs/getting-started)
 
 установить и запустить rebar3
 
@@ -111,7 +111,7 @@ cd my_cool_project
 Посмотреть observer.
 Проверить конфигурацию.
 
-Добавить модуль gen_server, запустить его под супервизором.
+Добавить модуль gen_server (из приготовленного шаблона worker_tpl.erl), запустить его под супервизором.
 
 Отключить шум в консоли, который генерирует sasl (сообщения о запуске супервизоров и т.д.)
 В sys.config добавить
@@ -146,6 +146,7 @@ cd my_cool_project
 Использовать lager, вывод в консоль и в файл при дефолтной конфигурации.
 
 Изменить конфигурацию lager, получить цветной вывод на консоль.
+примеры конфигурации взять тут: https://github.com/erlang-lager/lager
 
 Собрать и запустить релиз.
 
