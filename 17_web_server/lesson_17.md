@@ -31,7 +31,9 @@ add ranch to ws.app.src
 ```
 
 
-## simple routing and simple handlers
+## routing and simple handlers
+
+https://ninenines.eu/docs/en/cowboy/2.6/guide/routing/
 
 ws_app.erl
 ```
@@ -157,26 +159,83 @@ src/ws_app.erl
 ```
 
 
-## routing and handler details
-
-https://ninenines.eu/docs/en/cowboy/2.6/guide/routing/
-
-
 ## request obj
 
+https://ninenines.eu/docs/en/cowboy/2.6/guide/req/
+
+Выведем на консоль:
+```
+init(Req0, State) ->
+    io:format("~p~n", [Req0]),
+```
+
+Добавим еще один url на root_handler
+```
+    Dispatch = cowboy_router:compile([
+        {'_', [
+            {"/static/[...]", cowboy_static, {priv_dir, ws, "www"}},
+            {"/", root_handler, []},
+            {"/user/:user_id", root_handler, []},
+            {"/ping", ping_handler, []}
+        ]}
+    ]),
+```
+
+Посмотрим запросы:
+http://localhost:8080/
+http://localhost:8080/user/42
+http://localhost:8080/user/42?a=b&c=d
+
+cowboy_req модуль
+
+```
+    UserId = cowboy_req:binding(user_id, Req0),
+    io:format("UserId:~p~n", [UserId]),
+    GetParams = cowboy_req:parse_qs(Req0),
+    io:format("GetParams:~p~n", [GetParams]),
+```
+
+try cowboy_req:match_qs
+
+Body
+https://ninenines.eu/docs/en/cowboy/2.6/guide/req_body/
+```
+    case cowboy_req:has_body(Req0) of
+        true ->
+            Length = cowboy_req:body_length(Req0),
+            io:format("Body Length:~p~n", [Length]),
+            {ok, ReqBody, _Req} = cowboy_req:read_body(Req0),
+            io:format("Body:~p~n", [ReqBody]),
+            ok;
+        false -> io:format("no body~n")
+    end,
+```
+
+Query with curl
+```
+curl "http://localhost:8080/user/42" -d '{"user_id": 42, "user_name": "Bob"}'
+```
+
+
 ## templating
+
 mustache
 https://hex.pm/packages/bbmustache
 
+
 ## templates cache
+
 cache
 https://hex.pm/packages/cache
 
+
 ## json api
-json request, json responce
+
 jsx
 https://hex.pm/packages/jsx
 
+
 ## validation pipeline
+
 erlz
 https://github.com/yzh44yzh/erlz

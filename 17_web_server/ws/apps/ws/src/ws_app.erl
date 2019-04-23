@@ -19,6 +19,7 @@ init_cowboy() ->
         {'_', [
             {"/static/[...]", cowboy_static, {priv_dir, ws, "www"}},
             {"/", root_handler, []},
+            {"/user/:user_id", root_handler, []},
             {"/ping", ping_handler, []}
         ]}
     ]),
