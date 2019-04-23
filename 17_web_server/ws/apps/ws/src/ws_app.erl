@@ -14,15 +14,17 @@ stop(_State) ->
 
 
 init_cowboy() ->
+    {ok, Port} = application:get_env(ws, port),
     Dispatch = cowboy_router:compile([
         {'_', [
+            {"/static/[...]", cowboy_static, {priv_dir, ws, "www"}},
             {"/", root_handler, []},
             {"/ping", ping_handler, []}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(
         my_http_listener,
-        [{port, 8080}],
+        [{port, Port}],
         #{env => #{dispatch => Dispatch}}
     ),
     ok.

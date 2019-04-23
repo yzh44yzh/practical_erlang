@@ -75,6 +75,8 @@ init(Req0, State) ->
     {ok, Req1, State}.
 ```
 
+same code for ping_handler
+
 Run:
 ```
 rebar3 compile
@@ -91,14 +93,73 @@ http://localhost:8080/ping
 add port to sys.config
 also set error level for sasl in sys.config
 
+config/sys.config
+```
+[
+    {ws, [
+        {port, 8080}
+    ]},
+
+    {sasl, [
+        {errlog_type, error}
+    ]}
+].
+```
+
+ws_app.erl
+```
+init_cowboy() ->
+    {ok, Port} = application:get_env(ws, port),
+    Dispatch = cowboy_router:compile([
+        {'_', [
+            {"/", root_handler, []},
+            {"/ping", ping_handler, []}
+        ]}
+    ]),
+    {ok, _} = cowboy:start_clear(
+        my_http_listener,
+        [{port, Port}],
+        #{env => #{dispatch => Dispatch}}
+    ),
+    ok.
+```
+
+## statis files
+
+priv/www/main.css
+```
+body {
+    color: #f00;
+}
+```
+
+src/handlers/root_handler.erl
+```
+    Body = <<
+        "<html><head>"
+        "<link href='/static/main.css' rel='stylesheet' type='text/css'>"
+        "</head><body>"
+        "<h1>Hello from Cowboy</h1>"
+        "<p>This is root_handler</p>"
+        "</body></html>"
+    >>,
+```
+
+src/ws_app.erl
+```
+    Dispatch = cowboy_router:compile([
+        {'_', [
+            {"/static/[...]", cowboy_static, {priv_dir, ws, "www"}},
+            {"/", root_handler, []},
+            {"/ping", ping_handler, []}
+        ]}
+    ]),
+```
+
 
 ## routing and handler details
 
 https://ninenines.eu/docs/en/cowboy/2.6/guide/routing/
-
-## statis files
-
-html, css
 
 
 ## request obj
