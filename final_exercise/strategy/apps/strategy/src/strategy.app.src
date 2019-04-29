@@ -3,7 +3,7 @@
     {vsn, "0.1.0"},
     {registered, []},
     {mod, {strategy_app, []}},
-    {applications, [kernel, stdlib, lager]},
+    {applications, [kernel, stdlib, lager, ranch]},
     {env,[]},
     {modules, []}
 ]}.

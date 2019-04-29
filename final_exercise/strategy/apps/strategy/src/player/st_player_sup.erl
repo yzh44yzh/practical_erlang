@@ -20,7 +20,7 @@ init([]) ->
             #{
                 id => st_player_srv,
                 start => {st_player_srv, start_link, []},
-                restart => permanent,
+                restart => temporary,
                 shutdown => 2000,
                 type => worker,
                 modules => [st_player_srv]

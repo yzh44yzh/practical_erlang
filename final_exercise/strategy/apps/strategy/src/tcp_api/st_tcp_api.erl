@@ -1,3 +1,7 @@
+%%
+%% DEPRECATED
+%%
+
 -module(st_tcp_api).
 
 %% API
@@ -5,4 +9,5 @@
 
 on_connect() ->
     Socket = make_ref(),
-    supervisor:start_child(st_player_sup, [Socket]).
+    {ok, PlayerPid} = supervisor:start_child(st_player_sup, [Socket]),
+    PlayerPid. % is already in storage

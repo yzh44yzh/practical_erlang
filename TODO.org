@@ -13,6 +13,8 @@
   - keep {socker, player_srv} in storage
     почему st_player_storage:add_player нужно вызывать в st_player_srv:init?
   - storage мониторит player_srv и удаляет из storage при завершении процесса
+    Проблема хранения ресурсов с ограниченым временем жизни (pid, socket)
+    gproc
   - auth
   - close player session
   - get players list

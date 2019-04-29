@@ -22,7 +22,8 @@ init(no_args) ->
     {ok, State}.
 
 handle_call({add_player, Socket, PlayerSrv}, _From, State) ->
-    ets:insert(?MODULE, {Socket, PlayerSrv}),
+    erlang:monitor(process, PlayerSrv),
+    ets:insert(?MODULE, {PlayerSrv, Socket}),
     {reply, ok, State};
 
 handle_call(_Request, _From, #state{} = State) ->
@@ -30,6 +31,11 @@ handle_call(_Request, _From, #state{} = State) ->
 
 handle_cast(_Request, #state{} = State) ->
     {noreply, State}.
+
+handle_info({'DOWN', _Ref, process, Pid, Info}, State) ->
+    lager:info("Player down ~p ~p", [Pid, Info]),
+    ets:delete(?MODULE, Pid),
+    {noreply, State};
 
 handle_info(_Request, State) ->
     {noreply, State}.
