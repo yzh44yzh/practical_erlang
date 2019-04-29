@@ -1,11 +1,28 @@
-
-* Добавить темы:
-
-- курсовой проект
-  - zippers надо бы убрать, заменить на map
-  - ну и реализовать всю игру :)
+- 14-я тема -- создать проект по описанию в lesson_14.md
+  там все должно закончится на запуске двух воркеров с разными аргументами и разным стейтом
 
 - добавить темы 17 и 18 в README
+
+
+* курсовой проект
+
+- strategy proj
+  + player gen_server
+  + start player under sup from st_tcp_api
+  + player sessions storage
+  - keep {socker, player_srv} in storage
+    почему st_player_storage:add_player нужно вызывать в st_player_srv:init?
+  - storage мониторит player_srv и удаляет из storage при завершении процесса
+  - auth
+  - close player session
+  - get players list
+
+- battle
+  - начало уже есть, ff_game, нужно перенести в проекту
+  - убрать zippers, заменить на map
+  - реализовать взаимодействие с клиентом по текстовому протоколу через telnet
+
+- match maker
 
 
 * 08. concurrency
