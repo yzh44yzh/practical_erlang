@@ -222,11 +222,166 @@ curl "http://localhost:8080/user/42" -d '{"user_id": 42, "user_name": "Bob"}'
 mustache
 https://hex.pm/packages/bbmustache
 
+add deps to rebar.config
+```
+{deps, [
+    {cowboy, "2.6.3"},
+    {bbmustache, "1.7.0"}
+]}.
+```
+
+add user_handler
+```
+-module(user_handler).
+
+-export([init/2]).
+
+init(Req0, State) ->
+    Bindings = cowboy_req:bindings(Req0),
+    UserId = maps:get(user_id, Bindings, <<"0">>),
+    Info = get_user_info(UserId),
+
+    PrivDir = code:priv_dir(ws),
+    {ok, Tpl} = file:read_file(PrivDir ++ "/tpl/user.html"),
+    Body = bbmustache:render(Tpl, Info),
+
+    Headers = #{
+        <<"content-type">> => <<"text/html">>
+    },
+
+    Req = cowboy_req:reply(200, Headers, Body, Req0),
+    {ok, Req, State}.
+
+
+get_user_info(UserId) ->
+    #{
+        "user_id" => UserId,
+        "username" => <<"Bob">>,
+        "attributes" => [
+            #{"attr_name" => "height", "attr_value" => 182},
+            #{"attr_name" => "weight", "attr_value" => 70}
+        ]
+    }.
+```
+
+change routing to user handler
+```
+{"/static/[...]", cowboy_static, {priv_dir, ws, "www"}},
+{"/", root_handler, []},
+{"/user/:user_id", user_handler, []},
+{"/ping", ping_handler, []}
+```
+
+create template
+priv/tpl/user.html
+```
+<html>
+<head>
+    <title>Hello {{username}}!</title>
+</head>
+<body>
+<h1>Hello {{username}}</h1>
+<p>ID: {{user_id}}</p>
+
+<ul>
+{{#attributes}}
+<li>{{attr_name}} {{attr_value}}</li>
+{{/attributes}}
+</ul>
+
+</body>
+</html>
+```
+
+user handler get user info:
+```
+    Bindings = cowboy_req:bindings(Req0),
+    UserId = maps:get(user_id, Bindings, <<"0">>),
+    Info = get_user_info(UserId),
+```
+reads template file:
+```
+    PrivDir = code:priv_dir(ws),
+    {ok, Tpl} = file:read_file(PrivDir ++ "/tpl/user.html"),
+```
+and parses template:
+```
+    Body = bbmustache:render(Tpl, Info),
+```
 
 ## templates cache
 
 cache
 https://hex.pm/packages/cache
+
+add deps to rebar.config
+```
+{deps, [
+    {cowboy, "2.6.3"},
+    {bbmustache, "1.7.0"},
+    {cache, "2.3.1"}
+]}.
+```
+
+cache нужно добавить в зависимые приложения в ws.app.src, чтобы он запустился при старте ноды:
+```
+{application, ws, [
+    {description, "An OTP application"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {ws_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        ranch,
+        cache
+    ]},
+    {env,[]},
+    {modules, []}
+ ]}.
+```
+
+И нужно создать экземпляр кэша, в котором мы будем хранить шаблоны:
+```
+start(_StartType, _StartArgs) ->
+    init_cowboy(),
+    {ok, _} = cache:start_link(tpl_cache, [{n, 10}, {ttl, 60}]),
+    ws_sup:start_link().
+```
+TODO: его надо запустить под супервизором, а не так.
+
+create module tpl_manager:
+```
+-module(tpl_manager).
+
+-export([get_template/1]).
+
+get_template(Name) ->
+    case cache:get(tpl_cache, Name) of
+        undefined ->
+            io:format("~p not found in cache~n", [Name]),
+            PrivDir = code:priv_dir(ws),
+            {ok, Tpl} = file:read_file(PrivDir ++ "/tpl/" ++ Name ++ ".html"),
+            cache:put(tpl_cache, Name, Tpl),
+            Tpl;
+        Tpl ->
+            io:format("~p found in cache~n", [Name]),
+            Tpl
+    end.
+```
+
+Ищем шаблон в кеше. Если не находим, читаем шаблон из файла и сохраняем в кэш.
+Отдаем шаблон.
+
+TODO:
+Здесь не обрабатывается ситуация, когда указано неправильное имя шаблона.
+Такое надо обрабатывать.
+
+user_hander берет шаблон через tpl_manager, а не напрямую из файла:
+```
+    Tpl = tpl_manager:get_template("user"),
+    Body = bbmustache:render(Tpl, Info),
+```
 
 
 ## json api

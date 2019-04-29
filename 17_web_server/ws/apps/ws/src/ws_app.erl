@@ -6,6 +6,7 @@
 
 start(_StartType, _StartArgs) ->
     init_cowboy(),
+    {ok, _} = cache:start_link(tpl_cache, [{n, 10}, {ttl, 60}]),
     ws_sup:start_link().
 
 
@@ -19,7 +20,7 @@ init_cowboy() ->
         {'_', [
             {"/static/[...]", cowboy_static, {priv_dir, ws, "www"}},
             {"/", root_handler, []},
-            {"/user/:user_id", root_handler, []},
+            {"/user/:user_id", user_handler, []},
             {"/ping", ping_handler, []}
         ]}
     ]),
