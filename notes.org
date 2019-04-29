@@ -2,7 +2,7 @@
 https://medium.com/@dmitriid/designing-for-anything-with-erlang-cfadb6833bc0#.ctwsdsq0g
 
 пост о том, чего не хватает в книгах по эрлангу
-
+```
 it would be really nice to read up on at least some of these things:
     setting up multiple nodes
     testing a distributed app
@@ -29,19 +29,21 @@ it would be really nice to read up on at least some of these things:
     sessions
     latency
     <add your own>
-
+```
 
 * Дополнительные темы
 
-+ композиция функций
-  сделал в отдельном репозитории
-  https://github.com/yzh44yzh/erl_fun_composition
+** композиция функций
+сделал в отдельном репозитории
+https://github.com/yzh44yzh/erl_fun_composition
 
-- инроспекция, трассировка, профилирование
-  материал есть, надо оформить и выложить
+** инроспекция, трассировка, профилирование
+материал есть, надо оформить и выложить
 
-- bit syntax
+** bit syntax
 
-- память потока и сборщик мусора
+** память потока и сборщик мусора
 
-- модель акторов
+** модель акторов
+
+** RabbitMQ, rabbitmq_client, fox
