@@ -1,23 +1,34 @@
-- 14-я тема -- создать проект по описанию в lesson_14.md
-  там все должно закончится на запуске двух воркеров с разными аргументами и разным стейтом
+- 14-я тема
+  - создать проект по описанию в lesson_14.md
+    там все должно закончится на запуске двух воркеров с разными аргументами и разным стейтом
+  - README не соответствует тесту
 
-- добавить темы 17 и 18 в README
+- raft убрать отсюда, перенести в другой репозиторий
 
 
 * курсовой проект
+
+- общее описание архитектуры, модулей, процессов
+  текстом и картинками
 
 - strategy proj
   + player gen_server
   + start player under sup from st_tcp_api
   + player sessions storage
-  - keep {socker, player_srv} in storage
+  + keep {socker, player_srv} in storage
     почему st_player_storage:add_player нужно вызывать в st_player_srv:init?
-  - storage мониторит player_srv и удаляет из storage при завершении процесса
-    Проблема хранения ресурсов с ограниченым временем жизни (pid, socket)
-    gproc
-  - auth
+    почему call а не cast?
+  + storage мониторит player_srv и удаляет из storage при завершении процесса
+    - Проблема хранения ресурсов с ограниченым временем жизни (pid, socket)
+    - gproc
+  + API Protocol template
+  + start/stop player_srv from game_protocol
+  + player_srv is owner of socket
+  - API
+    + ping
+    + auth: player_srv:auth, protocol:handle_auth
+    - get players list
   - close player session
-  - get players list
 
 - battle
   - начало уже есть, ff_game, нужно перенести в проекту
